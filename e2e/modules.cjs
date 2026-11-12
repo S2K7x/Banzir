@@ -16,7 +16,7 @@ require('node:fs').mkdirSync(out, { recursive: true });
   const shot = async (n) => { await page.waitForTimeout(300); await page.screenshot({ path: `${out}/${n}.png` }); };
   const click = (name) => page.locator('button', { hasText: name }).first().click({ timeout: 8000 });
   const text = async () => (await page.locator('body').innerText()).replace(/\s+/g, ' ');
-  const expect = async (needle) => { const t = await text(); if (!t.includes(needle)) throw new Error(`expected "${needle}" in: ${t.slice(0, 600)}`); };
+  const expect = async (needle, label) => { for (let i = 0; ; i++) { const t = await text(); if (t.includes(needle)) return; if (i >= 25) throw new Error(`expected "${needle}"${label ? ` (${label})` : ''} in: ${t.slice(0, 600)}`); await page.waitForTimeout(200); } };
   const expectNot = async (needle) => { if ((await text()).includes(needle)) throw new Error(`did not expect "${needle}"`); };
   const tab = async (t) => { await page.locator('nav.tabbar button', { hasText: t }).click(); await page.waitForTimeout(500); };
 
@@ -96,7 +96,8 @@ require('node:fs').mkdirSync(out, { recursive: true });
   await expect('8 km'); await expect('6:00 /km');
   await page.locator('.card', { hasText: 'Running' }).locator('button', { hasText: 'Log' }).first().click();
   await page.getByLabel('Distance').fill('9.5'); await page.getByLabel('Time').fill('57:00');
-  await expect('more than 10 % longer'); await expect('(8 km)');
+  // The warning needs the saved runs, read from the database after the sheet opens.
+  await page.waitForSelector('text=more than 10 % longer', { timeout: 8000 }); await expect('(8 km)');
   await shot('06-run-warning');
   await page.locator('.sheet').getByLabel('Close', { exact: true }).click(); await page.waitForTimeout(200);
 
@@ -114,11 +115,11 @@ require('node:fs').mkdirSync(out, { recursive: true });
 
   // Zones and race equivalents.
   await click('Zones and paces'); await page.waitForSelector('text=Zone 2');
-  await expect('108-126'); await expect('208 - 0.7');
+  await page.waitForSelector('text=108-126', { timeout: 8000 }); await expect('208 - 0.7');
   await page.getByLabel('Resting heart rate').fill('60'); await page.waitForTimeout(400);
-  await expect('132-144'); await expect('heart-rate reserve');
+  await page.waitForSelector('text=132-144', { timeout: 8000 }); await expect('heart-rate reserve');
   await page.getByLabel('Recent 5 km time').fill('25:00'); await page.waitForTimeout(400);
-  await expect('52:07'); await expect('Likely optimistic'); await expect('Tempo: about');
+  await page.waitForSelector('text=52:07', { timeout: 8000 }); await expect('Likely optimistic'); await expect('Tempo: about');
   await shot('08-zones');
   await page.locator('.sheet').getByLabel('Close', { exact: true }).click(); await page.waitForTimeout(200);
 

@@ -13,7 +13,7 @@ require('node:fs').mkdirSync(out, { recursive: true });
   page.on('pageerror', (e) => errors.push('PAGEERROR ' + e.message));
   const click = (name) => page.locator('button', { hasText: name }).first().click({ timeout: 8000 });
   const text = async () => (await page.locator('body').innerText()).replace(/\s+/g, ' ');
-  const expect = async (needle) => { if (!(await text()).includes(needle)) throw new Error(`expected "${needle}"`); };
+  const expect = async (needle, label) => { for (let i = 0; ; i++) { const t = await text(); if (t.includes(needle)) return; if (i >= 25) throw new Error(`expected "${needle}"${label ? ` (${label})` : ''} in: ${t.slice(0, 600)}`); await page.waitForTimeout(200); } };
   await page.goto(BASE);
   await click('Continue'); await click('Calisthenics skills'); await click('Continue');
   await click('Advanced'); await click('Planche'); await click('30+'); await click('12+'); await click('Continue');

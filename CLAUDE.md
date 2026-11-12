@@ -174,6 +174,10 @@ Full layout and commands: `docs/product/architecture.md`.
 - Measure the first load as the sum of every script `index.html` loads.
   The entry chunk alone jumped from 79.5 to 115 kB when the bundler merged a
   shared chunk into it, with no change in what loads at startup.
+- Browser-test checks must wait, not read once: data loads from IndexedDB
+  after a sheet opens, and GitHub's runners are slower than this sandbox.
+  The 10 % run warning passed here and failed in CI. The `expect` helper in
+  `e2e/*.cjs` retries for 5 s; use `waitForSelector` for anything else.
 - Screens that depend on the time of day are tested with Playwright's
   `page.clock.setFixedTime` and a fixed `timezoneId`. Scope locators to
   `.overlay` or `.sheet`: cards behind an overlay have the same buttons.

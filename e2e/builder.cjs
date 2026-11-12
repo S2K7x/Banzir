@@ -16,7 +16,7 @@ require('node:fs').mkdirSync(out, { recursive: true });
   const tab = async (t) => { await page.locator('nav.tabbar button', { hasText: t }).click(); await page.waitForTimeout(400); };
   const text = async () => (await page.locator('body').innerText()).replace(/\s+/g, ' ');
   const expectInput = async (value) => { const vals = await page.locator('input').evaluateAll((els) => els.map((e) => e.value)); if (!vals.includes(value)) throw new Error(`expected an input with value "${value}", got ${JSON.stringify(vals)}`); };
-  const expect = async (needle, label) => { const t = await text(); if (!t.includes(needle)) throw new Error(`expected "${needle}" (${label})`); };
+  const expect = async (needle, label) => { for (let i = 0; ; i++) { const t = await text(); if (t.includes(needle)) return; if (i >= 25) throw new Error(`expected "${needle}"${label ? ` (${label})` : ''} in: ${t.slice(0, 600)}`); await page.waitForTimeout(200); } };
 
   await page.goto(BASE);
   await click('Continue');

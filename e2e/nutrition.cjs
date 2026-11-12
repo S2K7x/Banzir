@@ -23,7 +23,7 @@ require('node:fs').mkdirSync(out, { recursive: true });
   const shot = async (n) => { await page.waitForTimeout(300); await page.screenshot({ path: `${out}/${n}.png` }); };
   const click = (name) => page.locator('button', { hasText: name }).first().click({ timeout: 8000 });
   const text = async () => (await page.locator('body').innerText()).replace(/\s+/g, ' ');
-  const expect = async (needle) => { if (!(await text()).includes(needle)) throw new Error(`expected "${needle}"`); };
+  const expect = async (needle, label) => { for (let i = 0; ; i++) { const t = await text(); if (t.includes(needle)) return; if (i >= 25) throw new Error(`expected "${needle}"${label ? ` (${label})` : ''} in: ${t.slice(0, 600)}`); await page.waitForTimeout(200); } };
   const tab = async (t) => { await page.locator('nav.tabbar button', { hasText: t }).click(); await page.waitForTimeout(500); };
 
   await page.goto(BASE);
