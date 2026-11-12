@@ -11,6 +11,8 @@ both together.
 Program
   goal, level, daysPerWeek, daysRange, sessionMinutes, loops
   progression (default rule), deloadEveryWeeks
+  requires[]  equipment the plan makes no sense without
+  tags[]      matched against Profile.focus ('planche', 'handstand', ...)
   phases[]
     weeks
     days[]            DayTemplate
@@ -88,24 +90,46 @@ Exercise
 ```
 
 Ladders in the library: `pushup`, `pullup`, `dip`, `hspu`, `row`, `squat`,
-`bridge`.
+`bridge`, `handstand`, `planche`, `frontlever`, `muscleup`, `lsit`.
+
+Rings count as a pull-up bar (`equipmentSet` in the matcher): anything hung
+from a bar can be hung from rings.
 
 Volume charts count 1 set for `primary` muscles and 0.5 for `secondary`.
 
 ## Fitting a template to a person (`src/lib/matcher.ts`)
 
-1. For each item, pick the first usable option at the person's level: the
+1. With the `variation` rule, a ladder exercise first moves to the rung that
+   matches reported push-up and pull-up ability: up when the person reports
+   more than the template assumes, down the same ladder when it is too hard.
+2. Otherwise pick the first usable option at the person's level: the
    template's exercise, then its `alternatives`. "Usable" means the equipment
    is available and the log type suits the prescription mode.
-2. Otherwise step down the same ladder (pull-up → pull-up negative).
-3. Otherwise take the best exercise in the same slot, then in a related slot
+3. Otherwise step down the ladder of a named option.
+4. Otherwise keep the template's exercise even if it is demanding (a
+   muscle-up plan keeps its muscle-up negatives).
+5. Otherwise take the best exercise in the same slot, then in a related slot
    (vertical ↔ horizontal pull, squat ↔ single-leg).
-4. With the `variation` rule, ladder exercises start at the rung matching the
-   reported push-up and pull-up ability.
-5. Trim to the available time by dropping priority 3 items, then priority 2.
+6. Trim to the available time by dropping priority 3 items, then priority 2.
    Priority 1 items are never dropped for time.
-6. Rank templates by goal, level, weekly sessions, equipment fit and session
-   length. A health flag caps the level at beginner.
+7. Rank templates by goal, level, weekly sessions, equipment fit and session
+   length; +35 when a template tag matches `Profile.focus`; −120 when
+   `requires` equipment is missing. A health flag caps the level at beginner.
+
+"Too hard" means above the person's level, or above the rung their reported
+numbers map to. People in the top bucket (30+ push-ups, 12+ pull-ups) are not
+capped by the numbers, only by level.
+
+## Editing (`src/lib/edit.ts`)
+
+Pure functions used by the builder, each returning a new valid program:
+`addItem`, `removeItem`, `updateItem`, `moveItem` (crosses block edges),
+`setExercise` (resets the prescription when the kind changes),
+`replaceExercise` (every use, for ladder steps), `addDay`, `removeDay`,
+`moveDay`, `duplicateDay`, `renameDay`, `updateMeta`, `blankProgram`,
+`duplicateProgram`. Editing a template turns its `source` into `user`. After
+day changes the rotation is reset to the order of the days. A day may have no
+blocks while it is being built; the app will not start an empty day.
 
 ## Logged data
 

@@ -158,3 +158,36 @@ taper and pace-equivalence formulas.
   screen now offers it.
 - Not yet tested on a real iPhone or Android device: install flow, wake lock,
   audio beeps after screen lock, share-sheet backup.
+
+## 2026-11-12 — builder and calisthenics plans
+
+No new web research in this step; the plans apply
+`docs/science/calisthenics.md` and the legacy programme.
+
+Coaching decisions
+- Skill plans put the skill first in the session, hold 5-10 s (strength day)
+  or about 60 s in total (volume day), and leave about 72 h between the two
+  days for the same skill.
+- Every planche plan has a pulling day with rows and external rotation, and
+  every front lever or muscle-up plan has pushing work.
+- A beginner who asks for planche, front lever or muscle-up is started on
+  foundations; the skill plan stays in the list of other plans.
+- The pseudo planche push-up is tagged intermediate (the lean is scalable),
+  so planche plans keep it for intermediates.
+- Someone reporting 30+ push-ups or 12+ pull-ups is not capped by those
+  numbers; someone reporting fewer is.
+- A plan's named drill is kept even when demanding if nothing easier exists
+  on its ladder (muscle-up negatives), instead of being replaced by an
+  unrelated exercise from the same slot.
+- Rings count as a pull-up bar.
+
+Open questions for a later research pass
+- Hold-time and rep standards for each ladder step (currently coaching
+  convention; check Overcoming Gravity).
+- Time equivalents chosen for the legacy distance intervals.
+- Whether a handstand micro-dose add-on on run days is worth modelling.
+
+Engineering findings
+- Text that lives in an input's value is not in `innerText`; browser checks
+  must read input values.
+- Lazy-loaded tabs and live queries need an explicit wait in browser tests.

@@ -17,6 +17,7 @@ export const cal3Foundation = template({
   loops: true,
   progression: VARIATION,
   deloadEveryWeeks: 6,
+  tags: ['foundation'],
   sources: ['docs/science/calisthenics.md'],
   phases: [
     phase(

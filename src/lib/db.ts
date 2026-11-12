@@ -49,9 +49,17 @@ export const getActive = () => getKV<ActiveSession>('active');
 export const setActive = (a: ActiveSession) => setKV('active', a);
 export const clearActive = () => db.kv.delete('active');
 
-/** Makes a program the active one and restarts progress through it. */
+export const saveProgram = (program: Program) => db.programs.put(program);
+
+/**
+ * Makes a program the active one and restarts progress through it. A previous
+ * plan that was never edited is removed; edited and self-made ones are kept.
+ */
 export async function activateProgram(program: Program) {
   await db.transaction('rw', db.programs, db.kv, async () => {
+    const state = await getState();
+    const previous = state && state.programId !== program.id ? await db.programs.get(state.programId) : undefined;
+    if (previous?.source === 'template') await db.programs.delete(previous.id);
     await db.programs.put(program);
     await setState({ programId: program.id, completed: 0, startedAt: new Date().toISOString() });
   });

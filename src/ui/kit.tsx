@@ -31,6 +31,11 @@ const PATHS: Record<string, string> = {
   bolt: 'M13 2 4 14h7l-1 8 9-12h-7l1-8Z',
   scale: 'M4 20h16M6 20V8l6-4 6 4v12M9 12h6',
   ball: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM2 12h20M12 2c3 3 3 17 0 20M12 2c-3 3-3 17 0 20',
+  arrowUp: 'M12 19V5m0 0-6 6m6-6 6 6',
+  arrowDown: 'M12 5v14m0 0-6-6m6 6 6-6',
+  copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
+  pen: 'M4 20h4L19 9l-4-4L4 16v4ZM13.5 6.5l4 4',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm5-2 4.5 4.5',
   cog: 'M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm8-3.5 2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1L15.5 4h-4l-.4 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5L7 11.5v1L5 14l2 3.5 2.4-1a7 7 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5v-1Z',
 };
 
@@ -138,4 +143,21 @@ export function useNow(active: boolean, ms = 250): number {
     return () => clearInterval(id);
   }, [active, ms]);
   return now;
+}
+
+/** A labelled number with minus and plus buttons, for sets, reps and rest. */
+export function Stepper({ label, value, onChange, min = 0, max = 999, step = 1, format }: { label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number; format?: (v: number) => string }) {
+  const clamp = (v: number) => Math.min(max, Math.max(min, v));
+  return (
+    <div className="stepper">
+      <span className="grow">{label}</span>
+      <button className="icon-btn" onClick={() => onChange(clamp(value - step))} disabled={value <= min} aria-label={`Less: ${label}`}>
+        <Icon name="minus" size={16} />
+      </button>
+      <b className="num">{format ? format(value) : value}</b>
+      <button className="icon-btn" onClick={() => onChange(clamp(value + step))} disabled={value >= max} aria-label={`More: ${label}`}>
+        <Icon name="plus" size={16} />
+      </button>
+    </div>
+  );
 }

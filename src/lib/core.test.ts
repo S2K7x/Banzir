@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EXERCISES, findExercise, getExercise, rx } from '../data/exercises';
 import { TEMPLATES, getTemplate } from '../data/templates';
+import { addDay, addItem, blankProgram, dayItemCount, duplicateDay, duplicateProgram, moveDay, moveItem, removeDay, removeItem, replaceExercise, setExercise, updateItem, updateMeta } from './edit';
 import { canDo, estimateMinutes, instantiate, rankTemplates } from './matcher';
 import { lighten, position } from './programState';
 import { suggest } from './progression';
@@ -36,6 +37,8 @@ describe('data', () => {
     expect(new Set(TEMPLATES.map((t) => t.id)).size).toBe(TEMPLATES.length);
     for (const t of TEMPLATES) {
       Program.parse(t);
+      const dayIds = t.phases.flatMap((ph) => ph.days.map((d) => d.id));
+      expect(new Set(dayIds).size, `${t.id}: day ids must be unique across phases`).toBe(dayIds.length);
       const all = items(t);
       expect(new Set(all.map((i) => i.id)).size).toBe(all.length);
       for (const i of all) {
@@ -65,6 +68,36 @@ describe('matcher', () => {
     for (const id of ['gf-3-start', 'fat-3-lift-walk', 'cal-3-foundation', 'run-start']) {
       expect(instantiate(getTemplate(id)!, profile()).droppedCore, id).toBe(0);
     }
+  });
+
+  it('uses the focus to pick a skill plan, but not above the person\'s level', () => {
+    const top = (over: Partial<Profile>) => rankTemplates(profile({ goal: 'calisthenics', equipment: ['pullup_bar'], daysPerWeek: 4, sessionMinutes: 60, ...over }))[0].template.id;
+    expect(top({ level: 'intermediate', focus: 'planche' })).toBe('cal-planche');
+    expect(top({ level: 'intermediate', focus: 'frontlever' })).toBe('cal-frontlever');
+    expect(top({ level: 'intermediate', focus: 'muscleup', daysPerWeek: 3 })).toBe('cal-muscleup');
+    expect(top({ level: 'beginner', focus: 'handstand' })).toBe('cal-handstand');
+    expect(top({ level: 'beginner', focus: 'pullup', daysPerWeek: 3 })).toBe('cal-first-pullup');
+    expect(top({ level: 'beginner', focus: 'planche', daysPerWeek: 3 })).toBe('cal-3-foundation');
+    expect(top({ level: 'advanced', focus: 'planche', daysPerWeek: 6, sessionMinutes: 75 })).toBe('cal-6-planche-os');
+  });
+
+  it('keeps the specific skill drills of a plan', () => {
+    const ids = (id: string, over: Partial<Profile>) => items(instantiate(getTemplate(id)!, profile({ sessionMinutes: 90, ...over })).program).map((i) => i.exerciseId);
+    const mu = ids('cal-muscleup', { level: 'intermediate', equipment: ['pullup_bar'] });
+    expect(mu).toContain('muscleup_negative');
+    const planche = ids('cal-planche', { level: 'intermediate', equipment: ['pullup_bar'] });
+    expect(planche).toContain('pseudo_planche_pushup');
+    expect(planche).toContain('tuck_planche');
+    const os = ids('cal-6-planche-os', { level: 'advanced', equipment: ['rings', 'dumbbells'], ability: { pushups: 35, pullups: 12 } });
+    expect(os).toContain('pseudo_planche_pushup');
+    expect(os).toContain('wall_hspu_negative');
+    expect(os).toContain('ring_dip');
+  });
+
+  it('does not recommend bar-dependent plans without a bar, and rings count as a bar', () => {
+    const ids = (equipment: Equipment[]) => rankTemplates(profile({ goal: 'calisthenics', level: 'intermediate', focus: 'frontlever', equipment, daysPerWeek: 4 })).map((m) => m.template.id);
+    expect(ids([])[0]).not.toBe('cal-frontlever');
+    expect(ids(['rings'])[0]).toBe('cal-frontlever');
   });
 
   it('recommends a template of the chosen goal first', () => {
@@ -222,5 +255,96 @@ describe('stats', () => {
     const sessions = [s('2026-11-10T08:00:00'), s('2026-11-11T08:00:00'), s('2026-11-03T08:00:00'), s('2026-11-04T08:00:00')];
     expect(weekStreak(sessions, 2, new Date('2026-11-12T10:00:00'))).toBe(2);
     expect(weekStreak(sessions, 3, new Date('2026-11-12T10:00:00'))).toBe(0);
+  });
+});
+
+describe('program editing', () => {
+  const start = () => instantiate(getTemplate('gf-3-start')!, profile({ equipment: GYM })).program;
+  const day = (p: Program, i = 0) => p.phases[0].days[i];
+  const ids = (p: Program, i = 0) => day(p, i).blocks.flatMap((b) => b.items.map((x) => x.exerciseId));
+
+  it('adds, updates, moves and removes exercises and stays valid', () => {
+    let p = start();
+    expect(p.source).toBe('template');
+    const before = ids(p).length;
+    p = addItem(p, day(p).id, getExercise('db_curl'));
+    expect(p.source).toBe('user');
+    expect(ids(p).length).toBe(before + 1);
+    const main = day(p).blocks.find((b) => b.type === 'main')!;
+    const curl = main.items[main.items.length - 1];
+    expect(curl.prescription).toMatchObject({ mode: 'reps', sets: 3, reps: [8, 12] });
+
+    p = updateItem(p, curl.id, { prescription: { mode: 'reps', sets: 4, reps: [10, 15] }, restSeconds: 60 });
+    p = moveItem(p, curl.id, -1);
+    const moved = day(p).blocks.find((b) => b.type === 'main')!.items;
+    expect(moved[moved.length - 2].id).toBe(curl.id);
+    expect(moved[moved.length - 2].prescription).toMatchObject({ sets: 4 });
+
+    // Moving past the edge of a block crosses into the next one.
+    p = moveItem(p, curl.id, 1);
+    p = moveItem(p, curl.id, 1);
+    expect(day(p).blocks.find((b) => b.type === 'cooldown')!.items[0].id).toBe(curl.id);
+
+    p = removeItem(p, curl.id);
+    expect(ids(p)).not.toContain('db_curl');
+    Program.parse(p);
+  });
+
+  it('resets the prescription when the new exercise needs a different kind', () => {
+    let p = start();
+    const squat = day(p).blocks.flatMap((b) => b.items).find((i) => i.exerciseId === 'goblet_squat')!;
+    p = setExercise(p, squat.id, 'plank');
+    const changed = day(p).blocks.flatMap((b) => b.items).find((i) => i.id === squat.id)!;
+    expect(changed.prescription.mode).toBe('hold');
+    p = setExercise(p, squat.id, 'back_squat');
+    expect(day(p).blocks.flatMap((b) => b.items).find((i) => i.id === squat.id)!.prescription.mode).toBe('reps');
+    Program.parse(p);
+  });
+
+  it('replaces an exercise everywhere in the plan', () => {
+    let p = instantiate(getTemplate('cal-planche')!, profile({ level: 'intermediate', equipment: ['pullup_bar'], sessionMinutes: 90 })).program;
+    p = replaceExercise(p, 'tuck_planche', 'adv_tuck_planche');
+    const all = items(p).map((i) => i.exerciseId);
+    expect(all).not.toContain('tuck_planche');
+    expect(all.filter((x) => x === 'adv_tuck_planche').length).toBe(2);
+  });
+
+  it('adds, duplicates, reorders and removes days, keeping the rotation in step', () => {
+    let p = start();
+    const phaseId = p.phases[0].id;
+    p = addDay(p, phaseId);
+    expect(p.phases[0].days.length).toBe(3);
+    expect(dayItemCount(day(p, 2))).toBe(0);
+    p = duplicateDay(p, day(p, 0).id);
+    expect(day(p, 1).name).toBe('Full body A copy');
+    expect(new Set(items(p).map((i) => i.id)).size).toBe(items(p).length);
+    p = moveDay(p, day(p, 3).id, -1);
+    expect(p.phases[0].rotation).toEqual(p.phases[0].days.map((d) => d.id));
+    p = removeDay(p, day(p, 0).id);
+    expect(p.phases[0].days.length).toBe(3);
+    Program.parse(p);
+    // The last day cannot be removed.
+    let single = blankProgram('Mine', 'muscle', 3);
+    single = removeDay(single, single.phases[0].days[0].id);
+    expect(single.phases[0].days.length).toBe(1);
+  });
+
+  it('creates and copies programs that validate and run', () => {
+    let mine = blankProgram('  ', 'strength', 4);
+    expect(mine.name).toBe('My program');
+    Program.parse(mine);
+    mine = addItem(mine, mine.phases[0].days[0].id, getExercise('back_squat'));
+    mine = updateMeta(mine, { name: 'Legs', daysPerWeek: 9, deloadEveryWeeks: 4 });
+    expect(mine).toMatchObject({ name: 'Legs', daysPerWeek: 7, deloadEveryWeeks: 4 });
+    expect(updateMeta(mine, { deloadEveryWeeks: null }).deloadEveryWeeks).toBeUndefined();
+    expect(position(mine, 0).day.name).toBe('Day 1');
+
+    const original = getTemplate('cal-6-planche-os')!;
+    const copy = duplicateProgram(original, 'My Planche OS');
+    Program.parse(copy);
+    expect(copy.id).not.toBe(original.id);
+    expect(position(copy, 6).phase.name).toBe(original.phases[1].name);
+    const originalIds = new Set(items(original).map((i) => i.id));
+    expect(items(copy).some((i) => originalIds.has(i.id))).toBe(false);
   });
 });

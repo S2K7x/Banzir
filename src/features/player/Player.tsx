@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { findExercise, getExercise, rx } from '../../data/exercises';
-import { clearActive, setActive, type ActiveSession } from '../../lib/db';
+import { clearActive, saveProgram, setActive, type ActiveSession } from '../../lib/db';
+import { replaceExercise, setExercise } from '../../lib/edit';
+import { canDo, equipmentSet } from '../../lib/matcher';
 import { findDay, lighten } from '../../lib/programState';
 import { historyFor, suggest, type Suggestion } from '../../lib/progression';
 import type { Entry, Item, Profile, Program, Segment, Session, SetLog } from '../../lib/schema';
@@ -8,7 +10,7 @@ import { formatDuration, showWeight, toKg, useSettings, weightUnit } from '../..
 import { describe, effortText } from '../../lib/text';
 import { beep, doneSets, finishWorkout, flatItems, keepScreenOn, unlockAudio } from '../../lib/workout';
 import { Icon, NumInput, Sheet, useNow } from '../../ui/kit';
-import { SwapList, swapExercise } from '../program/ProgramTab';
+import { SwapList } from '../program/SwapList';
 
 type Props = {
   initial: ActiveSession | undefined;
@@ -32,7 +34,7 @@ export function Player({ initial, program, profile, sessions, onClose }: Props) 
 
   // Only on mount: after saving, the stored session disappears while the summary is still showing.
   useEffect(() => {
-    if (!initial) onClose();
+    if (!initial || initial.entries.length === 0) onClose();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => (settings.keepAwake ? keepScreenOn() : undefined), [settings.keepAwake]);
@@ -50,14 +52,15 @@ export function Player({ initial, program, profile, sessions, onClose }: Props) 
   }, [program, a?.dayId, a?.light]);
 
   if (saved) return <Summary session={saved} onClose={onClose} />;
-  if (!a) return null;
+  if (!a || a.entries.length === 0) return null;
 
   const entry = a.entries[a.cursor];
   const item: Item | undefined = entry.itemId ? items.get(entry.itemId) : undefined;
   const ex = getExercise(entry.exerciseId);
   const p = item ? rx(item) : undefined;
   const history = historyFor(ex.id, sessions);
-  const tip: Suggestion = item ? suggest(item, ex, item.progression ?? program?.progression ?? { type: 'none' }, history) : { note: '' };
+  const eq = equipmentSet(profile.equipment);
+  const tip: Suggestion = item ? suggest(item, ex, item.progression ?? program?.progression ?? { type: 'none' }, history, (e) => canDo(e, eq)) : { note: '' };
   const isLast = a.cursor === a.entries.length - 1;
   const timed = p?.mode === 'time' || p?.mode === 'intervals';
 
@@ -159,7 +162,7 @@ export function Player({ initial, program, profile, sessions, onClose }: Props) 
                 className="btn sm primary"
                 style={{ justifySelf: 'start' }}
                 onClick={async () => {
-                  await swapExercise(program, item.id, tip.advanceTo!);
+                  await saveProgram(replaceExercise(program, item.exerciseId, tip.advanceTo!));
                   patchEntry((e) => ({ ...e, exerciseId: tip.advanceTo!, sets: e.sets.map(() => ({ done: false })) }));
                 }}
               >
@@ -234,8 +237,8 @@ export function Player({ initial, program, profile, sessions, onClose }: Props) 
           <SwapList
             item={item}
             profile={profile}
-            onPick={async (id) => {
-              await swapExercise(program, item.id, id);
+            onPick={async (id, everywhere) => {
+              await saveProgram(everywhere ? replaceExercise(program, item.exerciseId, id) : setExercise(program, item.id, id));
               patchEntry((e) => ({ ...e, exerciseId: id, sets: e.sets.map(() => ({ done: false })) }));
               setSheet(null);
             }}

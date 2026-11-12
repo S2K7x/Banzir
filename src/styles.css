@@ -256,6 +256,19 @@ textarea.input { padding: 12px 14px; min-height: 80px; resize: vertical; }
 .restbar b { font-size: 22px; font-variant-numeric: tabular-nums; }
 .restbar button { font-weight: 700; padding: 6px 10px; border-radius: var(--r-s); background: rgb(0 0 0 / 0.14); }
 
+/* ---------- Builder ---------- */
+.stepper { display: flex; align-items: center; gap: 10px; min-height: 48px; }
+.stepper b { min-width: 64px; text-align: center; font-size: 17px; }
+.stepper .icon-btn { width: 40px; height: 40px; }
+.item-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.item-row:last-child { border-bottom: 0; }
+.item-row .main { flex: 1; min-width: 0; text-align: left; min-height: 44px; display: grid; align-content: center; }
+.item-row .mini { width: 34px; height: 34px; display: grid; place-items: center; border-radius: var(--r-s); color: var(--text-muted); flex: none; }
+.item-row .mini:disabled, .mini-btn:disabled { opacity: 0.25; }
+.mini-btn { width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--r-s); color: var(--text-muted); flex: none; }
+.name-input { font-weight: 700; font-size: 17px; background: transparent; border: 0; border-bottom: 1px dashed var(--border); padding: 4px 0; width: 100%; outline: none; border-radius: 0; }
+.name-input:focus { border-bottom-color: var(--accent); }
+
 /* ---------- Charts ---------- */
 .bars { display: flex; align-items: flex-end; gap: 6px; height: 118px; }
 .bars > div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; }

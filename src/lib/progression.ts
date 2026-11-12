@@ -35,7 +35,7 @@ function metTop(entry: Entry, sets: number, top: number, key: 'reps' | 'seconds'
   return d.length >= sets && d.every((s) => (s[key] ?? 0) >= top);
 }
 
-export function suggest(item: Item, exercise: Exercise, rule: ProgressionRule, history: Entry[]): Suggestion {
+export function suggest(item: Item, exercise: Exercise, rule: ProgressionRule, history: Entry[], usable: (e: Exercise) => boolean = () => true): Suggestion {
   const base = item.prescription;
   const p = base.mode === 'reps' && exercise.range ? { ...base, reps: exercise.range } : base;
   if (p.mode !== 'reps' && p.mode !== 'hold') return { note: '' };
@@ -73,7 +73,7 @@ export function suggest(item: Item, exercise: Exercise, rule: ProgressionRule, h
   if (top && rule.type === 'variation' && exercise.ladder) {
     const prev = history[1];
     const steps = ladderSteps(exercise.ladder);
-    const next = steps.find((s) => (s.step ?? 0) > (exercise.step ?? 0));
+    const next = steps.find((s) => (s.step ?? 0) > (exercise.step ?? 0) && s.logType === exercise.logType && usable(s));
     if (next && prev && metTop(prev, p.sets, hi, key)) {
       return { [key]: hi, advanceTo: next.id, note: `Standard met twice. Ready to move up to ${next.name}.` };
     }

@@ -113,7 +113,8 @@ export const DayTemplate = z.object({
   name: z.string(),
   kind: z.enum(['strength', 'skill', 'run', 'conditioning', 'mobility', 'mixed']),
   focus: z.array(z.string()).default([]),
-  blocks: z.array(Block).min(1),
+  /** May be empty while a day is being built. */
+  blocks: z.array(Block),
   notes: z.string().optional(),
 });
 export type DayTemplate = z.infer<typeof DayTemplate>;
@@ -148,6 +149,8 @@ export const Program = z
     phases: z.array(Phase).min(1),
     progression: ProgressionRule,
     deloadEveryWeeks: z.number().int().positive().optional(),
+    /** Equipment the plan makes no sense without (a front lever plan needs a bar). */
+    requires: z.array(Equipment).default([]),
     tags: z.array(z.string()).default([]),
     sources: z.array(z.string()).default([]),
   })
@@ -209,6 +212,8 @@ export const Profile = z.object({
   flags: z.array(z.string()).default([]),
   /** Self-reported ability, used to pick calisthenics starting steps. */
   ability: z.object({ pushups: z.number().optional(), pullups: z.number().optional() }).default({}),
+  /** What they want most within the goal, for example 'planche'. Matches template tags. */
+  focus: z.string().optional(),
   createdAt: z.string(),
 });
 export type Profile = z.infer<typeof Profile>;

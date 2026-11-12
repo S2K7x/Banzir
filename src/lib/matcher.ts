@@ -11,8 +11,15 @@ export function canDo(ex: Exercise, eq: ReadonlySet<Equipment>): boolean {
   return ex.equipment.every((e) => eq.has(e));
 }
 
+/** What the person can actually use. Rings hang from something, so they also cover bar work. */
+export function equipmentSet(equipment: Equipment[]): Set<Equipment> {
+  const set = new Set(equipment);
+  if (set.has('rings')) set.add('pullup_bar');
+  return set;
+}
+
 /** Which log types can satisfy a prescription mode. */
-function compatible(mode: Prescription['mode'], ex: Exercise): boolean {
+export function compatible(mode: Prescription['mode'], ex: Exercise): boolean {
   if (mode === 'reps') return ex.logType === 'reps' || ex.logType === 'weight_reps';
   if (mode === 'hold') return ex.logType === 'hold' || ex.logType === 'time';
   return ex.logType === 'time';
@@ -49,22 +56,25 @@ function bestInSlot(slot: Slot, original: Exercise, mode: Prescription['mode'], 
   return best;
 }
 
-/** Starting rung on a bodyweight ladder from what the person says they can do. */
-function ladderStartStep(ladder: string, profile: Profile): number | undefined {
+/**
+ * What the person told us about a ladder. `step` is the rung that matches their
+ * numbers; `open` means they are in the top bucket, so harder rungs are not ruled out.
+ */
+function ladderAbility(ladder: string, profile: Profile): { step: number; open: boolean } | undefined {
   const { pushups, pullups } = profile.ability;
   if (ladder === 'pushup' && pushups != null) {
-    if (pushups <= 0) return 1;
-    if (pushups <= 5) return 2;
-    if (pushups <= 15) return 3;
-    if (pushups <= 29) return 4;
-    return 5;
+    if (pushups <= 0) return { step: 1, open: false };
+    if (pushups <= 5) return { step: 2, open: false };
+    if (pushups <= 15) return { step: 3, open: false };
+    if (pushups <= 29) return { step: 4, open: false };
+    return { step: 5, open: true };
   }
   if (ladder === 'pullup') {
-    if (pullups == null) return profile.level === 'beginner' ? 3 : undefined;
-    if (pullups <= 0) return 3;
-    if (pullups <= 4) return 4;
-    if (pullups <= 11) return 5;
-    return 6;
+    if (pullups == null) return profile.level === 'beginner' ? { step: 3, open: false } : undefined;
+    if (pullups <= 0) return { step: 3, open: false };
+    if (pullups <= 4) return { step: 4, open: false };
+    if (pullups <= 11) return { step: 5, open: false };
+    return { step: 6, open: true };
   }
   return undefined;
 }
@@ -72,52 +82,66 @@ function ladderStartStep(ladder: string, profile: Profile): number | undefined {
 export type Fit = { item: Item; swapped: boolean } | null;
 
 export function fitItem(item: Item, profile: Profile, programRule: Program['progression']): Fit {
-  const eq = new Set(profile.equipment);
+  const eq = equipmentSet(profile.equipment);
   const mode = item.prescription.mode;
   const ex = getExercise(item.exerciseId);
   const rule = item.progression ?? programRule;
 
-  // Bodyweight ladders start where the person is, not where the template is.
+  const usable = (e: Exercise) => canDo(e, eq) && compatible(mode, e);
+  const tooHard = (e: Exercise) => {
+    const ability = e.ladder ? ladderAbility(e.ladder, profile) : undefined;
+    if (ability && !ability.open) return (e.step ?? 0) > ability.step;
+    return levelIndex(e.level) > levelIndex(profile.level);
+  };
+  const use = (pick: Exercise): Fit => (pick.id === ex.id ? { item, swapped: false } : { item: { ...item, exerciseId: pick.id, cue: undefined }, swapped: true });
+  /** Highest usable rung of the same ladder and slot that is not too hard. */
+  const easierRung = (e: Exercise) => {
+    if (!e.ladder) return undefined;
+    const rungs = ladderSteps(e.ladder).filter((s) => usable(s) && s.slot === e.slot && (s.step ?? 0) <= (e.step ?? 0) && !tooHard(s));
+    return rungs[rungs.length - 1];
+  };
+
+  // Progressing ladders start where the person is: move up when they report more than the template assumes.
   if (rule.type === 'variation' && ex.ladder) {
-    const start = ladderStartStep(ex.ladder, profile);
-    if (start != null) {
-      const steps = ladderSteps(ex.ladder).filter((s) => (s.step ?? 0) <= start && canDo(s, eq) && compatible(mode, s));
-      const pick = steps[steps.length - 1];
-      if (pick) return { item: { ...item, exerciseId: pick.id, cue: pick.id === ex.id ? item.cue : undefined }, swapped: false };
+    const ability = ladderAbility(ex.ladder, profile);
+    if (ability && ability.step > (ex.step ?? 0)) {
+      const rungs = ladderSteps(ex.ladder).filter((s) => usable(s) && s.slot === ex.slot && (s.step ?? 0) <= ability.step);
+      const pick = rungs[rungs.length - 1];
+      if (pick) return { item: pick.id === ex.id ? item : { ...item, exerciseId: pick.id, cue: undefined }, swapped: false };
+    }
+    // ...and step down the same ladder, rather than to an alternative, when it is too hard.
+    if (usable(ex) && tooHard(ex)) {
+      const rung = easierRung(ex);
+      if (rung) return { item: { ...item, exerciseId: rung.id, cue: undefined }, swapped: false };
     }
   }
 
-  // Order of preference: the template's own choices at the person's level, then
-  // an easier rung of the same ladder, then anything else in the movement slot.
+  // Order of preference: the template's own choices at the person's level, an
+  // easier rung of the same ladder, the template's choice even if demanding,
+  // then anything else in the movement slot.
   const named: Exercise[] = [ex];
   for (const altId of item.alternatives ?? []) {
     const alt = findExercise(altId);
     if (alt) named.push(alt);
   }
-  const usable = (e: Exercise) => canDo(e, eq) && compatible(mode, e);
-  const startOf = (e: Exercise) => (e.ladder ? ladderStartStep(e.ladder, profile) : undefined);
-  const tooHard = (e: Exercise) => {
-    const start = startOf(e);
-    return start != null ? (e.step ?? 0) > start : levelIndex(e.level) > levelIndex(profile.level);
-  };
-  const use = (pick: Exercise): Fit => (pick.id === ex.id ? { item, swapped: false } : { item: { ...item, exerciseId: pick.id, cue: undefined }, swapped: true });
 
   const atLevel = named.find((e) => usable(e) && !tooHard(e));
   if (atLevel) return use(atLevel);
 
   for (const e of named) {
-    if (!usable(e) || !e.ladder) continue;
-    const start = startOf(e);
-    const easier = ladderSteps(e.ladder).filter((s) => usable(s) && s.slot === e.slot && (start != null ? (s.step ?? 0) <= start : levelIndex(s.level) <= levelIndex(profile.level)));
-    if (easier.length) return use(easier[easier.length - 1]);
+    if (!usable(e)) continue;
+    const rung = easierRung(e);
+    if (rung) return use(rung);
   }
+
+  const demanding = named.find(usable);
+  if (demanding) return use(demanding);
 
   for (const slot of [ex.slot, ...(RELATED[ex.slot] ?? [])]) {
     const sub = bestInSlot(slot, ex, mode, eq, profile.level);
     if (sub) return use(sub);
   }
-  const hard = named.find(usable);
-  return hard ? use(hard) : null;
+  return null;
 }
 
 /** Rough session length in minutes, used to trim to the time the person has. */
@@ -222,6 +246,9 @@ export function rankTemplates(profile: Profile): Match[] {
     if (d >= min && d <= max) score += 15 + (d === template.daysPerWeek ? 5 : 0);
     else score -= 10 * Math.min(Math.abs(d - min), Math.abs(d - max));
     score -= 30 * inst.droppedCore + 2 * inst.swaps;
+    const eq = equipmentSet(profile.equipment);
+    if (template.requires.some((e) => !eq.has(e))) score -= 120;
+    if (profile.focus && template.tags.includes(profile.focus)) score += 35;
     score -= Math.abs(template.sessionMinutes - profile.sessionMinutes) / 5;
     return { ...inst, template, score };
   }).sort((a, b) => b.score - a.score);
@@ -229,7 +256,7 @@ export function rankTemplates(profile: Profile): Match[] {
 
 /** Exercises that could replace one in a program, for the quick-swap sheet. */
 export function swapOptions(item: Item, profile: Profile): Exercise[] {
-  const eq = new Set(profile.equipment);
+  const eq = equipmentSet(profile.equipment);
   const ex = getExercise(item.exerciseId);
   const slots = [ex.slot, ...(RELATED[ex.slot] ?? [])];
   return EXERCISES.filter((e) => e.id !== ex.id && slots.includes(e.slot) && canDo(e, eq) && compatible(item.prescription.mode, e)).sort(

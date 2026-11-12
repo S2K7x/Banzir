@@ -1,12 +1,16 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
 import { getExercise, rx } from '../../data/exercises';
-import { activateProgram, db, setState, type ActiveSession } from '../../lib/db';
-import { estimateMinutes, rankTemplates, swapOptions } from '../../lib/matcher';
+import { GOALS } from '../../lib/constants';
+import { activateProgram, db, saveProgram, setState, type ActiveSession } from '../../lib/db';
+import { blankProgram, dayItemCount, duplicateProgram, replaceExercise, setExercise } from '../../lib/edit';
+import { estimateMinutes, rankTemplates } from '../../lib/matcher';
 import { position, type ProgramState } from '../../lib/programState';
-import type { DayTemplate, Item, Profile, Program, Session } from '../../lib/schema';
+import type { DayTemplate, Goal, Item, Profile, Program, Session } from '../../lib/schema';
 import { GOAL_INFO, LEVEL_INFO, describe, effortText } from '../../lib/text';
 import { startWorkout, unlockAudio } from '../../lib/workout';
-import { Icon, Sheet } from '../../ui/kit';
+import { Icon, Sheet, Stepper } from '../../ui/kit';
+import { SwapList } from './SwapList';
 
 type Props = {
   profile: Profile;
@@ -15,25 +19,13 @@ type Props = {
   sessions: Session[];
   active: ActiveSession | undefined;
   openPlayer: () => void;
+  openBuilder: () => void;
 };
 
-/** Replaces one item's exercise everywhere it appears in the program. */
-export async function swapExercise(program: Program, itemId: string, exerciseId: string): Promise<void> {
-  const phases = program.phases.map((ph) => ({
-    ...ph,
-    days: ph.days.map((d) => ({
-      ...d,
-      blocks: d.blocks.map((b) => ({ ...b, items: b.items.map((i) => (i.id === itemId ? { ...i, exerciseId, cue: undefined } : i)) })),
-    })),
-  }));
-  await db.programs.put({ ...program, phases, source: program.source === 'template' ? 'user' : program.source });
-}
-
-export function ProgramTab({ profile, program, state, sessions, active, openPlayer }: Props) {
-  const [swap, setSwap] = useState<Item | null>(null);
+export function ProgramTab({ profile, program, state, sessions, active, openPlayer, openBuilder }: Props) {
+  const [swap, setSwap] = useState<string | null>(null);
   const [choosing, setChoosing] = useState(false);
   const pos = program && state ? position(program, state.completed) : undefined;
-  const matches = useMemo(() => (choosing ? rankTemplates(profile) : []), [choosing, profile]);
 
   if (!program || !state || !pos) {
     return (
@@ -42,7 +34,7 @@ export function ProgramTab({ profile, program, state, sessions, active, openPlay
         <button className="btn primary block" onClick={() => setChoosing(true)}>
           Choose a plan
         </button>
-        {choosing && <PlanSheet matches={matches} onClose={() => setChoosing(false)} currentId={undefined} />}
+        {choosing && <PlanSheet profile={profile} current={undefined} onClose={() => setChoosing(false)} openBuilder={openBuilder} />}
       </div>
     );
   }
@@ -50,6 +42,7 @@ export function ProgramTab({ profile, program, state, sessions, active, openPlay
   const info = GOAL_INFO[program.goal];
   const perWeek = program.daysPerWeek;
   const shiftWeek = (delta: number) => setState({ ...state, completed: Math.max(0, (pos.week + delta) * perWeek), lightWeek: undefined });
+  const swapItem: Item | undefined = swap ? pos.phase.days.flatMap((d) => d.blocks.flatMap((b) => b.items)).find((i) => i.id === swap) : undefined;
 
   async function startDay(day: DayTemplate) {
     if (!program) return;
@@ -65,15 +58,23 @@ export function ProgramTab({ profile, program, state, sessions, active, openPlay
       <div className="hero" style={{ ['--g1' as string]: info.g1, ['--g2' as string]: info.g2 }}>
         <div className="chips" style={{ marginBottom: 10 }}>
           <span className="chip">{info.label}</span>
-          <span className="chip">{LEVEL_INFO[program.level].label}</span>
+          <span className="chip">{program.source === 'template' ? LEVEL_INFO[program.level].label : 'Customised'}</span>
           <span className="chip">{perWeek} days a week</span>
         </div>
         <h2 className="h1" style={{ fontSize: 24 }}>
           {program.name}
         </h2>
-        <p className="muted small" style={{ marginTop: 6 }}>
+        <p className="muted small" style={{ margin: '6px 0 14px' }}>
           {program.description}
         </p>
+        <button className="btn block" onClick={openBuilder} disabled={!!active}>
+          <Icon name="pen" size={18} /> Edit plan
+        </button>
+        {active && (
+          <p className="muted small" style={{ marginTop: 8 }}>
+            Finish or discard the workout in progress to edit the plan.
+          </p>
+        )}
       </div>
 
       <div className="card row">
@@ -82,9 +83,7 @@ export function ProgramTab({ profile, program, state, sessions, active, openPlay
         </button>
         <div className="grow center">
           <b>{program.loops ? `Week ${pos.week + 1}` : `Week ${Math.min(pos.week + 1, pos.totalWeeks)} of ${pos.totalWeeks}`}</b>
-          <p className="muted small">
-            {pos.finished ? 'Complete' : `${pos.phase.name} · ${pos.doneThisWeek}/${perWeek} sessions done`}
-          </p>
+          <p className="muted small">{pos.finished ? 'Complete' : `${pos.phase.name} · ${pos.doneThisWeek}/${perWeek} sessions done`}</p>
         </div>
         <button className="icon-btn" onClick={() => shiftWeek(1)} disabled={pos.finished} aria-label="Skip to next week">
           <Icon name="right" size={18} />
@@ -100,27 +99,25 @@ export function ProgramTab({ profile, program, state, sessions, active, openPlay
             <div>
               <b>{day.name}</b>
               <p className="muted small">
-                about {estimateMinutes(day)} min{day.id === pos.day.id && !pos.finished ? ' · up next' : ''}
+                {dayItemCount(day) === 0 ? 'No exercises yet' : `about ${estimateMinutes(day)} min`}
+                {day.id === pos.day.id && !pos.finished ? ' · up next' : ''}
               </p>
             </div>
-            <button className="btn sm" onClick={() => startDay(day)} disabled={!!active}>
+            <button className="btn sm" onClick={() => startDay(day)} disabled={!!active || dayItemCount(day) === 0}>
               <Icon name="play" size={14} /> Start
             </button>
           </div>
           <div className="list">
             {day.blocks.flatMap((b) =>
-              b.items.map((item) => {
-                const ex = getExercise(item.exerciseId);
-                return (
-                  <button key={item.id} onClick={() => setSwap(item)} style={{ minHeight: 0, padding: '9px 0' }}>
-                    <span className="grow">
-                      {ex.name}
-                      {b.type !== 'main' && <span className="muted small"> · {b.type === 'warmup' ? 'warm-up' : 'cool-down'}</span>}
-                    </span>
-                    <span className="muted small num">{describe(rx(item))}</span>
-                  </button>
-                );
-              }),
+              b.items.map((item) => (
+                <button key={item.id} onClick={() => setSwap(item.id)} style={{ minHeight: 0, padding: '9px 0' }}>
+                  <span className="grow">
+                    {getExercise(item.exerciseId).name}
+                    {b.type !== 'main' && <span className="muted small"> · {b.type === 'warmup' ? 'warm-up' : 'cool-down'}</span>}
+                  </span>
+                  <span className="muted small num">{describe(rx(item))}</span>
+                </button>
+              )),
             )}
           </div>
           {day.notes && <p className="muted small">{day.notes}</p>}
@@ -131,61 +128,137 @@ export function ProgramTab({ profile, program, state, sessions, active, openPlay
         <Icon name="swap" size={18} /> Change plan
       </button>
 
-      {swap && (
-        <Sheet title={getExercise(swap.exerciseId).name} onClose={() => setSwap(null)}>
+      {swapItem && (
+        <Sheet title={getExercise(swapItem.exerciseId).name} onClose={() => setSwap(null)}>
           <p className="muted small">
-            {describe(rx(swap))}
-            {effortText(rx(swap)) ? ` · ${effortText(rx(swap))}` : ''}
+            {describe(rx(swapItem))}
+            {effortText(rx(swapItem)) ? ` · ${effortText(rx(swapItem))}` : ''}
           </p>
-          {(swap.cue ?? getExercise(swap.exerciseId).cue) && <p className="note">{swap.cue ?? getExercise(swap.exerciseId).cue}</p>}
-          <b>Swap for</b>
+          {(swapItem.cue ?? getExercise(swapItem.exerciseId).cue) && <p className="note">{swapItem.cue ?? getExercise(swapItem.exerciseId).cue}</p>}
           <SwapList
-            item={swap}
+            item={swapItem}
             profile={profile}
-            onPick={async (id) => {
-              await swapExercise(program, swap.id, id);
+            onPick={async (id, everywhere) => {
+              await saveProgram(everywhere ? replaceExercise(program, swapItem.exerciseId, id) : setExercise(program, swapItem.id, id));
               setSwap(null);
             }}
           />
         </Sheet>
       )}
-      {choosing && <PlanSheet matches={matches} onClose={() => setChoosing(false)} currentId={program.templateId} />}
+      {choosing && <PlanSheet profile={profile} current={program} onClose={() => setChoosing(false)} openBuilder={openBuilder} />}
     </div>
   );
 }
 
-export function SwapList({ item, profile, onPick }: { item: Item; profile: Profile; onPick: (exerciseId: string) => void }) {
-  const options = swapOptions(item, profile);
-  if (options.length === 0) return <p className="muted small">No alternative fits your equipment.</p>;
-  return (
-    <div className="list">
-      {options.map((o) => (
-        <button key={o.id} onClick={() => onPick(o.id)}>
-          <span className="grow">
-            {o.name}
-            <span className="muted small" style={{ display: 'block' }}>
-              {LEVEL_INFO[o.level].label}
-              {o.primary.length ? ` · ${o.primary.join(', ')}` : ''}
-            </span>
-          </span>
-          <Icon name="swap" size={16} />
-        </button>
-      ))}
-    </div>
-  );
-}
+/* ---------- Choosing, creating and managing plans ---------- */
 
-function PlanSheet({ matches, onClose, currentId }: { matches: ReturnType<typeof rankTemplates>; onClose: () => void; currentId: string | undefined }) {
+function PlanSheet({ profile, current, onClose, openBuilder }: { profile: Profile; current: Program | undefined; onClose: () => void; openBuilder: () => void }) {
   const [confirm, setConfirm] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [name, setName] = useState('');
+  const [goal, setGoal] = useState<Goal>(profile.goal);
+  const [days, setDays] = useState(profile.daysPerWeek);
+  const matches = useMemo(() => rankTemplates(profile), [profile]);
+  const saved = useLiveQuery(() => db.programs.filter((p) => p.source !== 'template').toArray(), [], []);
+  const mine = saved.filter((p) => p.id !== current?.id);
+
+  async function use(program: Program, thenEdit = false) {
+    await activateProgram(program);
+    onClose();
+    if (thenEdit) openBuilder();
+  }
+
+  if (creating) {
+    return (
+      <Sheet title="New program" onClose={onClose}>
+        <label className="field">
+          <span>Name</span>
+          <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="My program" />
+        </label>
+        <div className="field">
+          <span>Main goal</span>
+          <div className="chips">
+            {GOALS.map((g) => (
+              <button key={g} className={`chip ${goal === g ? 'on' : ''}`} onClick={() => setGoal(g)}>
+                {GOAL_INFO[g].label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="card">
+          <Stepper label="Sessions per week" value={days} min={1} max={7} onChange={setDays} />
+        </div>
+        <button className="btn primary big block" onClick={() => use(blankProgram(name, goal, days), true)}>
+          Create and add exercises
+        </button>
+        <button className="btn block" onClick={() => setCreating(false)}>
+          Back
+        </button>
+      </Sheet>
+    );
+  }
+
   return (
     <Sheet title="Choose a plan" onClose={onClose}>
-      <p className="muted small">Sorted by how well each plan fits your goal, level, schedule and equipment. Your history is kept when you switch.</p>
+      <div className="card stack">
+        <b>Build your own</b>
+        <p className="muted small">Start from an empty program, or copy your current plan and change it freely.</p>
+        <div className="row" style={{ flexWrap: 'wrap' }}>
+          <button className="btn sm primary" onClick={() => setCreating(true)}>
+            <Icon name="plus" size={14} /> New program
+          </button>
+          {current && (
+            <button className="btn sm" onClick={() => use(duplicateProgram(current, `${current.name} (my version)`), true)}>
+              <Icon name="copy" size={14} /> Copy current plan
+            </button>
+          )}
+        </div>
+      </div>
+
+      {mine.length > 0 && (
+        <>
+          <b>Your programs</b>
+          <div className="stack">
+            {mine.map((p) => (
+              <div className="card stack" key={p.id}>
+                <b>{p.name}</b>
+                <p className="muted small">
+                  {GOAL_INFO[p.goal].label} · {p.daysPerWeek} days a week
+                </p>
+                <div className="row">
+                  <button className="btn sm primary" onClick={() => use(p)}>
+                    Use
+                  </button>
+                  {confirm === `del-${p.id}` ? (
+                    <button
+                      className="btn sm danger"
+                      onClick={async () => {
+                        await db.programs.delete(p.id);
+                        setConfirm(null);
+                      }}
+                    >
+                      Confirm delete
+                    </button>
+                  ) : (
+                    <button className="btn sm ghost danger" onClick={() => setConfirm(`del-${p.id}`)}>
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <b>Ready-made plans</b>
+      <p className="muted small">Sorted by how well each fits your goal, level, schedule and equipment. Your history is kept when you switch; progress through the plan restarts at week 1.</p>
       <div className="stack">
         {matches.map((m, i) => (
           <div className="card stack" key={m.template.id}>
             <div className="row between">
               <b>{m.template.name}</b>
-              {i === 0 ? <span className="chip on">Best fit</span> : m.template.id === currentId ? <span className="chip">Current</span> : null}
+              {i === 0 ? <span className="chip on">Best fit</span> : m.template.id === current?.templateId && current.source === 'template' ? <span className="chip">Current</span> : null}
             </div>
             <p className="muted small">{m.template.description}</p>
             <div className="chips">
@@ -194,14 +267,8 @@ function PlanSheet({ matches, onClose, currentId }: { matches: ReturnType<typeof
               <span className="chip">{m.program.daysPerWeek} days</span>
             </div>
             {confirm === m.template.id ? (
-              <button
-                className="btn primary block"
-                onClick={async () => {
-                  await activateProgram(m.program);
-                  onClose();
-                }}
-              >
-                Confirm: start this plan from week 1
+              <button className="btn primary block" onClick={() => use(m.program)}>
+                Confirm: start this plan
               </button>
             ) : (
               <button className="btn block" onClick={() => setConfirm(m.template.id)}>

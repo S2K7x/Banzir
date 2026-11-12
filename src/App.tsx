@@ -10,10 +10,11 @@ const ProgramTab = lazy(() => import('./features/program/ProgramTab').then((m) =
 const Progress = lazy(() => import('./features/progress/Progress').then((m) => ({ default: m.Progress })));
 const Coach = lazy(() => import('./features/coach/Coach').then((m) => ({ default: m.Coach })));
 const ProfileTab = lazy(() => import('./features/profile/ProfileTab').then((m) => ({ default: m.ProfileTab })));
+const Builder = lazy(() => import('./features/program/Builder').then((m) => ({ default: m.Builder })));
 const Player = lazy(() => import('./features/player/Player').then((m) => ({ default: m.Player })));
 
 type Tab = 'today' | 'program' | 'progress' | 'coach' | 'profile';
-type Overlay = 'player' | 'edit' | null;
+type Overlay = 'player' | 'edit' | 'builder' | null;
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'today', label: 'Today', icon: 'home' },
@@ -77,11 +78,12 @@ export default function App({ update }: { update?: { subscribe: (cb: () => void)
 
       <Suspense fallback={null}>
         {tab === 'today' && <Today profile={profile} program={program} state={state} sessions={sessions} active={active} openPlayer={() => open('player')} goTo={setTab} />}
-        {tab === 'program' && <ProgramTab profile={profile} program={program} state={state} sessions={sessions} active={active} openPlayer={() => open('player')} />}
+        {tab === 'program' && <ProgramTab profile={profile} program={program} state={state} sessions={sessions} active={active} openPlayer={() => open('player')} openBuilder={() => open('builder')} />}
         {tab === 'progress' && <Progress sessions={sessions} target={program?.daysPerWeek ?? profile.daysPerWeek} />}
         {tab === 'coach' && <Coach />}
         {tab === 'profile' && <ProfileTab profile={profile} program={program} sessionCount={sessions.length} editProfile={() => open('edit')} />}
 
+        {overlay === 'builder' && program && <Builder key={program.id} program={program} profile={profile} onClose={close} />}
         {overlay === 'player' && <Player initial={active} program={program} profile={profile} sessions={sessions} onClose={close} />}
       </Suspense>
       {overlay === 'edit' && <Onboarding initial={profile} currentPlan={program?.name} onDone={close} onCancel={close} />}

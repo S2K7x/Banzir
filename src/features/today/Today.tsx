@@ -104,11 +104,17 @@ export function Today({ profile, program, state, sessions, active, openPlayer, g
             {day.name}
           </h2>
           <p className="muted small" style={{ marginBottom: 14 }}>
-            {flatItems(day).length} exercises · about {estimateMinutes(day)} min{day.focus.length ? ` · ${day.focus.slice(0, 3).join(', ')}` : ''}
+            {flatItems(day).length === 0 ? 'No exercises yet' : `${flatItems(day).length} exercises · about ${estimateMinutes(day)} min${day.focus.length ? ` · ${day.focus.slice(0, 3).join(', ')}` : ''}`}
           </p>
-          <button className="btn big block" onClick={start}>
-            <Icon name="play" size={18} /> Start workout
-          </button>
+          {flatItems(day).length === 0 ? (
+            <button className="btn big block" onClick={() => goTo('program')}>
+              Add exercises to this day
+            </button>
+          ) : (
+            <button className="btn big block" onClick={start}>
+              <Icon name="play" size={18} /> Start workout
+            </button>
+          )}
         </div>
       ) : (
         <div className="card stack">
@@ -129,7 +135,7 @@ export function Today({ profile, program, state, sessions, active, openPlayer, g
         </div>
       )}
 
-      {day && !active && !pos?.finished && (
+      {day && !active && !pos?.finished && flatItems(day).length > 0 && (
         <div className="card">
           <div className="list">
             {flatItems(day)

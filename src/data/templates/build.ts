@@ -92,9 +92,10 @@ export function phase(id: string, name: string, weeks: number, days: DayTemplate
   return { id, name, weeks, days, rotation: rotation ?? days.map((d) => d.id) };
 }
 
-type Meta = Omit<Program, 'schemaVersion' | 'source' | 'templateId' | 'tags' | 'sources'> & {
+type Meta = Omit<Program, 'schemaVersion' | 'source' | 'templateId' | 'tags' | 'sources' | 'requires'> & {
   tags?: string[];
   sources?: string[];
+  requires?: Program['requires'];
 };
 
 export function template(meta: Meta): Program {
@@ -104,6 +105,7 @@ export function template(meta: Meta): Program {
     templateId: meta.id,
     tags: [],
     sources: [],
+    requires: [],
     ...meta,
   };
 }

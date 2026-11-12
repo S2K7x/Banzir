@@ -27,6 +27,7 @@ type Draft = {
   flags: string[];
   pushups?: number;
   pullups?: number;
+  focus?: string;
 };
 
 const HOME_ITEMS: Equipment[] = ['dumbbells', 'bench', 'bands', 'pullup_bar', 'kettlebell', 'barbell', 'rack', 'rings', 'parallettes', 'dip_bars', 'jump_rope'];
@@ -55,6 +56,15 @@ const PULLUPS = [
   { label: '12+', value: 12 },
 ];
 
+const FOCUS: { id: string; label: string }[] = [
+  { id: 'foundation', label: 'Strong all round' },
+  { id: 'pullup', label: 'My first pull-up' },
+  { id: 'handstand', label: 'Handstand' },
+  { id: 'planche', label: 'Planche' },
+  { id: 'frontlever', label: 'Front lever' },
+  { id: 'muscleup', label: 'Muscle-up' },
+];
+
 const STEPS = ['welcome', 'goal', 'level', 'equipment', 'schedule', 'about', 'plan', 'look', 'ready'] as const;
 
 function placeOf(eq: Equipment[]): Place {
@@ -77,6 +87,7 @@ function toProfile(d: Draft, createdAt: string): Profile {
     weightKg: d.weightKg,
     flags: d.flags,
     ability: { pushups: d.pushups, pullups: d.pullups },
+    focus: d.goal === 'calisthenics' ? d.focus : undefined,
     createdAt,
   };
 }
@@ -112,6 +123,7 @@ export function Onboarding({ initial, currentPlan, onDone, onCancel }: Props) {
           flags: initial.flags,
           pushups: initial.ability.pushups,
           pullups: initial.ability.pullups,
+          focus: initial.focus,
         }
       : { name: '', goal: 'general_fitness', level: 'beginner', place: 'gym', equipment: [], daysPerWeek: 3, sessionMinutes: 45, flags: [] },
   );
@@ -240,6 +252,21 @@ export function Onboarding({ initial, currentPlan, onDone, onCancel }: Props) {
                 </button>
               ))}
             </div>
+            {d.goal === 'calisthenics' && (
+              <div className="field">
+                <span>What do you want most?</span>
+                <div className="chips">
+                  {FOCUS.map((f) => (
+                    <button key={f.id} className={`chip ${d.focus === f.id ? 'on' : ''}`} onClick={() => set({ focus: d.focus === f.id ? undefined : f.id })} aria-pressed={d.focus === f.id}>
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+                {(d.focus === 'planche' || d.focus === 'frontlever' || d.focus === 'muscleup') && d.level === 'beginner' && (
+                  <p className="muted small">These skills need a base first. We will start you on foundations, and the skill plan stays available under other plans.</p>
+                )}
+              </div>
+            )}
             <div className="field">
               <span>Push-ups in a row (optional)</span>
               <div className="chips">

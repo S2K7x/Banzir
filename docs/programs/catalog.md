@@ -4,12 +4,25 @@ Specification of every built-in program. Each will become a JSON file in
 `src/data/templates/` matching `schema.md`. Evidence for the choices is in
 `docs/science/`. Notation: sets × reps (or seconds); RIR = reps in reserve.
 
-Status: 8 of 35 are implemented in `src/data/templates/` (2026-11-12):
+Status: 15 of 35 are implemented in `src/data/templates/` (2026-11-12):
 `gf-3-start`, `mus-3-fullbody`, `mus-4-upperlower`, `str-3-linear`,
-`cal-3-foundation`, `run-start`, `fat-3-lift-walk`, `spt-athlete-general`.
+`cal-3-foundation`, `cal-first-pullup`, `cal-handstand`, `cal-4-intermediate`,
+`cal-planche`, `cal-frontlever`, `cal-muscleup`, `cal-6-planche-os`,
+`run-start`, `fat-3-lift-walk`, `spt-athlete-general`.
 The rest are specified only. Exercise lists name the default; the matcher
 substitutes by movement slot, equipment and level. Where code and this
 document differ, the code is current.
+
+Differences from the specification below, decided while building:
+- `cal-handstand` is a full 4-day plan (handstand practice opens every
+  session), not a stackable add-on, because add-ons are not implemented.
+- `cal-6-planche-os` converts the legacy distances to time: 4 x 4 min hard /
+  2.5 min jog, 6 x 90 s fast / 75 s jog, 8 x 45 s uphill / 90 s jog, and a
+  35 min zone-2 run with 4 strides. Each of the three weeks is its own phase,
+  so the run cycle repeats every three weeks. The 5 km test and the optional
+  evening handstand micro-doses are not included yet.
+- Skill plans start at tuck planche / tuck front lever; anyone weaker or
+  stronger changes the step from the exercise's progression ladder.
 
 ## Index
 

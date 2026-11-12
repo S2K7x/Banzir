@@ -78,7 +78,7 @@ export const EXERCISES: Exercise[] = [
   ex('diamond_pushup', 'Diamond push-up', 'push_h', ['chest', 'triceps'], { sec: ['shoulders'], lvl: 'intermediate', cue: 'Hands together under the chest.', ladder: ['pushup', 4] }),
   ex('decline_pushup', 'Decline push-up', 'push_h', ['chest'], { sec: ['shoulders', 'triceps'], lvl: 'intermediate', cue: 'Feet on a chair, stay rigid.', ladder: ['pushup', 5] }),
   ex('archer_pushup', 'Archer push-up', 'push_h', ['chest'], { sec: ['triceps', 'shoulders'], lvl: 'advanced', uni: true, cue: 'Shift your weight over one arm.', ladder: ['pushup', 6] }),
-  ex('pseudo_planche_pushup', 'Pseudo planche push-up', 'push_h', ['chest', 'shoulders'], { sec: ['triceps', 'core'], lvl: 'advanced', cue: 'Hands by the hips, lean forward, protract at the top.', ladder: ['pushup', 7] }),
+  ex('pseudo_planche_pushup', 'Pseudo planche push-up', 'push_h', ['chest', 'shoulders'], { sec: ['triceps', 'core'], lvl: 'intermediate', cue: 'Hands by the hips, lean forward as far as you can control, protract at the top.', ladder: ['pushup', 7] }),
   ex('bench_press', 'Bench press', 'push_h', ['chest'], { eq: ['barbell', 'bench', 'rack'], sec: ['triceps', 'shoulders'], cue: 'Shoulder blades back, bar to mid-chest.' }),
   ex('db_bench_press', 'Dumbbell bench press', 'push_h', ['chest'], { eq: ['dumbbells', 'bench'], sec: ['triceps', 'shoulders'], cue: 'Lower until the elbows pass the bench line.' }),
   ex('db_floor_press', 'Dumbbell floor press', 'push_h', ['chest'], { eq: ['dumbbells'], sec: ['triceps'], cue: 'Upper arms touch the floor, then press.' }),
@@ -126,6 +126,9 @@ export const EXERCISES: Exercise[] = [
   ex('hanging_knee_raise', 'Hanging knee raise', 'core', ['core'], { eq: ['pullup_bar'], lvl: 'intermediate', cue: 'No swinging, curl the pelvis up.' }),
   ex('lying_leg_raise', 'Lying leg raise', 'core', ['core'], { cue: 'Lower slowly, back stays flat.' }),
   ex('cable_crunch', 'Cable crunch', 'core', ['core'], { eq: ['cables'] }),
+  ex('tuck_lsit', 'Tuck L-sit', 'core', ['core'], { log: 'hold', cue: 'Hands by the hips, push down, lift the feet with knees bent.', ladder: ['lsit', 1] }),
+  ex('lsit', 'L-sit', 'core', ['core'], { sec: ['quads'], lvl: 'intermediate', log: 'hold', cue: 'Legs straight and level, shoulders pushed down.', ladder: ['lsit', 2] }),
+  ex('dragon_flag', 'Dragon flag', 'core', ['core'], { lvl: 'advanced', cue: 'Hold something behind your head. Lower as one straight line; bend the knees to make it easier.' }),
 
   // ----- Carry / calves / arms / shoulders -----
   ex('farmer_carry', 'Farmer carry', 'carry', ['forearms', 'core'], { eq: ['dumbbells'], log: 'time', cue: 'Walk tall, shoulders back.' }),
@@ -144,11 +147,41 @@ export const EXERCISES: Exercise[] = [
   ex('db_rear_delt_fly', 'Rear delt fly', 'shoulder_rear', ['shoulders'], { eq: ['dumbbells'], sec: ['back'], cue: 'Hinge forward, lift out to the sides.' }),
   ex('face_pull', 'Face pull', 'shoulder_rear', ['shoulders'], { eq: ['cables'], sec: ['back'], cue: 'Pull to the forehead, thumbs back.' }),
   ex('band_pull_apart', 'Band pull-apart', 'shoulder_rear', ['shoulders'], { eq: ['bands'], sec: ['back'] }),
+  ex('band_external_rotation', 'Band external rotation', 'shoulder_rear', ['shoulders'], { eq: ['bands'], cue: 'Elbow at your side, rotate the forearm outwards.' }),
   ex('prone_ytw', 'Prone Y-T-W', 'shoulder_rear', ['shoulders'], { sec: ['back'], cue: 'Lie face down, lift arms in Y, T and W shapes.' }),
 
-  // ----- Skill -----
-  ex('wall_handstand', 'Chest-to-wall handstand', 'skill', ['shoulders'], { sec: ['core'], log: 'hold', cue: 'Walk the feet up the wall, push tall through the shoulders.' }),
-  ex('wall_plank', 'Wall plank', 'skill', ['shoulders'], { sec: ['core'], log: 'hold', cue: 'Feet on the wall at hip height, arms locked.' }),
+  // ----- Skill: handstand -----
+  ex('wall_plank', 'Wall plank', 'skill', ['shoulders'], { sec: ['core'], log: 'hold', cue: 'Feet on the wall at hip height, arms locked, push the floor away.', ladder: ['handstand', 1] }),
+  ex('wall_handstand', 'Chest-to-wall handstand', 'skill', ['shoulders'], { sec: ['core'], lvl: 'intermediate', log: 'hold', cue: 'Walk the feet up the wall, push tall through the shoulders, ribs in.', ladder: ['handstand', 2] }),
+  ex('freestanding_handstand', 'Freestanding handstand', 'skill', ['shoulders'], { sec: ['core'], lvl: 'advanced', log: 'hold', cue: 'Grip the floor with your fingers to stop falling over.', ladder: ['handstand', 3] }),
+  ex('wall_kickup', 'Wall kick-up', 'skill', ['shoulders'], { sec: ['core'], cue: 'Back to the wall. Kick up gently, touch the wall with your heels, come down under control.' }),
+  ex('wall_shoulder_taps', 'Wall handstand shoulder taps', 'skill', ['shoulders'], { sec: ['core'], lvl: 'intermediate', cue: 'Chest to the wall. Shift your weight and lift one hand briefly.' }),
+  ex('handstand_practice', 'Handstand practice', 'skill', ['shoulders'], { sec: ['core'], log: 'time', cue: 'Wall or freestanding drills while you are fresh. Stop before your form goes.' }),
+
+  // ----- Skill: planche -----
+  ex('planche_lean', 'Planche lean', 'skill', ['shoulders'], { sec: ['chest', 'core'], log: 'hold', cue: 'Arms locked, shoulders well ahead of the wrists, round the upper back.', ladder: ['planche', 1] }),
+  ex('frog_stand', 'Frog stand', 'skill', ['shoulders'], { sec: ['core'], log: 'hold', cue: 'Knees on the elbows, lean forward until the feet leave the floor.', ladder: ['planche', 2] }),
+  ex('tuck_planche', 'Tuck planche', 'skill', ['shoulders'], { sec: ['chest', 'core'], lvl: 'intermediate', log: 'hold', cue: 'Arms locked, knees to the chest, hips level with the shoulders.', ladder: ['planche', 3] }),
+  ex('adv_tuck_planche', 'Advanced tuck planche', 'skill', ['shoulders'], { sec: ['chest', 'core'], lvl: 'advanced', log: 'hold', cue: 'Flat back, hips as high as the shoulders.', ladder: ['planche', 4] }),
+  ex('straddle_planche', 'Straddle planche', 'skill', ['shoulders'], { sec: ['chest', 'core'], lvl: 'advanced', log: 'hold', cue: 'Legs wide and straight, body level.', ladder: ['planche', 5] }),
+  ex('full_planche', 'Full planche', 'skill', ['shoulders'], { sec: ['chest', 'core'], lvl: 'advanced', log: 'hold', cue: 'Legs together, body in one line.', ladder: ['planche', 6] }),
+  ex('scap_pushup', 'Scapular push-up', 'skill', ['shoulders'], { sec: ['chest'], cue: 'Arms straight. Let the chest sink between the shoulders, then push the floor away.' }),
+
+  // ----- Skill: front lever -----
+  ex('tuck_front_lever', 'Tuck front lever', 'skill', ['back'], { eq: ['pullup_bar'], sec: ['core'], lvl: 'intermediate', log: 'hold', cue: 'Arms straight, pull the shoulders down, hips level with the shoulders.', ladder: ['frontlever', 1] }),
+  ex('adv_tuck_front_lever', 'Advanced tuck front lever', 'skill', ['back'], { eq: ['pullup_bar'], sec: ['core'], lvl: 'advanced', log: 'hold', cue: 'Flat back, thighs at right angles to the body.', ladder: ['frontlever', 2] }),
+  ex('one_leg_front_lever', 'One-leg front lever', 'skill', ['back'], { eq: ['pullup_bar'], sec: ['core'], lvl: 'advanced', log: 'hold', cue: 'One leg straight, one tucked. Swap legs each set.', ladder: ['frontlever', 3] }),
+  ex('straddle_front_lever', 'Straddle front lever', 'skill', ['back'], { eq: ['pullup_bar'], sec: ['core'], lvl: 'advanced', log: 'hold', cue: 'Legs wide and straight, body level.', ladder: ['frontlever', 4] }),
+  ex('front_lever', 'Front lever', 'skill', ['back'], { eq: ['pullup_bar'], sec: ['core'], lvl: 'advanced', log: 'hold', cue: 'Legs together, body in one line.', ladder: ['frontlever', 5] }),
+  ex('fl_raise', 'Tuck front lever raise', 'skill', ['back'], { eq: ['pullup_bar'], sec: ['core'], lvl: 'intermediate', cue: 'From a hang, raise the hips to horizontal with straight arms, then lower slowly.' }),
+  ex('tuck_fl_row', 'Tuck front lever row', 'pull_h', ['back'], { eq: ['pullup_bar'], sec: ['biceps', 'core'], lvl: 'advanced', cue: 'Hold the tuck lever and row the bar to your hips.' }),
+  ex('skin_the_cat', 'Skin the cat', 'skill', ['shoulders', 'back'], { eq: ['pullup_bar'], sec: ['core'], lvl: 'intermediate', cue: 'Slow and controlled both ways. Stop if the shoulders or elbows hurt.' }),
+
+  // ----- Skill: muscle-up -----
+  ex('false_grip_hang', 'False-grip hang', 'skill', ['forearms'], { eq: ['pullup_bar'], sec: ['back'], lvl: 'intermediate', log: 'hold', cue: 'Wrist over the bar or ring, hang with the shoulders active.' }),
+  ex('muscleup_transition', 'Muscle-up transition drill', 'skill', ['back', 'triceps'], { eq: ['pullup_bar'], sec: ['chest'], lvl: 'intermediate', cue: 'Low bar or feet on the floor. Pull high, roll the wrists over, press out.' }),
+  ex('muscleup_negative', 'Muscle-up negative', 'skill', ['back', 'triceps'], { eq: ['pullup_bar'], sec: ['chest', 'biceps'], lvl: 'advanced', cue: 'Start on top. Lower through the dip and the transition for 5 to 7 seconds.', range: [2, 4], ladder: ['muscleup', 1] }),
+  ex('muscle_up', 'Muscle-up', 'skill', ['back', 'triceps'], { eq: ['pullup_bar'], sec: ['chest', 'biceps'], lvl: 'advanced', cue: 'Strict: no kip. Quality reps only, never to failure.', ladder: ['muscleup', 2] }),
 
   // ----- Power -----
   ex('pogo_jumps', 'Pogo jumps', 'plyo', ['calves'], { cue: 'Quick, stiff ankle bounces.' }),
@@ -163,6 +196,7 @@ export const EXERCISES: Exercise[] = [
   ex('warmup_general', 'General warm-up', 'mobility', [], { log: 'time', cue: 'Easy movement, joint circles, a few light reps of the first exercise.' }),
   ex('warmup_wrists', 'Wrist and shoulder prep', 'mobility', [], { log: 'time', cue: 'Wrist circles and stretches, shoulder circles, scapular push-ups.' }),
   ex('cooldown_walk', 'Cool-down walk', 'mobility', [], { log: 'time', cue: 'Walk until your breathing settles.' }),
+  ex('wrist_care', 'Wrist stretch and strengthening', 'mobility', [], { log: 'time', cue: 'Gentle wrist stretches both ways, then light wrist curls or fist push-up holds.' }),
 ];
 
 const byId = new Map(EXERCISES.map((e) => [e.id, e]));

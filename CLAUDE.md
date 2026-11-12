@@ -59,13 +59,15 @@ Process
 ## Status
 
 - 2026-11-12: research and documentation written.
-- 2026-11-12: first working version built (roadmap phases 1-3 and part of 4):
-  onboarding, 8 templates, matcher, workout player, progression engine,
-  history, 10 themes, backup/restore, offline support. Verified end to end in
-  a phone-sized browser, including offline.
-- Not built yet: program builder, 27 more templates, AI coach, nutrition /
-  fasting / running / body-weight modules. The ordered list is under "Known
-  gaps and next steps" in `docs/product/features.md`.
+- 2026-11-12: first working version built (roadmap phases 1-3): onboarding,
+  matcher, workout player, progression engine, history, 10 themes,
+  backup/restore, offline support.
+- 2026-11-12: program builder, saved programs and the calisthenics skill
+  plans added (most of phase 4). 15 templates exist. All flows verified in a
+  phone-sized browser.
+- Not built yet: 20 more templates, AI coach, nutrition / fasting / running /
+  body-weight modules. The ordered list is under "Known gaps and next steps"
+  in `docs/product/features.md`.
 
 ## Code map
 
@@ -74,6 +76,8 @@ Full layout and commands: `docs/product/architecture.md`.
 - `src/lib/schema.ts` — the schema; source of truth for all stored shapes.
 - `src/data/exercises.ts`, `src/data/templates/` — library and templates.
 - `src/lib/matcher.ts` — fits and ranks templates for a profile.
+- `src/lib/edit.ts` — pure program-editing operations used by the builder
+  (`src/features/program/Builder.tsx`).
 - `src/lib/programState.ts`, `src/lib/progression.ts` — where someone is in a
   program and what to suggest next.
 - `src/features/*` — one folder per screen; `src/App.tsx` is the shell.
@@ -120,6 +124,15 @@ Full layout and commands: `docs/product/architecture.md`.
   stable: logged history refers to them.
 - Any change to stored shapes needs a Dexie version bump and a migration, and
   the backup `format` number if the file shape changes.
+- A screen that edits stored data keeps its own draft in state and writes
+  through (see `Builder.tsx`). Editing from a live-query prop loses fast taps.
+  Give such a screen a `key` on the record id so it remounts when the record
+  changes; without it the builder once opened on the previous program.
+- Day ids must be unique across the whole program, not just within a phase:
+  the player looks a day up by id. A test enforces it for templates.
+- When checking plans as a coach, print the fitted plan for a few typical
+  people (beginner with a bar, intermediate, advanced) and read it. Two
+  selection flaws were only visible that way.
 - Think in every role before shipping a feature: engineer (tests, bundle),
   coach and scientist (is the prescription sensible for this level, is the
   claim sourced), nutritionist (safe floors), designer (thumb reach, contrast,

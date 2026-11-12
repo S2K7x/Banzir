@@ -65,10 +65,10 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
 | Phase | Deliverable | Status |
 |---|---|---|
 | 0 | Research and docs | Done 2026-11-12 |
-| 1 | Scaffold; schema + Zod; Dexie; exercise library; theme tokens | Done 2026-11-12 (curated library of 99 exercises; all 10 themes) |
-| 2 | Onboarding; template matching; first templates | Done 2026-11-12 (8 templates, one per goal at least) |
+| 1 | Scaffold; schema + Zod; Dexie; exercise library; theme tokens | Done 2026-11-12 (curated library of 127 exercises; all 10 themes) |
+| 2 | Onboarding; template matching; first templates | Done 2026-11-12 |
 | 3 | Workout player; history; progression engine; records | Done 2026-11-12 |
-| 4 | Program builder; remaining templates; backup/export; install flow | Partly: backup, restore, CSV, install card, exercise swap and plan switch are done. Builder and 27 templates remain. |
+| 4 | Program builder; remaining templates; backup/export; install flow | Mostly done 2026-11-12: builder, saved programs, backup, restore, CSV, install card. 15 of 35 templates exist; 20 remain. |
 | 5 | AI coach: providers, relay, tools, memory | Not started (Coach tab is a placeholder) |
 | 6 | Modules: running, body weight, nutrition, fasting | Not started |
 | 7 | Polish, accessibility pass, first release | Not started |
@@ -82,7 +82,20 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
 - Today: weekly ring, next session, resume in-progress workout, lighter-week
   suggestion, stats, goal-based tip, install and backup reminders.
 - Program: plan overview, week navigation (repeat or skip), day lists, tap an
-  exercise to swap it, start any day, change plan (ranked list, history kept).
+  exercise to swap it or move along its progression ladder, start any day.
+- Program builder ("Edit plan"): rename the plan, sessions per week,
+  lighter-week frequency; per day: rename, reorder, duplicate, delete, add;
+  per exercise: sets, rep or hold range, duration, interval rounds and segment
+  lengths, rest, change exercise or ladder step, reorder, remove; exercise
+  picker with search, category chips and an equipment filter. Changes save
+  automatically. Editing is locked while a workout is in progress.
+- Plans: ranked ready-made plans, "New program" from scratch, "Copy current
+  plan", and a list of your own programs to switch back to or delete. An
+  unedited ready-made plan is removed when you switch away; edited and
+  self-made ones are kept.
+- Calisthenics: a "What do you want most?" question (all-round, first
+  pull-up, handstand, planche, front lever, muscle-up) picks the skill plan;
+  skill plans above the person's level are not recommended first.
 - Player: per-set logging with weight carry-down, last-time values, load and
   rep suggestions, ladder "move up" button, automatic rest timer with +15 s,
   hold stopwatch, countdown and interval timers with beeps (timestamp-based,
@@ -97,12 +110,13 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
 
 ## Known gaps and next steps
 
-1. Program builder: add/remove/reorder exercises, edit sets, reps and rest,
-   create a program from scratch.
-2. More templates from the catalog (priority: `cal-handstand`, `cal-planche`,
-   `cal-6-planche-os`, `run-5k`, `mus-6-ppl`, `gf-2-express`, sport-specific
-   ones), and sub-goal questions in onboarding (which skill, which distance,
-   which sport).
+1. Builder gaps: create interval sessions and supersets from scratch, edit
+   warm-up/cool-down membership directly, multi-phase editing in one view,
+   per-item progression rule and effort target, undo.
+2. More templates from the catalog (priority: `run-5k`, `run-10k`,
+   `mus-6-ppl`, `mus-3-home`, `gf-2-express`, `str-4-undulating`, sport plans
+   for boxing, tennis, soccer), and sub-goal questions for running distance
+   and sport.
 3. Full exercise database import (free-exercise-db) with images and
    instructions, loaded on demand.
 4. AI coach (phase 5).
