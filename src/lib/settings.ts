@@ -14,6 +14,8 @@ export type Settings = {
   sound: boolean;
   keepAwake: boolean;
   lastBackup: string | null;
+  /** Optional modules shown in the app. */
+  modules: { nutrition: boolean; body: boolean };
 };
 
 const KEY = 'banzir.settings';
@@ -27,6 +29,7 @@ const DEFAULTS: Settings = {
   sound: true,
   keepAwake: true,
   lastBackup: null,
+  modules: { nutrition: false, body: false },
 };
 
 function read(): Settings {

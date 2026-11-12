@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable, type Table } from 'dexie';
-import type { Entry, Profile, Program, Session } from './schema';
+import type { BodyEntry, Entry, FoodEntry, Profile, Program, Session } from './schema';
 import type { ProgramState } from './programState';
 
 /** In-progress workout, saved after every change so it survives a reload. */
@@ -21,6 +21,8 @@ class BanzirDB extends Dexie {
   programs!: EntityTable<Program, 'id'>;
   sessions!: EntityTable<Session, 'id'>;
   kv!: Table<KV, string>;
+  body!: EntityTable<BodyEntry, 'date'>;
+  foods!: EntityTable<FoodEntry, 'id'>;
 
   constructor() {
     super('banzir');
@@ -29,6 +31,11 @@ class BanzirDB extends Dexie {
       programs: 'id',
       sessions: 'id, date',
       kv: 'key',
+    });
+    // Version 2 adds body weight and the food log; existing data is untouched.
+    this.version(2).stores({
+      body: 'date',
+      foods: 'id, date',
     });
   }
 }

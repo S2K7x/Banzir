@@ -198,6 +198,30 @@ export const Session = z.object({
 });
 export type Session = z.infer<typeof Session>;
 
+/* ---------- Body weight and nutrition ---------- */
+
+/** One weigh-in per day; kilograms. */
+export const BodyEntry = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  kg: z.number().positive().max(500),
+});
+export type BodyEntry = z.infer<typeof BodyEntry>;
+
+export const FoodEntry = z.object({
+  id: z.string(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  time: z.string(),
+  name: z.string().min(1).max(120),
+  kcal: z.number().min(0).max(10000),
+  protein: z.number().min(0).max(1000).optional(),
+  carbs: z.number().min(0).max(2000).optional(),
+  fat: z.number().min(0).max(1000).optional(),
+  grams: z.number().positive().optional(),
+  /** Open Food Facts barcode when it came from a search. */
+  code: z.string().optional(),
+});
+export type FoodEntry = z.infer<typeof FoodEntry>;
+
 export const Profile = z.object({
   id: z.literal('me'),
   name: z.string().default(''),
