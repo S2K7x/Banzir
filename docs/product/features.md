@@ -71,7 +71,7 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
 | 4 | Program builder; remaining templates; backup/export; install flow | Done 2026-11-12: builder, saved programs, all 35 templates, backup, restore, CSV, install card. |
 | 5 | AI coach: providers, relay, tools, memory | Done 2026-11-12 (see `ai-coach.md`, "As built") |
 | 6 | Modules: running, body weight, nutrition, fasting | Done 2026-11-12 |
-| 7 | Polish, accessibility pass, first release | Not started |
+| 7 | Polish, accessibility pass, first release | Done 2026-11-12: version 1.0.0 |
 
 ## What works today (2026-11-12)
 
@@ -137,6 +137,11 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
 - Modules are chosen in onboarding (preselected from the goal, never fasting)
   and in Profile. The coach reads all four and can propose nutrition targets.
 - Offline: verified with the network disabled (shell, all tabs, player).
+- Accessibility (1.0.0): WCAG 2.1 AA contrast in every theme at every accent
+  hue, no axe violations on any screen, keyboard focus kept inside dialogs,
+  landmarks, reduced motion. Privacy note in Profile.
+- Release engineering (1.0.0): security headers, 11 browser tests, axe and
+  contrast checks in CI, changelog, README screenshot.
 
 ## Known gaps and next steps
 
@@ -155,7 +160,7 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
    updating the 5 km time from a logged race automatically.
 6. Readiness check, plate calculator, warm-up sets, per-exercise charts.
 7. Supersets as a player mode; voice announcements (legacy app has them).
-8. Accessibility pass (contrast check of every theme, screen-reader labels),
-   and tests for the React screens.
+8. Accessibility follow-ups: a real VoiceOver and TalkBack session, 200 %
+   text zoom, announcing timer milestones to screen readers.
 9. Preferred training weekdays and reminders.
 10. Legacy App-Sport backup importer.

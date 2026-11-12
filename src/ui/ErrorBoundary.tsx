@@ -12,7 +12,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
   render() {
     if (!this.state.error) return this.props.children;
     return (
-      <div className="overlay">
+      <div className="overlay" role="alertdialog" aria-modal="true" aria-label="Something went wrong">
         <div className="overlay-inner" style={{ justifyContent: 'center' }}>
           <h1 className="h1">Something went wrong</h1>
           <p className="muted">Your training data is still on this device. Reloading usually fixes it.</p>

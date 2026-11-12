@@ -11,7 +11,7 @@ import type { Entry, Item, Profile, Program, Segment, Session, SetLog } from '..
 import { distanceUnit, formatDuration, showWeight, toKg, toMeters, useSettings, weightUnit } from '../../lib/settings';
 import { describe, effortText } from '../../lib/text';
 import { beep, doneSets, finishWorkout, flatItems, keepScreenOn, unlockAudio } from '../../lib/workout';
-import { Icon, NumInput, Sheet, useNow } from '../../ui/kit';
+import { Icon, NumInput, Sheet, useNow, useFocusTrap } from '../../ui/kit';
 import { SwapList } from '../program/SwapList';
 
 type Props = {
@@ -27,6 +27,8 @@ type Props = {
 type Rest = { end: number; total: number };
 
 export function Player({ initial, program, profile, sessions, onClose, onAskCoach }: Props) {
+  const trapRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(trapRef);
   const settings = useSettings();
   const [a, setA] = useState(initial);
   const [rest, setRest] = useState<Rest | null>(null);
@@ -142,7 +144,7 @@ export function Player({ initial, program, profile, sessions, onClose, onAskCoac
     : null;
 
   return (
-    <div className="overlay">
+    <div ref={trapRef} tabIndex={-1} className="overlay" role="dialog" aria-modal="true" aria-label="Workout">
       <div className="overlay-inner">
         <div className="topbar">
           <button className="icon-btn" onClick={() => setSheet('quit')} aria-label="Close workout">
@@ -533,7 +535,7 @@ function TimedPanel({ reps, segments, done, sound, onDone, onUndo }: TimedProps)
           {reps > 1 ? `Round ${step.round} of ${reps} · ` : ''}step {index + 1} of {steps.length}
         </p>
       )}
-      <h2 className="h1" style={{ color: step.kind === 'work' ? 'var(--accent)' : 'var(--text-muted)' }}>
+      <h2 className="h1" style={{ color: step.kind === 'work' ? 'var(--accent-text)' : 'var(--text-muted)' }}>
         {step.label}
       </h2>
       <div className="timer-big" role="timer">
@@ -567,9 +569,11 @@ function TimedPanel({ reps, segments, done, sound, onDone, onUndo }: TimedProps)
 /* ---------- After saving ---------- */
 
 function Summary({ session, onClose, onAskCoach }: { session: Session; onClose: () => void; onAskCoach?: () => void }) {
+  const trapRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(trapRef);
   const sets = session.entries.reduce((n, e) => n + e.sets.length, 0);
   return (
-    <div className="overlay">
+    <div ref={trapRef} tabIndex={-1} className="overlay" role="dialog" aria-modal="true" aria-label="Workout complete">
       <div className="overlay-inner" style={{ justifyContent: 'center', textAlign: 'center' }}>
         <div style={{ color: 'var(--accent)', display: 'grid', placeItems: 'center' }}>
           <Icon name="trophy" size={64} />

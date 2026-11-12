@@ -5,7 +5,7 @@ import { requestPersistence } from '../../lib/db';
 import type { Profile, Program } from '../../lib/schema';
 import { fastingBlocked, FASTING_CAUTION } from '../../lib/fastingSafety';
 import { updateSettings, useSettings } from '../../lib/settings';
-import { DISCLAIMER, EQUIPMENT_LABEL, GOAL_INFO, LEVEL_INFO, shortDate } from '../../lib/text';
+import { DISCLAIMER, PRIVACY, EQUIPMENT_LABEL, GOAL_INFO, LEVEL_INFO, shortDate } from '../../lib/text';
 import { Icon, Segmented, Sheet, Toggle } from '../../ui/kit';
 import { InstallCard } from '../onboarding/Install';
 import { ThemePicker } from './ThemePicker';
@@ -148,6 +148,7 @@ export function ProfileTab({ profile, program, sessionCount, editProfile }: { pr
         <h2 className="h2">About</h2>
       </div>
       <div className="card stack">
+        <p className="muted small">{PRIVACY}</p>
         <p className="muted small">{DISCLAIMER}</p>
         <p className="muted small">Banzir {__APP_VERSION__} · open source, MIT licence.</p>
       </div>

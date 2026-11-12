@@ -1,0 +1,40 @@
+// An advanced planche athlete gets the skill plan and the right starting steps.
+// Run with the app served on BASE_URL (default http://localhost:4173/); see e2e/run.mjs.
+const { chromium, devices } = require('playwright');
+const BASE = process.env.BASE_URL || 'http://localhost:4173/';
+const out = process.argv[2] || require('node:os').tmpdir();
+require('node:fs').mkdirSync(out, { recursive: true });
+(async () => {
+  const browser = await chromium.launch();
+  const ctx = await browser.newContext({ ...devices['iPhone 13'], deviceScaleFactor: 2 });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  page.on('pageerror', (e) => errors.push('PAGEERROR ' + e.message));
+  const click = (name) => page.locator('button', { hasText: name }).first().click({ timeout: 8000 });
+  const text = async () => (await page.locator('body').innerText()).replace(/\s+/g, ' ');
+  const expect = async (needle) => { if (!(await text()).includes(needle)) throw new Error(`expected "${needle}"`); };
+  await page.goto(BASE);
+  await click('Continue'); await click('Calisthenics skills'); await click('Continue');
+  await click('Advanced'); await click('Planche'); await click('30+'); await click('12+'); await click('Continue');
+  await click('Continue');
+  await page.locator('.seg button', { hasText: /^6$/ }).click(); await page.locator('.seg button', { hasText: /^75$/ }).click(); await click('Continue');
+  await click('Continue');
+  await expect('Planche OS'); await expect('Pseudo planche push-up');
+  await page.waitForTimeout(300); await page.screenshot({ path: process.argv[2] + '/os-plan.png' });
+  await click('Use this plan'); await click('Continue'); await click('Start training');
+  await page.waitForSelector('text=This week');
+  await page.locator('nav.tabbar button', { hasText: 'Program' }).click(); await page.waitForTimeout(400);
+  await expect('Week 1: long intervals'); await expect('4 × (Hard 4 min / Jog 2 min 30 s)');
+  await page.getByLabel('Skip to next week').click(); await page.waitForTimeout(200);
+  await expect('Week 2: speed'); await expect('6 × (Fast 1 min 30 s / Jog 1 min 15 s)');
+  await page.getByLabel('Skip to next week').click(); await page.getByLabel('Skip to next week').click(); await page.waitForTimeout(200);
+  await expect('Week 4'); await expect('long intervals');
+  await page.locator('.card', { hasText: 'Quality run:' }).locator('button', { hasText: 'Start' }).click();
+  await page.waitForSelector('text=1 of 3');
+  await click('Mark as done'); await page.getByRole('button', { name: /^Next/ }).click();
+  await expect('Round 1 of 4'); await expect('Hard');
+  console.log('planche os ok, errors:', JSON.stringify(errors));
+  if (errors.length) process.exitCode = 1;
+  await browser.close();
+})().catch((e) => { console.error('FLOW FAILED', e.message); process.exit(1); });

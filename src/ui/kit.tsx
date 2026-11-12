@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 
 /* One stroke icon set, bundled. No emoji in the interface. */
 const PATHS: Record<string, string> = {
@@ -63,7 +63,46 @@ export function Ring({ value, size = 64, stroke = 7, children }: { value: number
   );
 }
 
+const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Moves keyboard focus into a dialog when it opens, keeps Tab inside it, and
+ * gives focus back to what had it when the dialog closes.
+ */
+export function useFocusTrap(ref: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const before = document.activeElement as HTMLElement | null;
+    if (!el.contains(document.activeElement)) el.focus({ preventScroll: true });
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      // Only the topmost dialog traps focus.
+      const dialogs = document.querySelectorAll('[aria-modal="true"]');
+      if (dialogs[dialogs.length - 1] !== el) return;
+      const items = [...el.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((x) => x.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === el)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      if (before && document.contains(before)) before.focus({ preventScroll: true });
+    };
+  }, [ref]);
+}
+
 export function Sheet({ title, onClose, children }: { title?: string; onClose: () => void; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFocusTrap(ref);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -71,7 +110,7 @@ export function Sheet({ title, onClose, children }: { title?: string; onClose: (
   }, [onClose]);
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+      <div ref={ref} tabIndex={-1} className="sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         {title && (
           <div className="row between">
             <h2 className="h2">{title}</h2>
@@ -88,9 +127,9 @@ export function Sheet({ title, onClose, children }: { title?: string; onClose: (
 
 export function Segmented<T extends string | number>({ value, options, onChange }: { value: T; options: { value: T; label: string }[]; onChange: (v: T) => void }) {
   return (
-    <div className="seg" role="tablist">
+    <div className="seg" role="radiogroup">
       {options.map((o) => (
-        <button key={String(o.value)} role="tab" aria-selected={o.value === value} className={o.value === value ? 'on' : ''} onClick={() => onChange(o.value)}>
+        <button key={String(o.value)} role="radio" aria-checked={o.value === value} className={o.value === value ? 'on' : ''} onClick={() => onChange(o.value)}>
           {o.label}
         </button>
       ))}

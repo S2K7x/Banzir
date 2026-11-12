@@ -5,12 +5,12 @@ import { formatSpan } from './settings';
 
 export const GOAL_INFO: Record<Goal, { label: string; blurb: string; icon: string; g1: string; g2: string }> = {
   muscle: { label: 'Build muscle', blurb: 'Size and shape', icon: 'dumbbell', g1: '#7b3ff2', g2: '#3b1790' },
-  strength: { label: 'Get stronger', blurb: 'Heavier lifts', icon: 'bolt', g1: '#e0483b', g2: '#7a1420' },
-  calisthenics: { label: 'Calisthenics skills', blurb: 'Master your bodyweight', icon: 'body', g1: '#1f8fe0', g2: '#0b3a8a' },
-  running: { label: 'Run', blurb: 'From first steps to faster', icon: 'run', g1: '#12a87b', g2: '#075a4c' },
-  fat_loss: { label: 'Lose fat', blurb: 'Leaner, keep your muscle', icon: 'flame', g1: '#f08a24', g2: '#a8390d' },
-  general_fitness: { label: 'General fitness', blurb: 'Stronger, fitter, healthier', icon: 'heart', g1: '#e0489a', g2: '#7a1763' },
-  sport: { label: 'Better at a sport', blurb: 'Strength, power, conditioning', icon: 'ball', g1: '#d9a514', g2: '#8a5a05' },
+  strength: { label: 'Get stronger', blurb: 'Heavier lifts', icon: 'bolt', g1: '#c7362b', g2: '#7a1420' },
+  calisthenics: { label: 'Calisthenics skills', blurb: 'Master your bodyweight', icon: 'body', g1: '#1769c4', g2: '#0b3a8a' },
+  running: { label: 'Run', blurb: 'From first steps to faster', icon: 'run', g1: '#0e7a5a', g2: '#075a4c' },
+  fat_loss: { label: 'Lose fat', blurb: 'Leaner, keep your muscle', icon: 'flame', g1: '#a94f0b', g2: '#6e2506' },
+  general_fitness: { label: 'General fitness', blurb: 'Stronger, fitter, healthier', icon: 'heart', g1: '#c2307e', g2: '#7a1763' },
+  sport: { label: 'Better at a sport', blurb: 'Strength, power, conditioning', icon: 'ball', g1: '#8f6508', g2: '#4f3402' },
 };
 
 export const LEVEL_INFO: Record<Level, { label: string; blurb: string }> = {
@@ -37,6 +37,10 @@ export const EQUIPMENT_LABEL: Record<Equipment, string> = {
   jump_rope: 'Jump rope',
   heavy_bag: 'Punching bag',
 };
+
+/** What leaves the device, shown in Profile and the README. */
+export const PRIVACY =
+  'Everything you log stays on this device. Banzir has no account and stores nothing on a server. Apart from loading and updating the app, it only goes online when you use the AI coach (your messages go to the provider you chose, with your own key) or search for a food (the search words go to Open Food Facts).';
 
 export const DISCLAIMER =
   'Banzir gives general training guidance. It is not medical advice. If you have a medical condition, are pregnant, or are unsure whether exercise is safe for you, check with a health professional first. Stop and seek help if you feel chest pain, faintness, or sharp or worsening pain.';

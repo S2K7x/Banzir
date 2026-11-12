@@ -8,7 +8,7 @@ import type { Equipment, Goal, Level, Profile } from '../../lib/schema';
 import { fastingBlocked, FASTING_CAUTION } from '../../lib/fastingSafety';
 import { updateSettings, useSettings } from '../../lib/settings';
 import { DISCLAIMER, EQUIPMENT_LABEL, GOAL_INFO, LEVEL_INFO, describe } from '../../lib/text';
-import { Icon, NumInput, Segmented } from '../../ui/kit';
+import { Icon, NumInput, Segmented, useFocusTrap } from '../../ui/kit';
 import { ThemePicker } from '../profile/ThemePicker';
 import { InstallCard } from './Install';
 
@@ -147,6 +147,8 @@ type Props = {
 };
 
 export function Onboarding({ initial, currentPlan, onDone, onCancel }: Props) {
+  const trapRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(trapRef);
   const settings = useSettings();
   const editing = !!initial;
   const [step, setStep] = useState(editing ? 1 : 0);
@@ -208,7 +210,7 @@ export function Onboarding({ initial, currentPlan, onDone, onCancel }: Props) {
   const askPullups = d.goal === 'calisthenics' || d.goal === 'strength' || d.goal === 'sport' || d.equipment.includes('pullup_bar');
 
   return (
-    <div className="overlay">
+    <div ref={trapRef} tabIndex={-1} className="overlay" role="dialog" aria-modal="true" aria-label={editing ? 'Edit profile' : 'Set up Banzir'}>
       <div className="overlay-inner">
         <div className="topbar">
           {(step > 0 || onCancel) && (

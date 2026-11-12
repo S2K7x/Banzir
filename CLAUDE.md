@@ -75,8 +75,10 @@ Process
 - 2026-11-12: running and fasting modules (phase 6 done): run log, GPX
   import, heart-rate zones, race equivalents, the 10 % single-run limit;
   eating windows, fasting timer and log, opt-in with safety rules.
-- Not built yet: polish and first release (phase 7). Ordered list under
-  "Known gaps and next steps" in `docs/product/features.md`.
+- 2026-11-12: phase 7 and release 1.0.0: accessibility pass (contrast in
+  every theme and hue, axe clean, focus handling), security headers, browser
+  tests and audits in CI, changelog. Next work: "Known gaps and next steps"
+  in `docs/product/features.md`; record user-facing changes in `CHANGELOG.md`.
 
 ## Code map
 
@@ -98,7 +100,8 @@ Full layout and commands: `docs/product/architecture.md`.
   `nutrition`, `running` and `fasting`. `src/lib/fastingSafety.ts` holds
   who fasting is not offered to.
 - `src/lib/text.ts` — all user-facing labels (for future languages).
-- `npm test` (Vitest), `npm run build` (type-check + build), `npm run dev`.
+- `npm test` (Vitest), `npm run build` (type-check + build), `npm run dev`,
+  `npm run e2e` (browser tests in `e2e/`), `npm run a11y`, `npm run contrast`.
 
 ## Working rules
 
@@ -123,9 +126,17 @@ Full layout and commands: `docs/product/architecture.md`.
 
 ## Engineering rules learned the hard way
 
-- Before calling work done: `npm test`, `npm run build`, then drive the real
-  app in a browser (Playwright, phone viewport) through the changed flow and
-  check for console errors. Unit tests alone missed two real bugs.
+- Before calling work done: `npm test`, `npm run build`, `npm run e2e`, then
+  drive the changed flow in a browser (Playwright, phone viewport) and check
+  for console errors. Add or extend a test in `e2e/` for a new flow. Unit
+  tests alone missed two real bugs.
+- Colour changes: run `npm run contrast` and `npm run a11y` (app served on
+  port 4173), then look at screenshots in a light, a dark and the
+  high-contrast theme. axe cannot judge text on gradients; the fasting hero
+  shipped with invisible tiles in light themes until a screenshot showed it.
+  Use `--accent-text` (not `--accent`) for accent-coloured text.
+- `index.html`'s inline theme script is allowed by hash in `vercel.json`. A
+  unit test fails when they drift: put the new hash in the policy.
 - A React effect must return nothing or a cleanup function. Write
   `useEffect(() => { window.scrollTo(0, 0); }, [x])` with braces: newer
   browsers return a promise from `scrollTo`, which crashed the app.

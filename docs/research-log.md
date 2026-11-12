@@ -333,3 +333,29 @@ Not verified
 - GPX files from real watches (Garmin, COROS, Apple exports via third-party
   apps); tested with a generated file only.
 
+## 2026-11-12 — accessibility and release (phase 7)
+
+Standards applied (no new web research; thresholds are the WCAG 2.1 success
+criteria, recalled and matching axe-core's checks)
+- 1.4.3 contrast minimum: 4.5:1 for normal text, 3:1 for large text
+  (24 px, or 18.66 px bold). 1.4.11 non-text contrast: 3:1 for graphics and
+  control boundaries. The app holds small labels to 4.5:1 everywhere.
+- axe-core 4.14 rule sets wcag2a, wcag2aa, wcag21a, wcag21aa, best-practice.
+
+Findings from measuring (scripts/contrast.mjs, scripts/a11y.mjs)
+- 419 failing colour pairs across themes and accent hues before the fixes:
+  red danger text on light themes (2.3-2.8:1), white labels on mid-light
+  accents (Carbon and System dark, 2.4-3.5:1), accent text and the active tab
+  in light themes, muted text in Lilac and Sand, white text on six goal
+  gradients (2.3-4.1:1). None remain.
+- axe: only landmark rules failed (no `<main>`, overlays outside landmarks).
+- Screenshots showed the fasting hero tiles invisible in light themes; axe
+  could not see it because the background is a gradient (reported as
+  "incomplete", not as a violation). Visual review of every theme stays
+  necessary.
+
+Not done
+- Lighthouse: running it needed downloading the package, which this session
+  was not allowed to do. Run `npx lighthouse` against a deployment.
+- Real screen readers and real phones.
+

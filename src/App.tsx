@@ -69,32 +69,37 @@ export default function App({ update }: { update?: { subscribe: (cb: () => void)
   const { profile, program, state, active, sessions } = data;
   if (!profile)
     return (
-      <Suspense fallback={null}>
-        <Onboarding onDone={() => setTab('today')} />
-      </Suspense>
+      <main>
+        <Suspense fallback={null}>
+          <Onboarding onDone={() => setTab('today')} />
+        </Suspense>
+      </main>
     );
 
   return (
     <div className="app">
-      {updateReady && (
-        <div className="screen" style={{ paddingBottom: 0 }}>
-          <div className="card accent row">
-            <span className="grow small">A new version of Banzir is ready.</span>
-            <button className="btn sm primary" onClick={() => update?.apply()}>
-              Update
-            </button>
+      <main>
+        {updateReady && (
+          <div className="screen" style={{ paddingBottom: 0 }}>
+            <div className="card accent row">
+              <span className="grow small">A new version of Banzir is ready.</span>
+              <button className="btn sm primary" onClick={() => update?.apply()}>
+                Update
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
+        <Suspense fallback={null}>
+          {tab === 'today' && <Today profile={profile} program={program} state={state} sessions={sessions} active={active} openPlayer={() => open('player')} openFasting={() => open('fasting')} goTo={setTab} />}
+          {tab === 'program' && <ProgramTab profile={profile} program={program} state={state} sessions={sessions} active={active} openPlayer={() => open('player')} openBuilder={() => open('builder')} />}
+          {tab === 'progress' && <Progress profile={profile} sessions={sessions} target={program?.daysPerWeek ?? profile.daysPerWeek} />}
+          {tab === 'coach' && <Coach />}
+          {tab === 'food' && <Nutrition profile={profile} editProfile={() => open('edit')} />}
+          {tab === 'profile' && <ProfileTab profile={profile} program={program} sessionCount={sessions.length} editProfile={() => open('edit')} />}
+        </Suspense>
+      </main>
       <Suspense fallback={null}>
-        {tab === 'today' && <Today profile={profile} program={program} state={state} sessions={sessions} active={active} openPlayer={() => open('player')} openFasting={() => open('fasting')} goTo={setTab} />}
-        {tab === 'program' && <ProgramTab profile={profile} program={program} state={state} sessions={sessions} active={active} openPlayer={() => open('player')} openBuilder={() => open('builder')} />}
-        {tab === 'progress' && <Progress profile={profile} sessions={sessions} target={program?.daysPerWeek ?? profile.daysPerWeek} />}
-        {tab === 'coach' && <Coach />}
-        {tab === 'food' && <Nutrition profile={profile} editProfile={() => open('edit')} />}
-        {tab === 'profile' && <ProfileTab profile={profile} program={program} sessionCount={sessions.length} editProfile={() => open('edit')} />}
-
         {overlay === 'fasting' && <FastingScreen profile={profile} onClose={close} />}
         {overlay === 'builder' && program && <Builder key={program.id} program={program} profile={profile} onClose={close} />}
         {overlay === 'player' && (

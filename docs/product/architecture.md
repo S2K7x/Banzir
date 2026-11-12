@@ -60,7 +60,12 @@ vite.config.ts          Vite, React, PWA manifest and service worker, Vitest
 /src/lib/fasting.ts    eating windows, fasting timer state, week summary, log
 /src/lib/fastingSafety.ts  who fasting is not offered to (no imports, safe for the shell)
 
-Planned and not there yet: nutrition, fasting and running modules.
+/e2e                   browser tests (Playwright, phone size, providers mocked); run.mjs runs them all
+/scripts/a11y.mjs      axe-core audit of every screen in three themes
+/scripts/contrast.mjs  WCAG contrast of every theme at every accent hue
+/scripts/serve.mjs     serves dist/ with the vercel.json headers, to test the security policy
+/scripts/screenshots.mjs  regenerates docs/screenshots/banzir.png
+vercel.json            security headers and caching
 
 ## Commands
 
@@ -70,9 +75,33 @@ Planned and not there yet: nutrition, fasting and running modules.
 | `npm test` | Unit tests (Vitest) |
 | `npm run build` | Type-check, then production build into `dist/` |
 | `npm run preview` | Serve the production build locally |
+| `npm run e2e` | Every browser test against a fresh `vite preview` (build first) |
+| `npm run a11y` | axe-core audit (needs the app on port 4173) |
+| `npm run contrast` | Contrast of every theme and accent hue (app on port 4173) |
+| `npm run serve` | Serve `dist/` with the production headers on port 4174 |
+| `node scripts/screenshots.mjs` | Regenerate the README screenshot (app on port 4173) |
 | `node scripts/make-icons.mjs` | Regenerate PNG icons (needs Playwright's Chromium) |
 
-CI (`.github/workflows/ci.yml`) runs the tests and the build on every push.
+CI (`.github/workflows/ci.yml`) runs the unit tests and the build, then, in a
+second job, installs Chromium and runs the browser tests, the axe audit and
+the contrast check. Screenshots are uploaded when a browser test fails.
+
+## Security headers (`vercel.json`)
+
+- Content Security Policy: scripts only from the app itself plus the hash of
+  the inline theme script in `index.html` (a unit test fails if they drift);
+  styles only from the app; `connect-src 'self' https:` plus localhost, so any
+  HTTPS AI provider or a local model server can be reached; no frames
+  (`frame-ancestors 'none'`), no plugins, no form posts elsewhere.
+- `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer` (the app
+  address is not sent to AI providers or Open Food Facts),
+  `Permissions-Policy` turning off camera, microphone, location, payment and
+  USB (a barcode scanner would need `camera=(self)`),
+  `Cross-Origin-Opener-Policy: same-origin`.
+- Hashed assets are cached for a year; `sw.js` is always revalidated.
+- Verified with `scripts/serve.mjs`: all browser tests, the mocked coach and
+  offline mode pass under the policy, and an injected inline script is
+  refused. Not yet checked on a real Vercel deployment.
 
 ## Bundle (2026-11-12, all modules)
 
@@ -154,7 +183,7 @@ stored shape changes, and bump `format` when the backup shape changes.
   `https://vercel.com/new/clone?repository-url=<encoded repo URL>`.
   It clones the repo into the user's Git account and deploys it `[verified:
   Vercel docs]`.
-- The repo is also marked as a GitHub template.
+- The repo can also be marked as a GitHub template (a repository setting).
 - No environment variables. The AI key is entered in the app and stored on the
   device only.
 - Works on any static host too (Netlify, Cloudflare Pages, GitHub Pages); only
@@ -165,8 +194,10 @@ stored shape changes, and bump `format` when the backup shape changes.
 Users get updates with GitHub's "Sync fork" button; Vercel redeploys
 automatically. Because users never edit files, there are no merge conflicts.
 The service worker shows "Update available" and reloads on confirmation.
-Data migrations run on first launch of a new version; always export a backup
-automatically before a migration.
+Data migrations run on first launch of a new version. So far every Dexie
+version only adds tables, so existing data is never rewritten; a version that
+changes a stored shape must add a migration and a test, and should prompt for
+a backup first (not built yet).
 
 ## AI relay (`/api/llm`)
 

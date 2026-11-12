@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { EXERCISES, getExercise, rx } from '../../data/exercises';
 import { saveProgram } from '../../lib/db';
 import { addDay, addItem, dayItemCount, duplicateDay, moveDay, moveItem, removeDay, removeItem, renameDay, replaceExercise, setExercise, updateItem, updateMeta } from '../../lib/edit';
@@ -6,7 +6,7 @@ import { canDo, equipmentSet, estimateMinutes } from '../../lib/matcher';
 import type { Exercise, Item, Prescription, Profile, Program, Slot } from '../../lib/schema';
 import { formatSpan } from '../../lib/settings';
 import { describe } from '../../lib/text';
-import { Icon, Segmented, Sheet, Stepper } from '../../ui/kit';
+import { Icon, Segmented, Sheet, Stepper, useFocusTrap } from '../../ui/kit';
 import { SwapList } from './SwapList';
 
 type Props = { program: Program; profile: Profile; onClose: () => void };
@@ -23,6 +23,8 @@ const CATEGORIES: { id: string; label: string; slots: Slot[] }[] = [
 
 /** Full-screen editor for the active program. Every change is saved straight away. */
 export function Builder({ program: stored, profile, onClose }: Props) {
+  const trapRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(trapRef);
   // The editor works on its own copy so quick taps never build on a stale program.
   const [program, setProgram] = useState(stored);
   const [phaseId, setPhaseId] = useState(program.phases[0].id);
@@ -37,7 +39,7 @@ export function Builder({ program: stored, profile, onClose }: Props) {
   const item = editing ? phase.days.flatMap((d) => d.blocks.flatMap((b) => b.items)).find((i) => i.id === editing) : undefined;
 
   return (
-    <div className="overlay">
+    <div ref={trapRef} tabIndex={-1} className="overlay" role="dialog" aria-modal="true" aria-label="Edit plan">
       <div className="overlay-inner">
         <div className="topbar">
           <button className="icon-btn" onClick={onClose} aria-label="Close editor">

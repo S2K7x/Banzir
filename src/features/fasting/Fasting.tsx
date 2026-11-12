@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { dayKey } from '../../lib/body';
 import {
   allFasts,
@@ -32,7 +32,7 @@ import {
 } from '../../lib/fasting';
 import type { Fast, Profile } from '../../lib/schema';
 import { shortDate } from '../../lib/text';
-import { Icon, Ring, Sheet } from '../../ui/kit';
+import { Icon, Ring, Sheet, useFocusTrap } from '../../ui/kit';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -206,7 +206,7 @@ function WeekChart({ fasts, s, now }: { fasts: Fast[]; s: FastingSettings; now: 
               <i className="empty" style={{ position: 'absolute', inset: 0, height: '100%', maxWidth: 'none' }} />
               {d.actual > 0 && <i style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: (d.actual / max) * H, maxWidth: 'none', opacity: d.onTarget ? 1 : 0.55 }} />}
             </span>
-            <span style={{ color: dayKey(now) === d.key ? 'var(--accent)' : undefined, fontWeight: dayKey(now) === d.key ? 700 : undefined }}>{SHORT[i]}</span>
+            <span style={{ color: dayKey(now) === d.key ? 'var(--accent-text)' : undefined, fontWeight: dayKey(now) === d.key ? 700 : undefined }}>{SHORT[i]}</span>
           </div>
         ))}
       </div>
@@ -397,6 +397,8 @@ function Schedule({ s }: { s: FastingSettings }) {
 }
 
 export function FastingScreen({ profile, onClose }: { profile: Profile; onClose: () => void }) {
+  const trapRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(trapRef);
   const { fasts, s } = useFasting();
   const now = useNow(15_000);
   const [editing, setEditing] = useState<Fast | null>(null);
@@ -405,7 +407,7 @@ export function FastingScreen({ profile, onClose }: { profile: Profile; onClose:
   const d = describeNow(f, now);
 
   return (
-    <div className="overlay">
+    <div ref={trapRef} tabIndex={-1} className="overlay" role="dialog" aria-modal="true" aria-label="Fasting">
       <div className="overlay-inner" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
         <div className="topbar">
           <button className="icon-btn" onClick={onClose} aria-label="Close fasting">

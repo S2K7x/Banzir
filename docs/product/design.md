@@ -64,8 +64,8 @@ Two tiers, CSS custom properties, switched by `data-theme` on `<html>`.
   `--shadow-card`, `--glass-blur`, `--tabbar-style`.
 
 Accent: user picks a hue; the app derives accent, soft tint and contrast colour
-with OKLCH and `color-mix()`. Check contrast (WCAG AA) when generating and
-clamp lightness if it fails.
+with OKLCH and `color-mix()`. Each theme fixes the accent lightness so every hue
+passes; `--accent-text` is the accent used as text (darker in light themes).
 
 Apply the theme before first paint (inline script reading the stored setting),
 as the legacy app does, to avoid a flash.
@@ -78,8 +78,41 @@ picker is `src/lib/themes.ts`. The accent is `oklch(L C H)` with the hue in
 `data-radius` (sharp / round / pill). Density, font choice, tab-bar style and
 card style are not user options yet; each theme fixes them. Goal cards and
 heroes use a fixed gradient per goal (`GOAL_INFO` in `src/lib/text.ts`), the
-same in every theme. Contrast of every theme/accent pair has not been
-measured yet.
+same in every theme.
+
+## Contrast and accessibility (measured 2026-11-12)
+
+`npm run contrast` (scripts/contrast.mjs) renders every theme, at every accent
+hue in 15-degree steps, and checks these WCAG 2.1 AA pairs: body and muted text
+on page, card and raised surfaces (4.5:1); primary-button label on the accent
+(4.5:1); accent text on page, card and the active-tab tint (4.5:1); accent
+graphics on the page (3:1); danger text (4.5:1); text in warning notes
+(4.5:1); white text on the lighter stop of every goal gradient (4.9:1, so the
+92 % white secondary lines still reach 4.5:1). All pass. Changes made to get
+there:
+
+- `--accent-text` token: the accent darkened by 0.1 OKLCH lightness in light
+  themes, used for links, the active tab and accent-coloured labels.
+- Light themes get a dark red `--danger` (#c0362c); the bright red only
+  worked on dark backgrounds.
+- Carbon and System (dark) use a near-black label on the accent; Lilac, Sand
+  and System (light) use a darker accent; Lilac and Sand muted text darkened.
+- Goal gradients darkened at their lighter stop (strength, calisthenics,
+  running, fat loss, general fitness, sport) and the default hero.
+- Inside a hero, tiles and rings are white on the gradient in every theme
+  (they were invisible in light themes).
+
+`npm run a11y` (scripts/a11y.mjs) runs axe-core with the WCAG 2.1 A/AA and
+best-practice rules on every onboarding step, every tab, the player, the
+fasting screen and the main sheets, in Midnight, Sky and High contrast: no
+violations. Structure: one `<main>`, the tab bar is a `<nav>`, full-screen
+screens and sheets are modal dialogs with a label, focus moves into a dialog
+when it opens, Tab stays inside it, Escape closes sheets, and focus returns to
+the control that opened it (`useFocusTrap` in `src/ui/kit.tsx`). Segmented
+controls are radio groups. Motion stops with `prefers-reduced-motion`.
+
+Not covered by tools: a real screen-reader session (VoiceOver, TalkBack) and
+200 % text zoom on a phone.
 
 ## Theme presets (first set)
 
