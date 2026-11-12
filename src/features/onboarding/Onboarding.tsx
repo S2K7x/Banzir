@@ -5,6 +5,7 @@ import { activateProgram, db, requestPersistence } from '../../lib/db';
 import { rankTemplates, type Match } from '../../lib/ranking';
 import { EQUIPMENT, GOALS, LEVELS } from '../../lib/constants';
 import type { Equipment, Goal, Level, Profile } from '../../lib/schema';
+import { fastingBlocked, FASTING_CAUTION } from '../../lib/fastingSafety';
 import { updateSettings, useSettings } from '../../lib/settings';
 import { DISCLAIMER, EQUIPMENT_LABEL, GOAL_INFO, LEVEL_INFO, describe } from '../../lib/text';
 import { Icon, NumInput, Segmented } from '../../ui/kit';
@@ -185,7 +186,8 @@ export function Onboarding({ initial, currentPlan, onDone, onCancel }: Props) {
     // Suggest the modules that fit the goal the first time the person reaches the look step.
     if (!editing && STEPS[step + 1] === 'look' && !modulesTouched.current) {
       modulesTouched.current = true;
-      updateSettings({ modules: { nutrition: d.goal === 'fat_loss' || settings.modules.nutrition, body: d.goal === 'fat_loss' || d.goal === 'muscle' || settings.modules.body } });
+      const m = settings.modules;
+      updateSettings({ modules: { ...m, nutrition: d.goal === 'fat_loss' || m.nutrition, body: d.goal === 'fat_loss' || d.goal === 'muscle' || m.body, running: d.goal === 'running' || m.running } });
     }
     setStep((s) => Math.min(STEPS.length - 1, s + 1));
   };
@@ -494,8 +496,17 @@ export function Onboarding({ initial, currentPlan, onDone, onCancel }: Props) {
                 <button className={`chip ${settings.modules.body ? 'on' : ''}`} onClick={() => updateSettings({ modules: { ...settings.modules, body: !settings.modules.body } })} aria-pressed={settings.modules.body}>
                   Body weight
                 </button>
+                <button className={`chip ${settings.modules.running ? 'on' : ''}`} onClick={() => updateSettings({ modules: { ...settings.modules, running: !settings.modules.running } })} aria-pressed={settings.modules.running}>
+                  Runs and heart rate
+                </button>
+                {!fastingBlocked(profile) && (
+                  <button className={`chip ${settings.modules.fasting ? 'on' : ''}`} onClick={() => updateSettings({ modules: { ...settings.modules, fasting: !settings.modules.fasting } })} aria-pressed={settings.modules.fasting}>
+                    Fasting
+                  </button>
+                )}
               </div>
             </div>
+            {settings.modules.fasting && !fastingBlocked(profile) && <p className="note">{FASTING_CAUTION}</p>}
             <p className="muted small">Pick a look. You can change all of this any time in Profile.</p>
             <ThemePicker />
           </>

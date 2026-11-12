@@ -290,3 +290,46 @@ Decisions
 Not verified
 - Open Food Facts from a real phone browser (CORS, rate limits). The search
   was tested with a mocked response only.
+
+## 2026-11-12 — running log and fasting
+
+Findings → `docs/science/running.md`, `nutrition-fat-loss.md`, `populations-safety.md`
+- Tanaka 2001: HRmax = 208 - 0.7 x age, 351 studies, 18,712 people, SEE about
+  10 bpm, no sex or activity difference. https://pubmed.ncbi.nlm.nih.gov/11153730/
+- ACSM heart-rate reserve bands: moderate 40-59 %, vigorous 60-89 %; sources
+  disagree on the upper bound (85 or 89 %). Five-zone 50-100 % bands are a
+  coaching convention with no single source.
+- Riegel (exponent 1.06, from world records) is well calibrated to the half
+  marathon and underestimates marathon times in recreational runners
+  (Vickers and Vertosick 2016, 2,303 performances). https://synapse.mskcc.org/synapse/works/101585
+- Threshold pace "about one-hour race pace" (between 10 km and half-marathon
+  pace) is a coaching rule; physiologists note it varies. No primary source
+  found, so the app gives ranges and keeps easy running by feel.
+- GPX heart rate: Garmin TrackPointExtension v1 `hr`; the namespace prefix
+  varies (gpxtpx, ns3), COROS uses gpxdata:hr. https://logiqx.github.io/gps-wizard/gpx
+- Time-restricted eating: Liu 2022 NEJM (no significant extra loss with the
+  same calories over 12 months), Lowe 2020 TREAT (no extra loss; small lean
+  mass signal, disputed), 2025 meta-analysis in women (not better than
+  calorie restriction). https://pubmed.ncbi.nlm.nih.gov/32986097/ ;
+  https://www.frontiersin.org/journals/nutrition/articles/10.3389/fnut.2025.1664412/full
+- 2024 AHA abstract (8-hour window and cardiovascular death, HR 1.91):
+  observational, unreviewed, criticised by 34 experts. Not used as a claim.
+- Fasting contraindications: eating-disorder history, pregnancy and
+  breastfeeding, children, underweight; insulin and sulfonylureas need the
+  care team to adjust doses. https://diabetesonthenet.com/wp-content/uploads/81.-Factsheet_Intermittent-fasting.pdf
+
+Decisions
+- Running: zones on heart-rate reserve when resting HR is known; the 10 %
+  single-run limit shown on Today and Progress and as a warning when logging;
+  run sessions save a run (session duration, optional distance and HR); a
+  GPX file that overlaps a session run without distance fills it in instead
+  of adding a duplicate.
+- Fasting: opt-in only, default 12:12, presets to 16:8, warning under 8 h,
+  not offered under 18, in pregnancy or with BMI < 18.5; a logged meal ends a
+  running fast; fasts over 72 h rejected.
+
+Not verified
+- Liu 2022 and Lowe 2020 numbers come from summaries, not the papers.
+- GPX files from real watches (Garmin, COROS, Apple exports via third-party
+  apps); tested with a generated file only.
+

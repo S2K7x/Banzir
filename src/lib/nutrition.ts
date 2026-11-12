@@ -1,5 +1,6 @@
 import { addDays, dayKey, trend } from './body';
 import { db, getKV, setKV } from './db';
+import { getSettings } from './settings';
 import { uid } from './matcher';
 import type { BodyEntry, FoodEntry, Profile } from './schema';
 
@@ -191,6 +192,8 @@ export const kcalFromMacros = (protein = 0, carbs = 0, fat = 0) => Math.round(pr
 export async function addFood(f: Omit<FoodEntry, 'id'>): Promise<FoodEntry> {
   const entry = { ...f, id: uid('f') };
   await db.foods.put(entry);
+  // With the fasting module on, a meal logged during a running fast ends it at the meal time.
+  if (getSettings().modules.fasting) await (await import('./fasting')).endFastWithMeal(entry.date, entry.time);
   return entry;
 }
 export const deleteFood = (id: string) => db.foods.delete(id);

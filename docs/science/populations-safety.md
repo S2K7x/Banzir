@@ -113,3 +113,22 @@ periods, show the REDs note (see `nutrition-fat-loss.md`).
 - ACOG exercise in pregnancy (summary): https://mdedge.com/content/new-acog-recommendations-encourage-exercise-during-pregnancy
 - IOC REDs 2023: https://pubmed.ncbi.nlm.nih.gov/37752011/
 - WHO 2020 guidelines: https://www.who.int/publications/i/item/9789240015128 (not opened this session)
+
+## Fasting module (added 2026-11-12)
+
+Not offered (the toggle is replaced by the reason): under 18; pregnant or
+recently gave birth (onboarding flag); BMI under 18.5.
+
+Standing caution shown whenever fasting is on: skip it with a history of
+eating disorders; talk to the diabetes team first when taking insulin or
+tablets that can cause low blood sugar; stop when faint, shaky or unwell.
+
+Basis `[secondary: clinician factsheet for diabetes care and NHS-linked
+guidance, via search]`: eating-disorder history is the most consistent
+contraindication (restrictive patterns can be precursors, NICE NG69 as
+cited); pregnancy and breastfeeding lack studies; with insulin or
+sulfonylureas, supervised trials did not see more hypoglycaemia, but only with
+medication adjusted by the care team; type 1 diabetes evidence is very thin.
+Sources: https://diabetesonthenet.com/wp-content/uploads/81.-Factsheet_Intermittent-fasting.pdf ;
+https://zoe.com/learn/intermittent-fasting-side-effects
+

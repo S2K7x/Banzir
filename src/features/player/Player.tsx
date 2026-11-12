@@ -1,3 +1,4 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { findExercise, getExercise, rx } from '../../data/exercises';
 import { clearActive, saveProgram, setActive, type ActiveSession } from '../../lib/db';
@@ -5,8 +6,9 @@ import { replaceExercise, setExercise } from '../../lib/edit';
 import { canDo, equipmentSet } from '../../lib/matcher';
 import { findDay, lighten } from '../../lib/programState';
 import { historyFor, historyForItem, suggest, type Suggestion } from '../../lib/progression';
+import { getRunningSettings, kindOfSession, saveRun, zoneText } from '../../lib/running';
 import type { Entry, Item, Profile, Program, Segment, Session, SetLog } from '../../lib/schema';
-import { formatDuration, showWeight, toKg, useSettings, weightUnit } from '../../lib/settings';
+import { distanceUnit, formatDuration, showWeight, toKg, toMeters, useSettings, weightUnit } from '../../lib/settings';
 import { describe, effortText } from '../../lib/text';
 import { beep, doneSets, finishWorkout, flatItems, keepScreenOn, unlockAudio } from '../../lib/workout';
 import { Icon, NumInput, Sheet, useNow } from '../../ui/kit';
@@ -32,6 +34,9 @@ export function Player({ initial, program, profile, sessions, onClose, onAskCoac
   const [saved, setSaved] = useState<Session | null>(null);
   const [effort, setEffort] = useState<number | undefined>();
   const [note, setNote] = useState('');
+  const [distance, setDistance] = useState<number | undefined>();
+  const [avgHr, setAvgHr] = useState<number | undefined>();
+  const running = useLiveQuery(getRunningSettings, [], {});
   const now = useNow(true, 500);
 
   // Only on mount: after saving, the stored session disappears while the summary is still showing.
@@ -47,6 +52,7 @@ export function Player({ initial, program, profile, sessions, onClose, onAskCoac
     }
   }, [now, rest, settings.sound]);
 
+  const runDay = settings.modules.running && !!program && !!a?.dayId && findDay(program, a.dayId)?.kind === 'run';
   const items = useMemo(() => {
     const day = program && a?.dayId ? findDay(program, a.dayId) : undefined;
     const list = day ? flatItems(a?.light ? lighten(day) : day) : [];
@@ -107,6 +113,18 @@ export function Player({ initial, program, profile, sessions, onClose, onAskCoac
 
   async function save() {
     const session = await finishWorkout(a!, { effort, note: note.trim() });
+    // A run session also goes into the run log, so the weekly volume and the single-run limit include it.
+    if (runDay)
+      await saveRun({
+        date: new Date(a!.startedAt).toISOString(),
+        seconds: Math.max(60, session.durationSeconds),
+        meters: distance ? toMeters(distance, settings.units) : undefined,
+        avgHr: avgHr && avgHr >= 30 && avgHr <= 250 ? avgHr : undefined,
+        effort,
+        kind: kindOfSession(session),
+        sessionId: session.id,
+        source: 'session',
+      });
     setSheet(null);
     setSaved(session);
   }
@@ -145,6 +163,7 @@ export function Player({ initial, program, profile, sessions, onClose, onAskCoac
             <p className="muted" style={{ marginTop: 4 }}>
               {describe(p)}
               {effortText(p) ? ` · ${effortText(p)}` : ''}
+              {settings.modules.running && 'target' in p && p.target?.type === 'hrZone' && zoneText(p.target.value, profile, running) ? ` (${zoneText(p.target.value, profile, running)})` : ''}
             </p>
           )}
         </div>
@@ -306,6 +325,18 @@ export function Player({ initial, program, profile, sessions, onClose, onAskCoac
                   ))}
                 </div>
               </div>
+              {runDay && (
+                <div className="row">
+                  <label className="field grow">
+                    <span>Distance ({distanceUnit(settings.units)}, optional)</span>
+                    <NumInput value={distance} onChange={setDistance} label="Distance" step={0.1} />
+                  </label>
+                  <label className="field grow">
+                    <span>Average heart rate</span>
+                    <NumInput value={avgHr} onChange={setAvgHr} label="Average heart rate" placeholder="optional" />
+                  </label>
+                </div>
+              )}
               <label className="field">
                 <span>Note (optional)</span>
                 <textarea className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="How it felt, pain, wins" />

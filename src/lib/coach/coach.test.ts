@@ -7,7 +7,7 @@ import { EQUIPMENT } from '../constants';
 import { instantiate } from '../matcher';
 import type { Profile } from '../schema';
 import { closeOpenCalls, runTurn, setProposalStatus, upgradeChat } from './agent';
-import { PROMPT_VERSION } from './prompt';
+import { contextSnapshot, PROMPT_VERSION } from './prompt';
 import { sseEvents, toAnthropicMessages, toOpenAIMessages } from './providers';
 import { getMemory, newChat } from './store';
 import { updateSettings } from '../settings';
@@ -199,10 +199,10 @@ describe('tools and proposals', () => {
   });
 
   it('reads weight and food only when the modules are on, and proposes safe nutrition targets', async () => {
-    updateSettings({ modules: { nutrition: false, body: false } });
+    updateSettings({ modules: { nutrition: false, body: false, running: false, fasting: false } });
     expect((await runTool({ id: '1', name: 'get_body_weight', input: {} }, { proposals: [] })).content).toContain('module is off');
 
-    updateSettings({ modules: { nutrition: true, body: true } });
+    updateSettings({ modules: { nutrition: true, body: true, running: true, fasting: true } });
     for (let i = 13; i >= 0; i--) await logWeight(80 + i * 0.05, addDays(dayKey(), -i));
     await db.foods.put({ id: 'f', date: dayKey(), time: '08:00', name: 'Oats', kcal: 350, protein: 12 });
     const weight = JSON.parse((await runTool({ id: '2', name: 'get_body_weight', input: { days: 14 } }, { proposals: [] })).content);
@@ -219,7 +219,33 @@ describe('tools and proposals', () => {
     expect(r.notes.join(' ')).toContain('Under 18');
     await acceptProposal(ctx.proposals[0]);
     expect((await getNutritionSettings(undefined)).goal).toBe('lose');
-    updateSettings({ modules: { nutrition: false, body: false } });
+    updateSettings({ modules: { nutrition: false, body: false, running: false, fasting: false } });
+  });
+
+  it('reads runs and fasts when the modules are on, and never offers fasting to a minor', async () => {
+    updateSettings({ modules: { nutrition: false, body: false, running: false, fasting: false } });
+    expect((await runTool({ id: '1', name: 'get_runs', input: {} }, { proposals: [] })).content).toContain('module is off');
+    expect((await runTool({ id: '2', name: 'get_fasting', input: {} }, { proposals: [] })).content).toContain('module is off');
+
+    updateSettings({ modules: { nutrition: false, body: false, running: true, fasting: true } });
+    await db.profile.put({ ...profile, age: 40 });
+    await db.runs.put({ id: 'r1', date: new Date(Date.now() - 2 * 86400000).toISOString(), seconds: 3000, meters: 8000, kind: 'long', source: 'manual' });
+    const runs = JSON.parse((await runTool({ id: '3', name: 'get_runs', input: {} }, { proposals: [] })).content);
+    expect(runs.runs).toHaveLength(1);
+    expect(runs.longestLast30Days.nextRunLimitMeters).toBe(8800);
+    expect(runs.heartRate).toMatchObject({ maxHr: 180, maxEstimatedFromAge: true });
+
+    await db.fasts.put({ id: 'f1', start: new Date(Date.now() - 20 * 3600000).toISOString(), end: new Date(Date.now() - 8 * 3600000).toISOString(), feel: 4 });
+    const fasting = JSON.parse((await runTool({ id: '4', name: 'get_fasting', input: {} }, { proposals: [] })).content);
+    expect(fasting.schedule).toHaveLength(7);
+    expect(fasting.fasts[0]).toMatchObject({ hours: 12, feel: 4 });
+    const context = await contextSnapshot();
+    expect(context).toContain('Running: 1 runs logged');
+    expect(context).toContain('Fasting: eating window today');
+
+    await db.profile.put({ ...profile, age: 16 });
+    expect((await runTool({ id: '5', name: 'get_fasting', input: {} }, { proposals: [] })).content).toContain('not offered');
+    updateSettings({ modules: { nutrition: false, body: false, running: false, fasting: false } });
   });
 
   it('a lighter-week proposal marks the current week', async () => {

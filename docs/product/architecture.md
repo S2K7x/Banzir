@@ -56,6 +56,9 @@ vite.config.ts          Vite, React, PWA manifest and service worker, Vitest
 /src/lib/coach         AI coach: providers, tools, prompt, agent loop, storage
 /src/lib/body.ts       weigh-ins, 7-day trend
 /src/lib/nutrition.ts  targets, safety rules, food log, corrections, Open Food Facts
+/src/lib/running.ts    run log, heart-rate zones, Riegel, 10 % rule, GPX parser
+/src/lib/fasting.ts    eating windows, fasting timer state, week summary, log
+/src/lib/fastingSafety.ts  who fasting is not offered to (no imports, safe for the shell)
 
 Planned and not there yet: nutrition, fasting and running modules.
 
@@ -71,13 +74,17 @@ Planned and not there yet: nutrition, fasting and running modules.
 
 CI (`.github/workflows/ci.yml`) runs the tests and the build on every push.
 
-## Bundle (2026-11-12, with the coach)
+## Bundle (2026-11-12, all modules)
 
-First load is about 130 kB gzipped: the main chunk (React, Dexie, shell,
-Today) at 79.5 kB, shared exercise data and labels at 46 kB, styles at 5 kB.
+First load is about 123 kB of gzipped JavaScript plus 5 kB of styles: the
+entry chunk (React, Dexie, shell, Today) at 115 kB and exercise data at 7 kB.
+Measure the sum of every script `index.html` loads, not the entry chunk
+alone: the bundler moved React and Dexie from a shared chunk into the entry
+chunk when the modules were added, and the entry grew from 79.5 to 115 kB
+while the first load stayed at 123 kB.
 Loaded on demand: onboarding (5 kB), templates and ranking (16 kB), the coach
-(18 kB), the Food tab (5 kB), the weight and food cards on Today (only
-when the modules are on), the Anthropic SDK (84 kB, only when Claude is the provider), Zod
+(18 kB), the Food tab (5 kB), the fasting screen (4 kB), the running
+screens (4 kB), the module cards on Today (only when the modules are on), the Anthropic SDK (84 kB, only when Claude is the provider), Zod
 (28 kB, coach and backup restore), and 2-5 kB chunks for the other screens.
 The service worker precaches everything.
 
@@ -103,15 +110,24 @@ and these `kv` keys: `nutrition.settings` (goal, pace, activity level,
 correction, manual targets), `nutrition.favourites`, `nutrition.water`
 (date → ml, last 90 days), `coach.config`, `coach.chat`, `coach.memory`.
 
+Version 3 (2026-11-12) added:
+
+| Table | Contents |
+|---|---|
+| `runs` | Runs: id, start time, seconds, metres, kind, average heart rate, effort, note, session id, source (manual, gpx, session). |
+| `fasts` | Fasts: id, start, end (missing while running), feel 1-5, note. |
+
+and the `kv` keys `running.settings` (measured maximum and resting heart
+rate, recent 5 km time) and `fasting.settings` (eating window per weekday).
+
 Device preferences (theme, accent, corners, units, timer and sound options,
 last backup date, enabled modules) live in `localStorage` under `banzir.settings`, so the
 theme can be applied synchronously before first paint.
 
-Planned tables: `exercises` (user-created), `bodyLog`, `nutritionLog`,
-`fastLog`, `coachMemory`, `chats`.
+Planned tables: `exercises` (user-created).
 
-The backup file is one JSON document (`app: 'banzir'`, `format: 2`; format 1
-files still restore) holding all tables plus the settings, without the AI
+The backup file is one JSON document (`app: 'banzir'`, `format: 3`; formats 1
+and 2 still restore) holding all tables plus the settings, without the AI
 key. A key already on the device survives a restore. Restore validates it with the schema and
 replaces local data. Add a Dexie version and a migration whenever a table or
 stored shape changes, and bump `format` when the backup shape changes.

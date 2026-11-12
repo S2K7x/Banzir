@@ -135,7 +135,7 @@ describe('storage', () => {
     await db.kv.put({ key: 'coach.config', value: { provider: 'anthropic', apiKey: 'sk-secret', model: 'm' } });
 
     const backup = await buildBackup();
-    expect(backup.format).toBe(2);
+    expect(backup.format).toBe(3);
     expect(backup.body).toHaveLength(2);
     expect(JSON.stringify(backup)).not.toContain('sk-secret');
 

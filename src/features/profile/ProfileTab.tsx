@@ -3,6 +3,7 @@ import { findExercise } from '../../data/exercises';
 import { exportBackup, exportCsv, importBackup, wipeAll } from '../../lib/backup';
 import { requestPersistence } from '../../lib/db';
 import type { Profile, Program } from '../../lib/schema';
+import { fastingBlocked, FASTING_CAUTION } from '../../lib/fastingSafety';
 import { updateSettings, useSettings } from '../../lib/settings';
 import { DISCLAIMER, EQUIPMENT_LABEL, GOAL_INFO, LEVEL_INFO, shortDate } from '../../lib/text';
 import { Icon, Segmented, Sheet, Toggle } from '../../ui/kit';
@@ -68,7 +69,19 @@ export function ProfileTab({ profile, program, sessionCount, editProfile }: { pr
       <div className="card list">
         <Toggle label="Nutrition" hint="Food log, calorie and protein targets, water" value={s.modules.nutrition} onChange={(nutrition) => updateSettings({ modules: { ...s.modules, nutrition } })} />
         <Toggle label="Body weight" hint="Weigh-ins, 7-day trend, calorie corrections" value={s.modules.body} onChange={(body) => updateSettings({ modules: { ...s.modules, body } })} />
+        <Toggle label="Running" hint="Run log, GPX import, heart-rate zones, race times" value={s.modules.running} onChange={(running) => updateSettings({ modules: { ...s.modules, running } })} />
+        {fastingBlocked(profile) ? (
+          <div>
+            <span className="grow">
+              <span style={{ display: 'block', fontWeight: 600 }}>Fasting</span>
+              <span className="muted small">{fastingBlocked(profile)}</span>
+            </span>
+          </div>
+        ) : (
+          <Toggle label="Fasting" hint="Eating window, fasting timer and log" value={s.modules.fasting} onChange={(fasting) => updateSettings({ modules: { ...s.modules, fasting } })} />
+        )}
       </div>
+      {s.modules.fasting && !fastingBlocked(profile) && <p className="muted small">{FASTING_CAUTION}</p>}
 
       <div className="section-title">
         <h2 className="h2">Workout</h2>

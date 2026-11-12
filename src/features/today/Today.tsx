@@ -11,11 +11,14 @@ import { sessionsInWeek, totalMinutes, weekStreak } from '../../lib/stats';
 import { GOAL_INFO, describe, greeting, shortDate } from '../../lib/text';
 import { flatItems, startWorkout, unlockAudio } from '../../lib/workout';
 import { Icon, Ring } from '../../ui/kit';
+import { fastingBlocked } from '../../lib/fastingSafety';
 import { isStandalone } from '../onboarding/Install';
 
 // Module cards load only when the module is on.
 const QuickWeigh = lazy(() => import('../body/Weight').then((m) => ({ default: m.QuickWeigh })));
 const FoodToday = lazy(() => import('../nutrition/FoodToday').then((m) => ({ default: m.FoodToday })));
+const FastingCard = lazy(() => import('../fasting/Fasting').then((m) => ({ default: m.FastingCard })));
+const RunToday = lazy(() => import('../running/Running').then((m) => ({ default: m.RunToday })));
 
 
 type Props = {
@@ -25,7 +28,8 @@ type Props = {
   sessions: Session[];
   active: ActiveSession | undefined;
   openPlayer: () => void;
-  goTo: (tab: 'program' | 'profile' | 'coach' | 'food') => void;
+  openFasting: () => void;
+  goTo: (tab: 'program' | 'profile' | 'coach' | 'food' | 'progress') => void;
 };
 
 const TIPS: Record<string, string> = {
@@ -39,7 +43,7 @@ const TIPS: Record<string, string> = {
   sport: 'Do jumps and sprints fresh, with full recovery. Tired power work is just conditioning.',
 };
 
-export function Today({ profile, program, state, sessions, active, openPlayer, goTo }: Props) {
+export function Today({ profile, program, state, sessions, active, openPlayer, openFasting, goTo }: Props) {
   const coachReady = useLiveQuery(async () => {
     const c = await getKV<{ apiKey?: string; model?: string; provider?: string }>(COACH_CONFIG_KEY);
     return !!c?.model && (!!c.apiKey || c.provider === 'custom');
@@ -163,7 +167,9 @@ export function Today({ profile, program, state, sessions, active, openPlayer, g
 
       <Suspense fallback={null}>
         {settings.modules.body && <QuickWeigh />}
+        {settings.modules.fasting && !fastingBlocked(profile) && <FastingCard onOpen={openFasting} />}
         {settings.modules.nutrition && <FoodToday profile={profile} onOpen={() => goTo('food')} />}
+        {settings.modules.running && <RunToday profile={profile} runDay={day?.kind === 'run'} onOpen={() => goTo('progress')} />}
       </Suspense>
 
       <div className="tiles">

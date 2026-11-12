@@ -15,7 +15,7 @@ export type Settings = {
   keepAwake: boolean;
   lastBackup: string | null;
   /** Optional modules shown in the app. */
-  modules: { nutrition: boolean; body: boolean };
+  modules: { nutrition: boolean; body: boolean; running: boolean; fasting: boolean };
 };
 
 const KEY = 'banzir.settings';
@@ -29,12 +29,14 @@ const DEFAULTS: Settings = {
   sound: true,
   keepAwake: true,
   lastBackup: null,
-  modules: { nutrition: false, body: false },
+  modules: { nutrition: false, body: false, running: false, fasting: false },
 };
 
 function read(): Settings {
   try {
-    return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || '{}') };
+    const stored = JSON.parse(localStorage.getItem(KEY) || '{}');
+    // Modules added later default to off for people who saved settings before.
+    return { ...DEFAULTS, ...stored, modules: { ...DEFAULTS.modules, ...stored.modules } };
   } catch {
     return DEFAULTS;
   }
@@ -58,7 +60,7 @@ export function getSettings(): Settings {
 }
 
 export function updateSettings(patch: Partial<Settings>) {
-  current = { ...current, ...patch };
+  current = { ...current, ...patch, modules: { ...DEFAULTS.modules, ...(patch.modules ?? current.modules) } };
   try {
     localStorage.setItem(KEY, JSON.stringify(current));
   } catch {
@@ -94,6 +96,28 @@ export function showBodyWeight(kg: number, units: Settings['units']): number {
 
 export function toKg(value: number, units: Settings['units']): number {
   return units === 'imperial' ? value / LB : value;
+}
+
+const MILE = 1609.344;
+
+/** Distance in km or miles, to two decimals. Stored distances are metres. */
+export function showDistance(meters: number, units: Settings['units']): number {
+  return Math.round((units === 'imperial' ? meters / MILE : meters / 1000) * 100) / 100;
+}
+
+export function toMeters(value: number, units: Settings['units']): number {
+  return units === 'imperial' ? value * MILE : value * 1000;
+}
+
+export const distanceUnit = (units: Settings['units']) => (units === 'imperial' ? 'mi' : 'km');
+
+/** "5:12 /km" from a duration and a distance. */
+export function showPace(seconds: number, meters: number, units: Settings['units']): string {
+  if (!meters) return '-';
+  const per = seconds / (units === 'imperial' ? meters / MILE : meters / 1000);
+  const m = Math.floor(per / 60);
+  const s = Math.round(per % 60);
+  return `${s === 60 ? m + 1 : m}:${String(s === 60 ? 0 : s).padStart(2, '0')} /${distanceUnit(units)}`;
 }
 
 export const weightUnit = (units: Settings['units']) => (units === 'imperial' ? 'lb' : 'kg');

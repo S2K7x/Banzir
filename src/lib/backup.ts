@@ -3,8 +3,8 @@ import { getSettings, updateSettings, type Settings } from './settings';
 
 /** One JSON file holding everything the app stores. */
 
-/** 2 added body weight and the food log. Older files still restore. */
-const FORMAT = 2;
+/** 2 added body weight and the food log, 3 runs and fasts. Older files still restore. */
+const FORMAT = 3;
 
 export type Backup = {
   app: 'banzir';
@@ -17,13 +17,27 @@ export type Backup = {
   kv: { key: string; value: unknown }[];
   body?: unknown[];
   foods?: unknown[];
+  runs?: unknown[];
+  fasts?: unknown[];
 };
 
+/** Every table a backup holds; a restore or erase clears them all. */
+const TABLES = () => [db.profile, db.programs, db.sessions, db.kv, db.body, db.foods, db.runs, db.fasts];
+
 export async function buildBackup(): Promise<Backup> {
-  const [profile, programs, sessions, kv, body, foods] = await Promise.all([db.profile.toArray(), db.programs.toArray(), db.sessions.toArray(), db.kv.toArray(), db.body.toArray(), db.foods.toArray()]);
+  const [profile, programs, sessions, kv, body, foods, runs, fasts] = await Promise.all([
+    db.profile.toArray(),
+    db.programs.toArray(),
+    db.sessions.toArray(),
+    db.kv.toArray(),
+    db.body.toArray(),
+    db.foods.toArray(),
+    db.runs.toArray(),
+    db.fasts.toArray(),
+  ]);
   // The AI key never leaves the device in a backup file.
   const safeKv = kv.map((row) => (row.key === 'coach.config' && row.value && typeof row.value === 'object' ? { ...row, value: { ...(row.value as object), apiKey: '' } } : row));
-  return { app: 'banzir', format: FORMAT, exportedAt: new Date().toISOString(), settings: getSettings(), profile, programs, sessions, kv: safeKv, body, foods };
+  return { app: 'banzir', format: FORMAT, exportedAt: new Date().toISOString(), settings: getSettings(), profile, programs, sessions, kv: safeKv, body, foods, runs, fasts };
 }
 
 export async function exportBackup(): Promise<void> {
@@ -61,23 +75,27 @@ export async function importBackup(text: string): Promise<{ sessions: number }> 
   if (data.format > FORMAT) throw new Error('This backup comes from a newer version of Banzir. Update the app first.');
 
   // The validation library is only needed here, so it is loaded on demand.
-  const { Profile, Program, Session, BodyEntry, FoodEntry } = await import('./schema');
+  const { Profile, Program, Session, BodyEntry, FoodEntry, Run, Fast } = await import('./schema');
   const profile = (data.profile ?? []).map((p) => Profile.parse(p));
   const programs = (data.programs ?? []).map((p) => Program.parse(p));
   const sessions = (data.sessions ?? []).map((s) => Session.parse(s));
   const body = (data.body ?? []).map((b) => BodyEntry.parse(b));
   const foods = (data.foods ?? []).map((f) => FoodEntry.parse(f));
+  const runs = (data.runs ?? []).map((r) => Run.parse(r));
+  const fasts = (data.fasts ?? []).map((f) => Fast.parse(f));
   // A key saved on this device survives a restore, because backups never contain it.
   const coach = await db.kv.get('coach.config');
 
-  await db.transaction('rw', [db.profile, db.programs, db.sessions, db.kv, db.body, db.foods], async () => {
-    await Promise.all([db.profile.clear(), db.programs.clear(), db.sessions.clear(), db.kv.clear(), db.body.clear(), db.foods.clear()]);
+  await db.transaction('rw', TABLES(), async () => {
+    await Promise.all(TABLES().map((t) => t.clear()));
     await db.profile.bulkPut(profile);
     await db.programs.bulkPut(programs);
     await db.sessions.bulkPut(sessions);
     await db.kv.bulkPut(data.kv ?? []);
     await db.body.bulkPut(body);
     await db.foods.bulkPut(foods);
+    await db.runs.bulkPut(runs);
+    await db.fasts.bulkPut(fasts);
     const restored = (data.kv ?? []).find((k) => k.key === 'coach.config')?.value as { apiKey?: string } | undefined;
     const local = coach?.value as { apiKey?: string } | undefined;
     if (local?.apiKey && restored && !restored.apiKey) await db.kv.put({ key: 'coach.config', value: { ...restored, apiKey: local.apiKey } });
@@ -87,8 +105,8 @@ export async function importBackup(text: string): Promise<{ sessions: number }> 
 }
 
 export async function wipeAll(): Promise<void> {
-  await db.transaction('rw', [db.profile, db.programs, db.sessions, db.kv, db.body, db.foods], async () => {
-    await Promise.all([db.profile.clear(), db.programs.clear(), db.sessions.clear(), db.kv.clear(), db.body.clear(), db.foods.clear()]);
+  await db.transaction('rw', TABLES(), async () => {
+    await Promise.all(TABLES().map((t) => t.clear()));
   });
 }
 

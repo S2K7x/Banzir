@@ -136,6 +136,39 @@ extra benefit over the same intake eaten normally `[secondary, cited in legacy
 app]`. Very short eating windows make protein targets harder. Offer it as a
 preference tool, default window 10-12 h.
 
+Evidence added 2026-11-12
+- Liu et al. 2022 (NEJM), 139 adults with obesity, all on the same calorie
+  restriction for 12 months, with or without an 8:00-16:00 eating window:
+  -8.0 vs -6.3 kg, difference -1.8 kg (95 % CI -4.0 to 0.4, not significant);
+  body fat, lean mass and risk factors followed the same pattern. Calorie
+  restriction explained most of the effect `[secondary: summaries of the
+  trial]`.
+- Lowe et al. 2020 (TREAT, JAMA Internal Medicine), 16:8 for 12 weeks without
+  other advice: no more weight loss than three regular meals; a small extra
+  loss of appendicular lean mass in the subgroup measured, possibly from
+  lower protein intake; critics note the difference was within measurement
+  error `[secondary]`.
+- Meta-analysis in women with overweight (13 trials, 612 people, searched to
+  August 2024): more weight loss than an unchanged diet, but not more than
+  calorie restriction; adherence and safety were good `[secondary: abstract
+  via search]`.
+- A 2024 conference abstract (NHANES, 20,078 adults) linked an eating window
+  under 8 hours with higher cardiovascular death (HR 1.91). It is
+  observational, from two 24-hour recalls, not peer reviewed, and open to
+  reverse causation; the authors said it shows no cause `[secondary]`. The app
+  does not cite it as a risk, but it is one more reason not to push very
+  short windows.
+
+App rules
+- Fasting is opt-in, never preselected, and never suggested by the coach as
+  a fat-loss method on its own.
+- Default 12:12 (08:00-20:00) overnight fast; presets 12:12, 14:10 and 16:8;
+  a note when any window is under 8 hours (protein meals, no extra benefit).
+- Not offered under 18, during pregnancy or after birth, or with BMI under
+  18.5; a standing caution for eating-disorder history and for insulin or
+  other glucose-lowering medicines (see `populations-safety.md`).
+- The log rejects fasts over 72 hours as almost certainly a typing mistake.
+
 ## Women
 
 Protein and carbohydrate needs apply across the cycle (ISSN 2023)
@@ -164,6 +197,10 @@ default; it lets users log symptoms and adjust by feel.
 - ISSN caffeine 2021: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7777221/
 - ISSN creatine 2017: https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z
 - IOC REDs consensus 2023: https://pubmed.ncbi.nlm.nih.gov/37752011/
+- Liu et al. 2022, TRE with calorie restriction (summary): https://medicaldialogues.in/diet-nutrition/news/calorie-restricted-diet-added-to-time-restriction-fails-to-boost-weight-loss-nejm-91790
+- Lowe et al. 2020, TREAT: https://pubmed.ncbi.nlm.nih.gov/32986097/
+- TRE in women, meta-analysis 2025: https://www.frontiersin.org/journals/nutrition/articles/10.3389/fnut.2025.1664412/full
+- 2024 AHA abstract and expert response: https://cms.ahs.uic.edu/inside-ahs/wp-content/uploads/sites/12/2024/04/Collective-Reponse-to-AHA-press-release-on-TRE.pdf
 - Intermittent fasting + resistance training meta-analysis: https://pmc.ncbi.nlm.nih.gov/articles/PMC11434652/
 - McNulty et al. 2020 (menstrual cycle): https://springerlink.bibliotecabuap.elogim.com/content/pdf/10.1007/s40279-020-01319-3.pdf
 - Colenso-Semple et al. 2023: https://frontiersin.org/articles/10.3389/fspor.2023.1054542/full

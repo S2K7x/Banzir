@@ -1,16 +1,22 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { findExercise } from '../../data/exercises';
 import { db } from '../../lib/db';
-import type { Session } from '../../lib/schema';
+import type { Profile, Session } from '../../lib/schema';
 import { formatDuration, showWeight, useSettings, weightUnit } from '../../lib/settings';
 import { WeightCard } from '../body/Weight';
 import { muscleSets, records, sessionsInWeek, weeklyCounts } from '../../lib/stats';
 import { shortDate } from '../../lib/text';
+
+const RunsCard = lazy(() => import('../running/Running').then((m) => ({ default: m.RunsCard })));
 import { Icon, Sheet } from '../../ui/kit';
 
-export function Progress({ sessions, target }: { sessions: Session[]; target: number }) {
-  const { modules } = useSettings();
-  const { units } = useSettings();
+export function Progress({ profile, sessions, target }: { profile: Profile; sessions: Session[]; target: number }) {
+  const { modules, units } = useSettings();
+  const runs = modules.running && (
+    <Suspense fallback={null}>
+      <RunsCard profile={profile} />
+    </Suspense>
+  );
   const [open, setOpen] = useState<Session | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const sorted = [...sessions].sort((a, b) => b.date.localeCompare(a.date));
@@ -25,6 +31,7 @@ export function Progress({ sessions, target }: { sessions: Session[]; target: nu
       <div className="screen">
         <h1 className="h1">Progress</h1>
         {modules.body && <WeightCard />}
+        {runs}
         <div className="card stack center" style={{ padding: 28 }}>
           <div style={{ color: 'var(--accent)', display: 'grid', placeItems: 'center' }}>
             <Icon name="chart" size={44} />
@@ -41,6 +48,7 @@ export function Progress({ sessions, target }: { sessions: Session[]; target: nu
       <h1 className="h1">Progress</h1>
 
       {modules.body && <WeightCard />}
+      {runs}
 
       <div className="card stack">
         <div className="row between">

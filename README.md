@@ -11,8 +11,8 @@ your device. No account, no database, nothing to configure.
 workouts with timers, progression suggestions, history, ten themes, backup,
 offline use and an optional AI coach (bring your own key from Claude,
 OpenAI, Gemini, OpenRouter, Groq, Mistral or a local model) work today, with
-optional food and body-weight tracking. Fasting and a running log are still
-to come. See [`docs/product/features.md`](docs/product/features.md).
+optional modules for food, body weight, running (run log, GPX import,
+heart-rate zones) and fasting. See [`docs/product/features.md`](docs/product/features.md).
 
 ## Get your own copy
 

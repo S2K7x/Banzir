@@ -39,12 +39,47 @@ advanced plans may polarise in the final weeks before a race.
   (Frandsen et al. 2025, BJSM) `[verified abstract]`.
 
 App rules
-- Long run grows by at most 10 % over the longest run in the last 30 days
-  (minimum step 0.5 km for beginners).
+- Long run grows by at most 10 % over the longest run in the last 30 days.
+  The run log applies it to every logged run: Today and Progress show the
+  limit for the next run (10 % above the longest of the last 30 days, by
+  distance when known, otherwise by time), and logging a longer run shows a
+  warning. The plans enforce it on minutes (unit test).
 - Every 3-4 weeks, a lighter week (about 70-80 % of volume).
 - After a break of more than 2 weeks, restart from about 50-70 % of previous
   volume.
 - Add frequency before adding long-run length for beginners.
+
+## Heart rate, zones and race equivalents (run log)
+
+- Maximum heart rate: Tanaka, Monahan and Seals 2001 pooled 351 studies
+  (18,712 people) and cross-validated in 514 lab-tested adults: HRmax = 208 -
+  0.7 x age, not different between men and women or by activity level; the
+  standard error is about 10 bpm, and 220 - age underestimates it in older
+  adults `[verified abstract]`. The app uses it only until a measured maximum
+  is entered, and says so.
+- Zones: the common five-zone convention (50-60, 60-70, 70-80, 80-90, 90-100 %)
+  `[secondary: coaching convention, no single source]`, applied to heart-rate
+  reserve (Karvonen: rest + % x (max - rest)) when the resting rate is known,
+  otherwise to maximum heart rate. ACSM bands for comparison: moderate 40-59 %
+  and vigorous 60-89 % of heart-rate reserve `[secondary]`. Zones 1-2 are
+  "easy" in the three-zone model above. The talk test stays the first guide
+  on hot days and hills.
+- Race equivalents: Riegel's formula, T2 = T1 x (D2 / D1)^1.06, fitted to
+  world records. In 2,303 performances of recreational runners it was well
+  calibrated up to the half marathon but underestimated marathon times,
+  often by 10 minutes or more for half of the runners (Vickers and Vertosick
+  2016) `[verified abstract via catalogue record]`. The app labels the
+  marathon prediction "likely optimistic".
+- Training paces from a 5 km time `[secondary: coaching sources, not lab
+  values]`: intervals of 3-5 min near 5 km race pace; tempo between 10 km and
+  half-marathon race pace (threshold is often described as the pace held for
+  about an hour, which varies between people). Easy and long runs go by feel
+  or zone 2, not by pace.
+- GPX import: GPX 1.1 track points; heart rate from Garmin's
+  TrackPointExtension (`hr`), matched by element name because the namespace
+  prefix varies between exporters (gpxtpx, ns3) `[secondary: developer
+  notes]`. Distance is the sum of great-circle distances between points;
+  time is first to last timestamp (elapsed, not moving time).
 
 ## Session types
 
@@ -121,4 +156,8 @@ reuse the session types with time-based prescriptions. Not specified yet.
 - 10 % rule critique: https://www.outsideonline.com/health/running/training-advice/running-101/myth-of-the-10-percent-rule/
 - Helgerud et al. 2007: https://pubmed.ncbi.nlm.nih.gov/17414804/
 - Llanos-Lagos et al. 2024: https://repository.essex.ac.uk/37272/
+- Tanaka et al. 2001: https://pubmed.ncbi.nlm.nih.gov/11153730/
+- Vickers and Vertosick 2016, race-time prediction: https://synapse.mskcc.org/synapse/works/101585
+- ACSM heart-rate reserve bands (as cited): https://paulogentil.com/pdf/HRR%20and%20VO2R%20Fractions%20Are%20Not%20Equivalent%20-%20Is%20It%20Time%20to%20Rethink%20Aerobic%20Exercise%20Prescription%20Methods.pdf
+- GPX heart-rate extension notes: https://logiqx.github.io/gps-wizard/gpx ; https://groups.google.com/g/strava-api/c/ZmnDisDab4s
 - NHS Couch to 5K: https://www.nhs.uk/better-health/get-active/get-running-with-couch-to-5k/couch-to-5k-running-plan

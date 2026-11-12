@@ -14,10 +14,11 @@ const Coach = lazy(() => import('./features/coach/Coach').then((m) => ({ default
 const ProfileTab = lazy(() => import('./features/profile/ProfileTab').then((m) => ({ default: m.ProfileTab })));
 const Nutrition = lazy(() => import('./features/nutrition/Nutrition').then((m) => ({ default: m.Nutrition })));
 const Builder = lazy(() => import('./features/program/Builder').then((m) => ({ default: m.Builder })));
+const FastingScreen = lazy(() => import('./features/fasting/Fasting').then((m) => ({ default: m.FastingScreen })));
 const Player = lazy(() => import('./features/player/Player').then((m) => ({ default: m.Player })));
 
 type Tab = 'today' | 'program' | 'progress' | 'food' | 'coach' | 'profile';
-type Overlay = 'player' | 'edit' | 'builder' | null;
+type Overlay = 'player' | 'edit' | 'builder' | 'fasting' | null;
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'today', label: 'Today', icon: 'home' },
@@ -87,13 +88,14 @@ export default function App({ update }: { update?: { subscribe: (cb: () => void)
       )}
 
       <Suspense fallback={null}>
-        {tab === 'today' && <Today profile={profile} program={program} state={state} sessions={sessions} active={active} openPlayer={() => open('player')} goTo={setTab} />}
+        {tab === 'today' && <Today profile={profile} program={program} state={state} sessions={sessions} active={active} openPlayer={() => open('player')} openFasting={() => open('fasting')} goTo={setTab} />}
         {tab === 'program' && <ProgramTab profile={profile} program={program} state={state} sessions={sessions} active={active} openPlayer={() => open('player')} openBuilder={() => open('builder')} />}
-        {tab === 'progress' && <Progress sessions={sessions} target={program?.daysPerWeek ?? profile.daysPerWeek} />}
+        {tab === 'progress' && <Progress profile={profile} sessions={sessions} target={program?.daysPerWeek ?? profile.daysPerWeek} />}
         {tab === 'coach' && <Coach />}
         {tab === 'food' && <Nutrition profile={profile} editProfile={() => open('edit')} />}
         {tab === 'profile' && <ProfileTab profile={profile} program={program} sessionCount={sessions.length} editProfile={() => open('edit')} />}
 
+        {overlay === 'fasting' && <FastingScreen profile={profile} onClose={close} />}
         {overlay === 'builder' && program && <Builder key={program.id} program={program} profile={profile} onClose={close} />}
         {overlay === 'player' && (
           <Player

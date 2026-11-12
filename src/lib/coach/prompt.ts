@@ -7,6 +7,8 @@ import { EQUIPMENT_LABEL, GOAL_INFO, LEVEL_INFO } from '../text';
 import { trend } from '../body';
 import { dayKey } from '../body';
 import { getNutritionSettings, targets as nutritionTargets, totals } from '../nutrition';
+import { allFasts, fastingNow, getFastingSettings } from '../fasting';
+import { longestRecent, weeklyRuns } from '../running';
 import { getMemory } from './store';
 import { TOOLS_VERSION } from './tools';
 
@@ -19,7 +21,7 @@ import { TOOLS_VERSION } from './tools';
  * The evidence summary mirrors docs/science/. Keep the two in step.
  */
 
-export const PROMPT_VERSION = `p1-${TOOLS_VERSION}`;
+export const PROMPT_VERSION = `p2-${TOOLS_VERSION}`;
 
 export const SYSTEM_PROMPT = `You are the coach inside Banzir, a training app. You coach one person: the owner of this device. You can read their profile, plan and training log through tools, remember durable facts about them, and propose changes to their plan.
 
@@ -30,7 +32,7 @@ How to work
 - Only exercises from the app's library can go into a plan. Find ids with search_exercises, and respect the person's equipment and level.
 - Save durable facts with save_memory (a goal and date, an injury, a preference, a decision). One fact per note, written so it makes sense months later. Do not save one-off details. Remove notes that became wrong with forget_memory.
 - Reply in the language the person writes in. Be warm, direct and brief: a few short paragraphs or a short list. No preamble, no repeating the question.
-- Food and body weight are optional modules: use get_nutrition and get_body_weight when they are on, and do not push food tracking on someone who has not turned it on.
+- Food, body weight, running and fasting are optional modules: use get_nutrition, get_body_weight, get_runs and get_fasting when they are on, and do not push tracking on someone who has not turned it on.
 - Weights in the log are in kilograms; the context says which units the person reads. Convert when you quote numbers.
 - When evidence is weak or mixed, say so plainly instead of sounding certain.
 
@@ -43,6 +45,8 @@ Evidence you rely on (from the app's research notes; the confidence is given whe
 - Running: about 80 % of running time easy (conversational). A single run more than 10 % longer than the longest run of the previous 30 days raises injury risk (cohort of 5,205 runners, 2025); every 3-4 weeks lighter. Heavy strength work and plyometrics improve running economy.
 - Concurrent training does not reduce strength or muscle overall; it blunts explosive strength when both are in one session. Separate hard runs and heavy leg days, or lift first.
 - Fat loss: a moderate deficit losing about 0.5-1 % of body weight per week, protein about 1.6-2.2 g/kg (more when lean and dieting), strength training to keep muscle, daily steps. Intervals and steady cardio burn fat equally; pick what the person enjoys. Diet breaks help adherence, not fat loss.
+- Fasting (time-restricted eating): with the same food it gives no extra fat loss or muscle benefit over normal meal timing; it is a way to organise eating. Muscle is kept with strength training and enough protein. Windows under about 8 hours make 3-4 protein meals hard. Never suggest fasting to people under 18, during pregnancy or breastfeeding, with an eating disorder history, when underweight, or on insulin or other medicines that can cause low blood sugar without their diabetes team.
+- Heart rate: maximum estimated as 208 - 0.7 x age, with an error of about 10 beats a minute; a measured value is better. Race-time equivalents from Riegel's formula are fair up to the half marathon and too optimistic for the marathon.
 - Gaining muscle: a small surplus; larger surpluses mostly add fat. Protein about 1.6 g/kg on average reaches the plateau, spread over 3-4 meals.
 - Supplements: creatine monohydrate 3-5 g a day has strong support; caffeine before training helps performance; most other supplements are not worth it. These are information, not prescriptions.
 - Sport: build strength, power and conditioning around the sport, fresh power work, conditioning that matches its work-to-rest pattern. Nordic hamstring curls and the Copenhagen adduction exercise have strong evidence against hamstring and groin injuries in football.
@@ -110,7 +114,23 @@ export async function contextSnapshot(now = new Date()): Promise<string> {
       `Nutrition: goal ${t.goal}${t.goal !== 'maintain' ? ` (${t.ratePct} % a week)` : ''}${t.kcal ? `, target ${t.kcal} kcal and ${t.protein} g protein` : ', targets not set'}; logged today ${today.kcal} kcal and ${today.protein} g protein.`,
     );
   }
-  if (!modules.body || !modules.nutrition) lines.push(`Modules off: ${[!modules.nutrition && 'nutrition', !modules.body && 'body weight'].filter(Boolean).join(', ')} (turned on in Profile).`);
+  if (modules.running) {
+    const runs = await db.runs.orderBy('date').toArray();
+    const week = weeklyRuns(runs, 1, now)[0];
+    const longest = longestRecent(runs, now);
+    lines.push(
+      runs.length
+        ? `Running: ${runs.length} runs logged; this week ${(week.meters / 1000).toFixed(1)} km in ${week.count} runs${longest ? `; longest of the last 30 days ${(longest.meters / 1000).toFixed(1)} km / ${Math.round(longest.seconds / 60)} min` : ''}.`
+        : 'Running: module on, no runs logged yet.',
+    );
+  }
+  if (modules.fasting) {
+    const [fasts, s] = await Promise.all([allFasts(), getFastingSettings()]);
+    const f = fastingNow(fasts, s, now);
+    lines.push(`Fasting: eating window today ${s.schedule[now.getDay()].open}-${s.schedule[now.getDay()].close}; ${f.kind === 'fasting' ? `fasting for ${Math.round(f.elapsed / 360000) / 10} h now` : f.kind === 'eating' ? 'eating window open' : 'window closed, no fast started'}.`);
+  }
+  const off = [!modules.nutrition && 'nutrition', !modules.body && 'body weight', !modules.running && 'running', !modules.fasting && 'fasting'].filter(Boolean);
+  if (off.length) lines.push(`Modules off: ${off.join(', ')} (turned on in Profile).`);
 
   lines.push(notes.length ? `Coach notes (your memory):\n${notes.map((n) => `- [${n.id}] ${n.text}`).join('\n')}` : 'Coach notes: none yet.');
   return lines.join('\n');

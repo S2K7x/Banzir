@@ -70,7 +70,7 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
 | 3 | Workout player; history; progression engine; records | Done 2026-11-12 |
 | 4 | Program builder; remaining templates; backup/export; install flow | Done 2026-11-12: builder, saved programs, all 35 templates, backup, restore, CSV, install card. |
 | 5 | AI coach: providers, relay, tools, memory | Done 2026-11-12 (see `ai-coach.md`, "As built") |
-| 6 | Modules: running, body weight, nutrition, fasting | Body weight and nutrition done 2026-11-12; fasting and a running log not started |
+| 6 | Modules: running, body weight, nutrition, fasting | Done 2026-11-12 |
 | 7 | Polish, accessibility pass, first release | Not started |
 
 ## What works today (2026-11-12)
@@ -121,8 +121,21 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
   recents, favourites and manual entry; protein-rich meal count; water;
   weight-trend calorie corrections (±150 kcal, at most every 14 days); a
   warning when weight falls faster than 1 % a week for two weeks.
-- Modules are chosen in onboarding (preselected from the goal) and in
-  Profile. The coach reads both and can propose new nutrition targets.
+- Running (optional module): run log on Progress (week totals, 8-week chart,
+  history, edit and delete), manual entry with pace, GPX import with
+  duplicate detection and merge into a run session, heart-rate zones (age
+  estimate or measured maximum, resting rate for reserve-based zones), race
+  equivalents and training paces from a 5 km time, the 10 % single-run limit
+  on Today and as a warning when logging; run sessions in the player ask for
+  distance and heart rate and go into the log; zone targets show bpm.
+- Fasting (optional module, opt-in only): eating window per weekday with
+  12:12, 14:10 and 16:8 presets; Today card and full screen with a live
+  timer, "start since the planned close" for a forgotten button, end, 1-5
+  rating, week chart against the plan, 10-day log with one-tap confirmation
+  of planned fasts, edit and delete; a logged meal ends a running fast; not
+  offered under 18, in pregnancy or when underweight.
+- Modules are chosen in onboarding (preselected from the goal, never fasting)
+  and in Profile. The coach reads all four and can propose nutrition targets.
 - Offline: verified with the network disabled (shell, all tabs, player).
 
 ## Known gaps and next steps
@@ -136,9 +149,10 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
    instructions, loaded on demand.
 4. Coach follow-ups: automatic weekly review (opt-in), several saved
    conversations, effort setting per provider.
-5. Modules: fasting (port from the legacy app), running log (distance, pace,
-   heart-rate zones, GPX import), barcode scanning for food (BarcodeDetector
-   where available), editing a logged food, meal templates.
+5. Module follow-ups: barcode scanning for food (BarcodeDetector where
+   available), editing a logged food, meal templates, flagging meals outside
+   the eating window, per-run pace splits and a map from GPX, TCX/FIT import,
+   updating the 5 km time from a logged race automatically.
 6. Readiness check, plate calculator, warm-up sets, per-exercise charts.
 7. Supersets as a player mode; voice announcements (legacy app has them).
 8. Accessibility pass (contrast check of every theme, screen-reader labels),

@@ -14,6 +14,8 @@ import { describe as describeRx } from '../text';
 import { addDays, dayKey, trend } from '../body';
 import { getNutritionSettings, saveNutritionSettings, targets as nutritionTargets, totals, type NutritionSettings } from '../nutrition';
 import { getSettings } from '../settings';
+import { allFasts, duration, fastingBlocked, fastingNow, fastingWeek, getFastingSettings, windowHours } from '../fasting';
+import { equivalents, getRunningSettings, hrZones, longestRecent, maxHrOf, weeklyRuns } from '../running';
 import { addMemory, removeMemory } from './store';
 import type { Proposal, ToolResult, ToolSpec } from './types';
 
@@ -362,6 +364,51 @@ const TOOLS = [
     },
   }),
   def({
+    name: 'get_runs',
+    description: 'Logged runs (distance in metres, seconds, kind, average heart rate), distance per week, the longest run of the last 30 days and the 10 % limit for the next one, heart-rate zones and race equivalents from a recent 5 km time. Only when the running module is on.',
+    input: z.object({ days: z.number().int().min(7).max(180).optional() }),
+    run: async ({ days }) => {
+      if (!getSettings().modules.running) return { note: 'The running module is off. The person can turn it on in Profile.' };
+      const [{ profile }, runs, s] = await Promise.all([load(), db.runs.orderBy('date').toArray(), getRunningSettings()]);
+      const from = Date.now() - (days ?? 42) * 86400000;
+      const longest = longestRecent(runs, new Date(Date.now() + 1));
+      const max = maxHrOf(profile, s);
+      return {
+        runs: runs
+          .filter((r) => new Date(r.date).getTime() >= from)
+          .map((r) => ({ date: r.date.slice(0, 16), kind: r.kind, meters: r.meters, seconds: r.seconds, avgHr: r.avgHr, effort: r.effort, note: r.note, source: r.source })),
+        weeks: weeklyRuns(runs, 8).map((w) => ({ weekOf: dayKey(w.start), meters: Math.round(w.meters), minutes: Math.round(w.seconds / 60), runs: w.count })),
+        longestLast30Days: longest ? { meters: Math.round(longest.meters), minutes: Math.round(longest.seconds / 60), nextRunLimitMeters: Math.round(longest.capMeters), nextRunLimitMinutes: Math.round(longest.capSeconds / 60) } : undefined,
+        heartRate: max ? { maxHr: max.bpm, maxEstimatedFromAge: max.estimated, restHr: s.restHr, zones: hrZones(max.bpm, s.restHr).map((z) => ({ zone: z.zone, name: z.name, bpm: `${z.from}-${z.to}` })) } : { note: 'No age or measured maximum heart rate.' },
+        raceEquivalents: s.fiveK ? equivalents(s.fiveK).map((e) => ({ distance: e.label, seconds: Math.round(e.seconds), optimistic: e.optimistic })) : undefined,
+      };
+    },
+  }),
+  def({
+    name: 'get_fasting',
+    description: "The person's eating window per weekday, whether a fast is running now, this week's fasts against the plan and recent fasts with their 1-5 rating (5 = easy). Only when the fasting module is on.",
+    input: z.object({ days: z.number().int().min(1).max(60).optional() }),
+    run: async ({ days }) => {
+      if (!getSettings().modules.fasting) return { note: 'The fasting module is off. The person can turn it on in Profile.' };
+      const { profile } = await load();
+      const blocked = fastingBlocked(profile);
+      if (blocked) return { note: `Fasting is not offered to this person: ${blocked}` };
+      const [fasts, s] = await Promise.all([allFasts(), getFastingSettings()]);
+      const now = fastingNow(fasts, s);
+      const week = fastingWeek(fasts, s);
+      const from = Date.now() - (days ?? 14) * 86400000;
+      const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      return {
+        schedule: s.schedule.map((w, i) => ({ day: DAYS[i], open: w.open, close: w.close, windowHours: windowHours(w) })),
+        now: now.kind === 'fasting' ? { fasting: true, startedAt: now.start.toISOString(), hoursSoFar: Math.round(now.elapsed / 360000) / 10, goalHours: Math.round(now.total / 360000) / 10 } : { fasting: false, state: now.kind },
+        thisWeek: { logged: week.logged, daysPassed: week.past, onTarget: week.onTarget, averageHours: Math.round(week.average / 360000) / 10 },
+        fasts: fasts
+          .filter((f) => f.end && new Date(f.start).getTime() >= from)
+          .map((f) => ({ start: f.start.slice(0, 16), hours: Math.round(duration(f) / 360000) / 10, feel: f.feel, note: f.note })),
+      };
+    },
+  }),
+  def({
     name: 'propose_nutrition_targets',
     description: 'Propose new nutrition settings: goal (lose, maintain, gain), pace in % of body weight per week (lose -0.25 to -1, gain 0.1 to 0.5), and optionally fixed calories or protein. The app applies its safety rules (no deficit under 18, in pregnancy or when underweight; calorie floors). Nothing changes until the person accepts.',
     input: z.object({
@@ -446,7 +493,7 @@ const TOOLS = [
 ];
 
 /** Bump when tool names, descriptions or schemas change: running conversations then drop their thinking blocks. */
-export const TOOLS_VERSION = 't2';
+export const TOOLS_VERSION = 't3';
 
 export const TOOL_SPECS: ToolSpec[] = TOOLS.map((t) => {
   const schema = z.toJSONSchema(t.input) as Record<string, unknown>;
@@ -454,7 +501,7 @@ export const TOOL_SPECS: ToolSpec[] = TOOLS.map((t) => {
   return { name: t.name, description: t.description, schema };
 });
 
-export const READ_TOOLS = new Set(['get_profile', 'get_program', 'get_recent_sessions', 'get_exercise_history', 'get_stats', 'search_exercises', 'list_plans', 'get_body_weight', 'get_nutrition']);
+export const READ_TOOLS = new Set(['get_profile', 'get_program', 'get_recent_sessions', 'get_exercise_history', 'get_stats', 'search_exercises', 'list_plans', 'get_body_weight', 'get_nutrition', 'get_runs', 'get_fasting']);
 
 /** Validates and runs one tool call. Errors become `isError` results the model can correct. */
 export async function runTool(call: { id: string; name: string; input: unknown }, ctx: Ctx): Promise<ToolResult> {

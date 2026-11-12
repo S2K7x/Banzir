@@ -72,9 +72,11 @@ Process
   tools, memory, proposals, summaries. Verified with mocked providers.
 - 2026-11-12: body weight and nutrition modules (most of phase 6), with
   Open Food Facts search, weight-trend calorie corrections and safety rules.
-- Not built yet: fasting and running-log modules, polish and first release
-  (phase 7). Ordered list in `docs/product/features.md`. The ordered list is under "Known gaps and next steps"
-  in `docs/product/features.md`.
+- 2026-11-12: running and fasting modules (phase 6 done): run log, GPX
+  import, heart-rate zones, race equivalents, the 10 % single-run limit;
+  eating windows, fasting timer and log, opt-in with safety rules.
+- Not built yet: polish and first release (phase 7). Ordered list under
+  "Known gaps and next steps" in `docs/product/features.md`.
 
 ## Code map
 
@@ -91,8 +93,10 @@ Full layout and commands: `docs/product/architecture.md`.
 - `src/features/*` — one folder per screen; `src/App.tsx` is the shell.
 - `src/lib/coach/` — AI coach; `api/llm.ts` — relay for providers that block
   browser calls. Read `docs/product/ai-coach.md` ("As built") first.
-- `src/lib/body.ts`, `src/lib/nutrition.ts` — optional modules; screens in
-  `src/features/body` and `src/features/nutrition`.
+- `src/lib/body.ts`, `src/lib/nutrition.ts`, `src/lib/running.ts`,
+  `src/lib/fasting.ts` — optional modules; screens in `src/features/body`,
+  `nutrition`, `running` and `fasting`. `src/lib/fastingSafety.ts` holds
+  who fasting is not offered to.
 - `src/lib/text.ts` — all user-facing labels (for future languages).
 - `npm test` (Vitest), `npm run build` (type-check + build), `npm run dev`.
 
@@ -156,6 +160,12 @@ Full layout and commands: `docs/product/architecture.md`.
   plates (`showWeight`). Mixing them showed 80.2 kg as 80.25.
 - Optional-module cards on Today are lazy-loaded so people without the
   module do not pay for them in the main bundle.
+- Measure the first load as the sum of every script `index.html` loads.
+  The entry chunk alone jumped from 79.5 to 115 kB when the bundler merged a
+  shared chunk into it, with no change in what loads at startup.
+- Screens that depend on the time of day are tested with Playwright's
+  `page.clock.setFixedTime` and a fixed `timezoneId`. Scope locators to
+  `.overlay` or `.sheet`: cards behind an overlay have the same buttons.
 - Think in every role before shipping a feature: engineer (tests, bundle),
   coach and scientist (is the prescription sensible for this level, is the
   claim sourced), nutritionist (safe floors), designer (thumb reach, contrast,

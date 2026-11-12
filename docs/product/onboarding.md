@@ -26,7 +26,7 @@ Every screen has "Skip" and a back arrow. A progress bar shows position.
 | 4 | Schedule | Days per week (2-6), session length (20-90 min), preferred days | Split choice, volume |
 | 5 | About you | Age, sex, height, weight; limits or injuries (free text + chips) | Calorie estimate, heart-rate zones, safety flags |
 | 6 | Your plan | Recommended template with week preview; "See other plans"; edit days | Confirm or change |
-| 7 | Make it yours | Theme preset + accent; modules (nutrition, fasting, body weight) | Appearance, tabs shown |
+| 7 | Make it yours | Theme preset + accent; modules (food, body weight, running, fasting). Food and body weight preselected for fat loss, body weight for muscle, running for the running goal; fasting never preselected and hidden for people it is not offered to | Appearance, tabs and Today cards shown |
 | 8 | Install | "Add to Home Screen" instructions for the detected browser | Data safety |
 | 9 | Ready | "Start first workout" (primary), "Explore the app" | First workout |
 

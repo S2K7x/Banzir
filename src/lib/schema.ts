@@ -222,6 +222,37 @@ export const FoodEntry = z.object({
 });
 export type FoodEntry = z.infer<typeof FoodEntry>;
 
+/* ---------- Running and fasting ---------- */
+
+export const RUN_KINDS = ['easy', 'long', 'tempo', 'intervals', 'race', 'other'] as const;
+
+/** A run, logged by hand, imported from a GPX file or saved with a run session. */
+export const Run = z.object({
+  id: z.string(),
+  /** Start time, ISO. */
+  date: z.string(),
+  seconds: z.number().positive().max(7 * 86400),
+  meters: z.number().min(0).max(1_000_000).optional(),
+  kind: z.enum(RUN_KINDS).default('easy'),
+  avgHr: z.number().min(30).max(250).optional(),
+  effort: z.number().min(1).max(10).optional(),
+  note: z.string().max(280).optional(),
+  sessionId: z.string().optional(),
+  source: z.enum(['manual', 'gpx', 'session']).default('manual'),
+});
+export type Run = z.infer<typeof Run>;
+
+/** One fast: from the last meal to the next. An open fast has no end yet. */
+export const Fast = z.object({
+  id: z.string(),
+  start: z.string(),
+  end: z.string().optional(),
+  /** 1 = very hard, 5 = easy. */
+  feel: z.number().int().min(1).max(5).optional(),
+  note: z.string().max(140).optional(),
+});
+export type Fast = z.infer<typeof Fast>;
+
 export const Profile = z.object({
   id: z.literal('me'),
   name: z.string().default(''),
