@@ -270,6 +270,7 @@ export const sptAthlete = template({
   loops: true,
   progression: DOUBLE,
   deloadEveryWeeks: 6,
+  tags: ['athlete'],
   sources: ['docs/science/sport-specific.md'],
   phases: [
     phase('base', 'Base', 6, [

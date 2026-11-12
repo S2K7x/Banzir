@@ -63,6 +63,7 @@ export const seg = (label: string, seconds: number, kind: 'work' | 'rest' = 'wor
 export function iv(exerciseId: string, reps: number, segments: Segment[], o: ItemOpts & { effort?: Effort } = {}): Draft {
   return {
     exerciseId,
+    alternatives: o.alt,
     priority: o.p ?? 1,
     prescription: { mode: 'intervals', reps, segments, target: o.effort },
     restSeconds: 0,

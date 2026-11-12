@@ -42,6 +42,8 @@ const LEGS: Muscle[] = ['quads', 'glutes'];
 
 export const EXERCISES: Exercise[] = [
   // ----- Squat -----
+  ex('sit_to_stand', 'Sit to stand', 'squat', LEGS, { cue: 'From a chair: stand up quickly, sit down slowly. Use your hands only if you need to.', ladder: ['squat', 0] }),
+  ex('wall_sit', 'Wall sit', 'squat', ['quads'], { log: 'hold', cue: 'Back flat on the wall, thighs as close to level as is comfortable. Good for sore knees and tendons.' }),
   ex('bw_squat', 'Bodyweight squat', 'squat', LEGS, { cue: 'Sit between your hips, knees track over toes.', ladder: ['squat', 1] }),
   ex('goblet_squat', 'Goblet squat', 'squat', LEGS, { eq: ['dumbbells'], sec: ['core'], cue: 'Hold the weight at your chest, elbows inside the knees.' }),
   ex('back_squat', 'Back squat', 'squat', LEGS, { eq: ['barbell', 'rack'], sec: ['hamstrings', 'core'], cue: 'Brace, break at hips and knees together, drive up through mid-foot.' }),
@@ -72,6 +74,7 @@ export const EXERCISES: Exercise[] = [
   ex('leg_extension', 'Leg extension', 'squat', ['quads'], { eq: ['machines'], cue: 'Pause at the top.' }),
 
   // ----- Horizontal push -----
+  ex('wall_pushup', 'Wall push-up', 'push_h', ['chest'], { sec: ['triceps', 'shoulders'], cue: 'Hands on a wall at shoulder height, body straight, chest to the wall.', ladder: ['pushup', 0] }),
   ex('incline_pushup', 'Incline push-up', 'push_h', ['chest'], { sec: ['triceps', 'shoulders'], cue: 'Hands on a table or bench, body in one line.', ladder: ['pushup', 1] }),
   ex('knee_pushup', 'Knee push-up', 'push_h', ['chest'], { sec: ['triceps', 'shoulders'], cue: 'Straight line from knees to head.', ladder: ['pushup', 2] }),
   ex('pushup', 'Push-up', 'push_h', ['chest'], { sec: ['triceps', 'shoulders', 'core'], cue: 'Elbows about 45 degrees, chest to the floor.', ladder: ['pushup', 3] }),
@@ -118,6 +121,11 @@ export const EXERCISES: Exercise[] = [
   ex('lat_pulldown', 'Lat pull-down', 'pull_v', ['back'], { eq: ['cables'], sec: ['biceps'], cue: 'Pull the bar to the upper chest.' }),
   ex('band_pulldown', 'Band pull-down', 'pull_v', ['back'], { eq: ['bands'], sec: ['biceps'], cue: 'Anchor the band high, pull elbows to your sides.' }),
 
+  ex('lateral_lunge', 'Lateral lunge', 'single_leg', ['quads', 'glutes'], { sec: ['hamstrings'], uni: true, cue: 'Step wide, sit back into one hip, keep the other leg straight.' }),
+  ex('db_fly', 'Dumbbell fly', 'push_h', ['chest'], { eq: ['dumbbells', 'bench'], cue: 'Slight bend in the elbows, open wide for a deep stretch.' }),
+  ex('landmine_press', 'Landmine press', 'push_v', ['shoulders', 'chest'], { eq: ['barbell'], sec: ['triceps', 'core'], uni: true, cue: 'One end of the bar in a corner. Press up and forward from the shoulder.' }),
+  ex('bent_knee_calf_raise', 'Bent-knee calf raise', 'calf', ['calves'], { cue: 'Knees bent about 30 degrees: works the deeper calf muscle runners rely on.' }),
+
   // ----- Core -----
   ex('plank', 'Plank', 'core', ['core'], { log: 'hold', cue: 'Squeeze glutes, do not let the hips sag.' }),
   ex('side_plank', 'Side plank', 'core', ['core'], { log: 'hold', uni: true, cue: 'Hips high, body in one line.' }),
@@ -129,6 +137,20 @@ export const EXERCISES: Exercise[] = [
   ex('tuck_lsit', 'Tuck L-sit', 'core', ['core'], { log: 'hold', cue: 'Hands by the hips, push down, lift the feet with knees bent.', ladder: ['lsit', 1] }),
   ex('lsit', 'L-sit', 'core', ['core'], { sec: ['quads'], lvl: 'intermediate', log: 'hold', cue: 'Legs straight and level, shoulders pushed down.', ladder: ['lsit', 2] }),
   ex('dragon_flag', 'Dragon flag', 'core', ['core'], { lvl: 'advanced', cue: 'Hold something behind your head. Lower as one straight line; bend the knees to make it easier.' }),
+
+  ex('pallof_press', 'Pallof press', 'core', ['core'], { eq: ['bands'], uni: true, cue: 'Band anchored to your side. Press it straight out and do not let it turn you.' }),
+  ex('copenhagen_plank', 'Copenhagen plank', 'core', ['core'], { log: 'hold', uni: true, cue: 'Side plank with the top leg on a bench or sofa. Bend the knee on the bench to make it easier.' }),
+
+  // ----- Rotation, balance, neck, grip -----
+  ex('medball_rot_throw', 'Medicine ball rotational throw', 'rotation', ['core'], { eq: ['medball'], sec: ['shoulders', 'glutes'], uni: true, cue: 'Turn from the back hip and throw into a wall as hard as you can. Reset each rep.' }),
+  ex('medball_slam', 'Medicine ball slam', 'rotation', ['core'], { eq: ['medball'], sec: ['back', 'shoulders'], cue: 'Reach tall, then slam the ball down with your whole body.' }),
+  ex('cable_woodchop', 'Cable woodchop', 'rotation', ['core'], { eq: ['cables'], sec: ['shoulders'], uni: true, cue: 'Turn through the hips and upper back, arms stay long.' }),
+  ex('band_woodchop', 'Band woodchop', 'rotation', ['core'], { eq: ['bands'], sec: ['shoulders'], uni: true, cue: 'Turn through the hips and upper back, arms stay long.' }),
+  ex('single_leg_balance', 'Single-leg balance', 'balance', ['calves'], { sec: ['core'], log: 'hold', uni: true, cue: 'Stand on one leg near a support. Harder: close your eyes or stand on a cushion.' }),
+  ex('tandem_stance', 'Heel-to-toe stand', 'balance', ['core'], { log: 'hold', cue: 'One foot directly in front of the other, near a wall or chair for safety.' }),
+  ex('neck_isometric', 'Neck isometric holds', 'neck', ['shoulders'], { log: 'hold', cue: 'Press your head into your hand forwards, backwards and to each side without moving. Moderate effort only.' }),
+  ex('db_wrist_extension', 'Wrist extension', 'grip', ['forearms'], { eq: ['dumbbells'], cue: 'Forearm on your thigh, palm down. Lift and lower the back of the hand slowly.' }),
+  ex('db_wrist_curl', 'Wrist curl', 'grip', ['forearms'], { eq: ['dumbbells'], cue: 'Forearm on your thigh, palm up. Curl the weight with the wrist only.' }),
 
   // ----- Carry / calves / arms / shoulders -----
   ex('farmer_carry', 'Farmer carry', 'carry', ['forearms', 'core'], { eq: ['dumbbells'], log: 'time', cue: 'Walk tall, shoulders back.' }),
@@ -188,6 +210,10 @@ export const EXERCISES: Exercise[] = [
   ex('squat_jump', 'Squat jump', 'plyo', LEGS, { cue: 'Land softly, reset before each jump.' }),
   ex('broad_jump', 'Broad jump', 'plyo', LEGS, { lvl: 'intermediate', cue: 'Swing the arms, stick the landing.' }),
 
+  ex('box_jump', 'Box jump', 'plyo', LEGS, { eq: ['box'], cue: 'Jump up, land softly, step down. Height is not the point.' }),
+  ex('lateral_bound', 'Lateral bound', 'plyo', LEGS, { uni: true, cue: 'Push sideways off one leg, land on the other and hold the landing for a second.' }),
+  ex('a_skip', 'A-skips', 'plyo', ['calves'], { sec: ['quads'], cue: 'Skip with a high knee and a quick, springy foot strike.' }),
+
   // ----- Cardio and timed work -----
   ex('run_walk', 'Run / walk', 'cardio', ['cardio'], { log: 'time', cue: 'Run at a pace where you could still talk.' }),
   ex('easy_run', 'Easy run', 'cardio', ['cardio'], { log: 'time', cue: 'Conversational pace.' }),
@@ -196,6 +222,23 @@ export const EXERCISES: Exercise[] = [
   ex('warmup_general', 'General warm-up', 'mobility', [], { log: 'time', cue: 'Easy movement, joint circles, a few light reps of the first exercise.' }),
   ex('warmup_wrists', 'Wrist and shoulder prep', 'mobility', [], { log: 'time', cue: 'Wrist circles and stretches, shoulder circles, scapular push-ups.' }),
   ex('cooldown_walk', 'Cool-down walk', 'mobility', [], { log: 'time', cue: 'Walk until your breathing settles.' }),
+  ex('easy_cardio', 'Easy cardio', 'cardio', ['cardio'], { log: 'time', cue: 'Run, cycle, row, swim or walk briskly at a pace where you can still talk.' }),
+  ex('long_run', 'Long run', 'cardio', ['cardio'], { log: 'time', cue: 'Easy, conversational pace the whole way. Slow down on hills.' }),
+  ex('tempo_run', 'Tempo run', 'cardio', ['cardio'], { log: 'time', cue: 'Comfortably hard: you can say a few words, not hold a conversation.' }),
+  ex('run_intervals', 'Running intervals', 'cardio', ['cardio'], { log: 'time', cue: 'Hard but repeatable: the last repetition should look like the first.' }),
+  ex('race_pace_run', 'Race-pace running', 'cardio', ['cardio'], { log: 'time', cue: 'The pace you plan to hold in your race. Controlled, not a sprint.' }),
+  ex('time_trial', 'Time trial or race', 'cardio', ['cardio'], { log: 'time', cue: 'Warm up well, then run the distance as evenly as you can. Note your time.' }),
+  ex('sprints', 'Sprints', 'cardio', ['cardio'], { log: 'time', cue: 'Accelerate hard over 20 to 30 m, then walk back. Full recovery each time.' }),
+  ex('jump_rope_rounds', 'Jump rope', 'cardio', ['cardio'], { eq: ['jump_rope'], log: 'time', cue: 'Light, quick bounces on the balls of the feet.' }),
+  ex('shadow_boxing', 'Shadow boxing', 'cardio', ['cardio'], { log: 'time', cue: 'Move and punch at round pace: hands up, breathe out on each punch.' }),
+  ex('bag_rounds', 'Bag rounds', 'cardio', ['cardio'], { eq: ['heavy_bag'], log: 'time', cue: 'Work in combinations and keep moving. Hands up between punches.' }),
+  ex('court_shuffles', 'Court movement drills', 'cardio', ['cardio'], { log: 'time', cue: 'Split step, shuffle, sprint and recover, like a point.' }),
+  ex('hip_9090', '90/90 hip switch', 'mobility', [], { log: 'hold', cue: 'Sit with both knees bent at right angles and rotate slowly from side to side.' }),
+  ex('couch_stretch', 'Couch stretch', 'mobility', [], { log: 'hold', uni: true, cue: 'Back knee on a cushion, foot up against a wall or sofa, squeeze the glute.' }),
+  ex('thoracic_rotation', 'Open book rotation', 'mobility', [], { log: 'hold', uni: true, cue: 'Lie on your side, knees bent, open the top arm and look after it.' }),
+  ex('wall_slides', 'Wall slides', 'mobility', [], { log: 'time', cue: 'Back and arms on the wall, slide the arms up without arching your back.' }),
+  ex('ankle_rocks', 'Ankle rocks', 'mobility', [], { log: 'time', cue: 'Half kneeling, drive the front knee over the toes with the heel down.' }),
+  ex('hamstring_stretch', 'Hamstring stretch', 'mobility', [], { log: 'hold', uni: true, cue: 'Heel on a low step, hinge forward with a flat back until you feel a stretch.' }),
   ex('wrist_care', 'Wrist stretch and strengthening', 'mobility', [], { log: 'time', cue: 'Gentle wrist stretches both ways, then light wrist curls or fist push-up holds.' }),
 ];
 

@@ -28,6 +28,7 @@ export const EQUIPMENT = [
   'medball',
   'box',
   'jump_rope',
+  'heavy_bag',
 ] as const;
 
 export const SLOTS = [
@@ -49,6 +50,10 @@ export const SLOTS = [
   'plyo',
   'cardio',
   'mobility',
+  'rotation',
+  'balance',
+  'neck',
+  'grip',
 ] as const;
 
 export const MUSCLES = [

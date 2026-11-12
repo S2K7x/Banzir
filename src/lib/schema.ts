@@ -151,6 +151,8 @@ export const Program = z
     deloadEveryWeeks: z.number().int().positive().optional(),
     /** Equipment the plan makes no sense without (a front lever plan needs a bar). */
     requires: z.array(Equipment).default([]),
+    /** What someone should already be able to do. Compared with Profile.ability when known. */
+    prerequisites: z.object({ runMinutes: z.number().optional(), pullups: z.number().optional(), pushups: z.number().optional() }).optional(),
     tags: z.array(z.string()).default([]),
     sources: z.array(z.string()).default([]),
   })
@@ -211,7 +213,7 @@ export const Profile = z.object({
   /** Health flags from onboarding; any entry triggers the conservative path. */
   flags: z.array(z.string()).default([]),
   /** Self-reported ability, used to pick calisthenics starting steps. */
-  ability: z.object({ pushups: z.number().optional(), pullups: z.number().optional() }).default({}),
+  ability: z.object({ pushups: z.number().optional(), pullups: z.number().optional(), runMinutes: z.number().optional() }).default({}),
   /** What they want most within the goal, for example 'planche'. Matches template tags. */
   focus: z.string().optional(),
   createdAt: z.string(),

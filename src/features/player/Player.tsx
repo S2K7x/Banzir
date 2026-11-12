@@ -4,7 +4,7 @@ import { clearActive, saveProgram, setActive, type ActiveSession } from '../../l
 import { replaceExercise, setExercise } from '../../lib/edit';
 import { canDo, equipmentSet } from '../../lib/matcher';
 import { findDay, lighten } from '../../lib/programState';
-import { historyFor, suggest, type Suggestion } from '../../lib/progression';
+import { historyFor, historyForItem, suggest, type Suggestion } from '../../lib/progression';
 import type { Entry, Item, Profile, Program, Segment, Session, SetLog } from '../../lib/schema';
 import { formatDuration, showWeight, toKg, useSettings, weightUnit } from '../../lib/settings';
 import { describe, effortText } from '../../lib/text';
@@ -58,9 +58,10 @@ export function Player({ initial, program, profile, sessions, onClose }: Props) 
   const item: Item | undefined = entry.itemId ? items.get(entry.itemId) : undefined;
   const ex = getExercise(entry.exerciseId);
   const p = item ? rx(item) : undefined;
-  const history = historyFor(ex.id, sessions);
+  const h = item && item.exerciseId === ex.id ? historyForItem(item, sessions, program) : { entries: historyFor(ex.id, sessions), matched: true };
+  const history = h.entries;
   const eq = equipmentSet(profile.equipment);
-  const tip: Suggestion = item ? suggest(item, ex, item.progression ?? program?.progression ?? { type: 'none' }, history, (e) => canDo(e, eq)) : { note: '' };
+  const tip: Suggestion = item ? suggest(item, ex, item.progression ?? program?.progression ?? { type: 'none' }, history, (e) => canDo(e, eq), h.matched) : { note: '' };
   const isLast = a.cursor === a.entries.length - 1;
   const timed = p?.mode === 'time' || p?.mode === 'intervals';
 

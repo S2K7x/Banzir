@@ -433,7 +433,8 @@ export const calPlancheOs = template({
   goal: 'calisthenics',
   level: 'advanced',
   daysPerWeek: 6,
-  daysRange: [5, 6],
+  // Each week is its own phase with six sessions, so the number of sessions is fixed.
+  daysRange: [6, 6],
   sessionMinutes: 75,
   loops: true,
   progression: VARIATION,

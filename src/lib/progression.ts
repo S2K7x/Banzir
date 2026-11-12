@@ -1,5 +1,5 @@
 import { ladderSteps } from '../data/exercises';
-import type { Entry, Exercise, Item, ProgressionRule, Session, SetLog } from './schema';
+import type { Entry, Exercise, Item, Program, ProgressionRule, Session, SetLog } from './schema';
 
 /**
  * Suggests what to do next for one exercise from the last logged sessions.
@@ -28,14 +28,53 @@ export function historyFor(exerciseId: string, sessions: Session[]): Entry[] {
   return out;
 }
 
+/** Ids of the items in a program that prescribe the same thing: same exercise, mode and range. */
+export function similarItemIds(program: Program | undefined, item: Item): Set<string> {
+  const ids = new Set([item.id]);
+  const key = (i: Item) => {
+    const p = i.prescription;
+    return `${i.exerciseId}|${p.mode}|${p.mode === 'reps' ? p.reps.join('-') : p.mode === 'hold' ? p.seconds.join('-') : ''}`;
+  };
+  const k = key(item);
+  for (const ph of program?.phases ?? []) for (const d of ph.days) for (const b of d.blocks) for (const i of b.items) if (key(i) === k) ids.add(i.id);
+  return ids;
+}
+
+export type History = { entries: Entry[]; matched: boolean };
+
+/**
+ * History for one prescribed item. Entries logged for the same prescription come
+ * first; when there are none (a new rep range, a new plan) every entry for the
+ * exercise is returned and `matched` is false, so loads are re-estimated.
+ */
+export function historyForItem(item: Item, sessions: Session[], program: Program | undefined): History {
+  const all = historyFor(item.exerciseId, sessions);
+  const ids = similarItemIds(program, item);
+  const same = all.filter((e) => e.itemId && ids.has(e.itemId));
+  return same.length ? { entries: same, matched: true } : { entries: all, matched: false };
+}
+
 const roundKg = (kg: number) => Math.round(kg * 2) / 2;
+/** Rounds a calculated load down to a weight that exists: 2.5 kg steps on a barbell, 1 kg otherwise. */
+const loadable = (kg: number, ex: Exercise) => {
+  const step = ex.equipment.includes('barbell') ? 2.5 : 1;
+  return Math.max(step, Math.floor(kg / step) * step);
+};
 
 function metTop(entry: Entry, sets: number, top: number, key: 'reps' | 'seconds'): boolean {
   const d = done(entry);
   return d.length >= sets && d.every((s) => (s[key] ?? 0) >= top);
 }
 
-export function suggest(item: Item, exercise: Exercise, rule: ProgressionRule, history: Entry[], usable: (e: Exercise) => boolean = () => true): Suggestion {
+export function suggest(
+  item: Item,
+  exercise: Exercise,
+  rule: ProgressionRule,
+  history: Entry[],
+  usable: (e: Exercise) => boolean = () => true,
+  /** False when the history comes from a different prescription of the same exercise. */
+  matched = true,
+): Suggestion {
   const base = item.prescription;
   const p = base.mode === 'reps' && exercise.range ? { ...base, reps: exercise.range } : base;
   if (p.mode !== 'reps' && p.mode !== 'hold') return { note: '' };
@@ -56,14 +95,24 @@ export function suggest(item: Item, exercise: Exercise, rule: ProgressionRule, h
   const top = metTop(last, p.sets, hi, key);
 
   if (exercise.logType === 'weight_reps' && p.mode === 'reps') {
+    if (!matched) {
+      // A different rep range: estimate the load from the best recent set (Epley).
+      const best = Math.max(0, ...history.slice(0, 3).flatMap((e) => done(e).map((s) => (s.kg && s.reps ? e1rm(s.kg, s.reps) : 0))));
+      if (best > 0) {
+        const t = item.prescription.mode === 'reps' ? item.prescription.target : undefined;
+        const rir = t?.type === 'rir' ? (t.value[0] + t.value[1]) / 2 : 2;
+        const reps = Math.round((lo + hi) / 2);
+        return { kg: loadable(best / (1 + (reps + rir) / 30), exercise), reps, note: 'New rep range: the starting weight is estimated from your recent sets. Adjust it if the first set feels off.' };
+      }
+    }
     const kg = Math.max(...lastSets.map((s) => s.kg ?? 0));
     if (rule.type === 'none') return { kg, reps: Math.min(hi, Math.max(lo, lastMin)), note: 'Repeat last time.' };
     const step = rule.type === 'linear' || rule.type === 'double' ? rule.stepKg : 2.5;
-    if (top) return { kg: roundKg(kg + step), reps: lo, note: `You hit ${hi} on every set. Add ${step} kg.` };
+    if (top) return { kg: roundKg(kg + step), reps: lo, note: `You hit ${hi} on every set. The weight goes up one step.` };
     if (rule.type === 'linear') {
       const prev = history[1];
       const missedTwice = lastMin < lo && prev && Math.min(...done(prev).map((s) => s.reps ?? 0)) < lo && Math.max(...done(prev).map((s) => s.kg ?? 0)) >= kg;
-      if (missedTwice) return { kg: roundKg(kg * 0.9), reps: hi, note: 'Two missed sessions at this load. Drop 10 % and build back up.' };
+      if (missedTwice) return { kg: roundKg(kg * 0.9), reps: hi, note: 'Two missed sessions at this weight. It drops by 10 % so you can build back up.' };
       return { kg, reps: hi, note: `Same load. Get all ${p.sets} sets of ${hi}.` };
     }
     return { kg, reps: Math.min(hi, Math.max(lo, lastMin + 1)), note: `Same load. Add a rep where you can, up to ${hi}.` };

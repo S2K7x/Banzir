@@ -1,7 +1,7 @@
 import { getExercise } from '../data/exercises';
 import { clearActive, db, getState, setActive, setState, type ActiveSession } from './db';
 import { uid } from './matcher';
-import { historyFor, suggest } from './progression';
+import { historyForItem, suggest } from './progression';
 import type { DayTemplate, Entry, Item, Program, Session } from './schema';
 
 export const flatItems = (day: DayTemplate): Item[] => day.blocks.flatMap((b) => b.items);
@@ -12,7 +12,8 @@ export async function startWorkout(program: Program, day: DayTemplate, sessions:
     const p = item.prescription;
     const ex = getExercise(item.exerciseId);
     const n = p.mode === 'reps' || p.mode === 'hold' ? p.sets : 1;
-    const s = suggest(item, ex, item.progression ?? program.progression, historyFor(ex.id, sessions));
+    const h = historyForItem(item, sessions, program);
+    const s = suggest(item, ex, item.progression ?? program.progression, h.entries, () => true, h.matched);
     return {
       itemId: item.id,
       exerciseId: ex.id,

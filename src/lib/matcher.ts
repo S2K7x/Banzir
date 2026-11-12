@@ -34,6 +34,10 @@ const RELATED: Partial<Record<Slot, Slot[]>> = {
   squat: ['single_leg'],
   single_leg: ['squat'],
   carry: ['core'],
+  rotation: ['core'],
+  balance: ['core'],
+  neck: ['core'],
+  grip: ['carry', 'arm_flex'],
 };
 
 const levelIndex = (l: Level) => LEVELS.indexOf(l);
@@ -249,6 +253,19 @@ export function rankTemplates(profile: Profile): Match[] {
     const eq = equipmentSet(profile.equipment);
     if (template.requires.some((e) => !eq.has(e))) score -= 120;
     if (profile.focus && template.tags.includes(profile.focus)) score += 35;
+    // Add-ons (daily mobility) only come first when asked for by name.
+    if (template.tags.includes('addon') && !(profile.focus && template.tags.includes(profile.focus))) score -= 80;
+    // Things the plan assumes you can already do. Unknown means not penalised,
+    // except that a running beginner who did not answer is assumed to be starting out.
+    const able = { ...profile.ability };
+    if (able.runMinutes == null && profile.goal === 'running' && profile.level === 'beginner') able.runMinutes = 0;
+    for (const [k, need] of Object.entries(template.prerequisites ?? {}) as [keyof typeof able, number | undefined][]) {
+      const have = able[k];
+      if (need != null && have != null && have < need) score -= 60;
+    }
+    if ((profile.age ?? 0) >= 60 && template.tags.includes('senior')) score += 30;
+    const bmi = profile.weightKg && profile.heightCm ? profile.weightKg / (profile.heightCm / 100) ** 2 : 0;
+    if ((bmi >= 30 || profile.flags.includes('joint')) && template.tags.includes('low-impact')) score += 25;
     score -= Math.abs(template.sessionMinutes - profile.sessionMinutes) / 5;
     return { ...inst, template, score };
   }).sort((a, b) => b.score - a.score);

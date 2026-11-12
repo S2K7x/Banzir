@@ -35,6 +35,7 @@ export const EQUIPMENT_LABEL: Record<Equipment, string> = {
   medball: 'Medicine ball',
   box: 'Plyo box',
   jump_rope: 'Jump rope',
+  heavy_bag: 'Punching bag',
 };
 
 export const DISCLAIMER =
