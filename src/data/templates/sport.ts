@@ -40,7 +40,7 @@ export const sptBoxing = sportPlan({
       day('str', 'Strength + rotation', 'strength', ['Legs', 'Rotation', 'Neck'], {
         warmup: WARMUP,
         main: [
-          r('medball_rot_throw', 4, 4, 5, { rest: 75, prog: NONE, alt: ['cable_woodchop', 'band_woodchop'], cue: 'Each side. Throw as hard as you can, reset fully between throws.' }),
+          r('medball_rot_throw', 4, 4, 5, { rest: 75, prog: NONE, alt: ['cable_woodchop', 'band_woodchop', 'db_woodchop'], cue: 'Each side. Throw as hard as you can, reset fully between throws.' }),
           r('back_squat', 4, 4, 6, { rir: STRONG, rest: 180, alt: ['goblet_squat', 'bw_bulgarian'] }),
           r('db_bench_press', 3, 5, 8, { rir: STRONG, rest: 120, alt: ['pushup'] }),
           r('pullup', 3, 5, 8, { rir: STRONG, rest: 120, alt: ['lat_pulldown', 'inverted_row'] }),
@@ -56,7 +56,7 @@ export const sptBoxing = sportPlan({
           r('landmine_press', 3, 6, 8, { rir: STRONG, rest: 90, alt: ['db_shoulder_press', 'pike_pushup'], cue: 'Each arm. Drive from the back foot like a straight punch.' }),
           r('db_row', 3, 8, 10, { rir: STRONG, alt: ['inverted_row', 'table_row'] }),
           r('db_hip_thrust', 3, 8, 10, { rir: STRONG, alt: ['single_leg_bridge'] }),
-          r('medball_slam', 3, 6, 8, { rest: 60, prog: NONE, alt: ['band_woodchop'] }),
+          r('medball_slam', 3, 6, 8, { rest: 60, prog: NONE, alt: ['band_woodchop', 'db_woodchop'] }),
           h('farmer_carry', 3, 30, 40, { p: 2, alt: ['side_plank'] }),
           r('band_external_rotation', 2, 12, 15, { p: 3, rest: 45, alt: ['prone_ytw'], prog: NONE }),
         ],
@@ -87,7 +87,7 @@ export const sptTennis = sportPlan({
           r('db_split_squat', 3, 6, 8, { rir: STRONG, rest: 90, alt: ['split_squat'] }),
           r('db_rdl', 3, 6, 8, { rir: STRONG, rest: 90, alt: ['single_leg_rdl'] }),
           r('db_row', 3, 8, 10, { rir: STRONG, alt: ['inverted_row', 'table_row'] }),
-          r('medball_rot_throw', 3, 5, 5, { rest: 60, prog: NONE, alt: ['band_woodchop', 'cable_woodchop'], cue: 'Each side, forehand and backhand stance.' }),
+          r('medball_rot_throw', 3, 5, 5, { rest: 60, prog: NONE, alt: ['band_woodchop', 'cable_woodchop', 'db_woodchop'], cue: 'Each side, forehand and backhand stance.' }),
           r('band_external_rotation', 2, 12, 15, { p: 2, rest: 45, alt: ['prone_ytw'], prog: NONE, cue: 'The serving shoulder gets strong turning in; this balances it.' }),
         ],
       }),

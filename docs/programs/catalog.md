@@ -4,16 +4,29 @@ Specification of every built-in program. Each will become a JSON file in
 `src/data/templates/` matching `schema.md`. Evidence for the choices is in
 `docs/science/`. Notation: sets × reps (or seconds); RIR = reps in reserve.
 
-Status: 15 of 35 are implemented in `src/data/templates/` (2026-11-12):
-`gf-3-start`, `mus-3-fullbody`, `mus-4-upperlower`, `str-3-linear`,
-`cal-3-foundation`, `cal-first-pullup`, `cal-handstand`, `cal-4-intermediate`,
-`cal-planche`, `cal-frontlever`, `cal-muscleup`, `cal-6-planche-os`,
-`run-start`, `fat-3-lift-walk`, `spt-athlete-general`.
-The rest are specified only. Exercise lists name the default; the matcher
+Status: all 35 are implemented in `src/data/templates/` (2026-11-12), split
+by family: `strength.ts`, `general.ts`, `skills.ts`, `bodyweight-running.ts`,
+`running.ts`, `sport.ts`. Exercise lists name the default; the matcher
 substitutes by movement slot, equipment and level. Where code and this
 document differ, the code is current.
 
 Differences from the specification below, decided while building:
+- Running plans are prescribed in minutes, not kilometres, so they work at
+  any pace and without GPS. Long runs follow the 10 % rule, which a unit test
+  checks; every fourth week is lighter. Peak long runs: 5 km 50 min, 10 km
+  75 min, half 105 min, marathon about 2 h 30 (148 min).
+- Distance plans state a prerequisite in minutes of continuous running
+  (5 km: 20, 10 km and half: 30, marathon: 60). The 5 km plan is tagged
+  beginner, 10 km, half and marathon intermediate.
+- `run-strength-addon` and `mob-daily` are standalone plans because add-ons
+  are not implemented. `mob-daily` is never recommended first unless the
+  person asks for mobility only.
+- `str-4-block` is 3 + 1 lighter + 3 + 1 lighter + 3 + test week. Loads at
+  each phase change are estimated from the best recent set (Epley).
+- `str-4-undulating` trains each lift heavy once and for volume once; the two
+  keep separate histories (history is matched by prescription).
+- Sport plans are tagged beginner so everyone can get them; heavy lifts swap
+  to bodyweight versions with 8-12 reps when there is no equipment.
 - `cal-handstand` is a full 4-day plan (handstand practice opens every
   session), not a stackable add-on, because add-ons are not implemented.
 - `cal-6-planche-os` converts the legacy distances to time: 4 x 4 min hard /

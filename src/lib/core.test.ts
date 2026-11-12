@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { EXERCISES, findExercise, getExercise, rx } from '../data/exercises';
 import { TEMPLATES, getTemplate } from '../data/templates';
 import { addDay, addItem, blankProgram, dayItemCount, duplicateDay, duplicateProgram, moveDay, moveItem, removeDay, removeItem, replaceExercise, setExercise, updateItem, updateMeta } from './edit';
-import { canDo, estimateMinutes, instantiate, rankTemplates } from './matcher';
+import { canDo, estimateMinutes, instantiate } from './matcher';
+import { rankTemplates } from './ranking';
 import { lighten, position } from './programState';
-import { suggest } from './progression';
+import { historyForItem, suggest } from './progression';
 import { EQUIPMENT, Exercise, Program, type Entry, type Equipment, type Goal, type Item, type Profile } from './schema';
 import { weekStart, weekStreak } from './stats';
 
@@ -346,5 +347,153 @@ describe('program editing', () => {
     expect(position(copy, 6).phase.name).toBe(original.phases[1].name);
     const originalIds = new Set(items(original).map((i) => i.id));
     expect(items(copy).some((i) => originalIds.has(i.id))).toBe(false);
+  });
+});
+
+describe('coaching rules for the built-in plans', () => {
+  it('plans that change every week have a fixed number of sessions matching each week', () => {
+    for (const t of TEMPLATES) {
+      const weekly = t.phases.filter((ph) => ph.weeks === 1);
+      if (t.phases.length < 2 || weekly.length === 0) continue;
+      expect(t.daysRange[0], `${t.id}: daysRange must be fixed`).toBe(t.daysRange[1]);
+      // One day repeated all week (couch to 5K) is fine; otherwise one day per session.
+      for (const ph of weekly) if (ph.rotation.length > 1) expect(ph.rotation.length, `${t.id}/${ph.id}`).toBe(t.daysPerWeek);
+    }
+  });
+
+  it('no long run grows more than 10 % beyond the longest of the previous four weeks', () => {
+    const minutes = (d: { blocks: { items: Item[] }[] }) =>
+      d.blocks.flatMap((b) => b.items).reduce((n, i) => {
+        const ex = getExercise(i.exerciseId);
+        return n + (ex.slot === 'cardio' && i.prescription.mode === 'time' && ['long_run', 'race_pace_run', 'easy_run'].includes(ex.id) ? i.prescription.seconds / 60 : 0);
+      }, 0);
+    for (const t of TEMPLATES.filter((x) => x.goal === 'running' && x.phases.length > 1)) {
+      const longs: number[] = [];
+      for (const ph of t.phases) {
+        const long = ph.days.find((d) => d.id.endsWith('long'));
+        if (long) {
+          const m = minutes(long);
+          const prev = longs.slice(-4);
+          if (prev.length) expect(m, `${t.id} ${ph.name}: ${m} min after ${prev.join(', ')}`).toBeLessThanOrEqual(Math.max(...prev) * 1.1 + 0.5);
+          longs.push(m);
+        }
+      }
+    }
+  });
+
+  it('easy running is most of the running time in every distance plan', () => {
+    for (const t of TEMPLATES.filter((x) => x.goal === 'running' && x.phases.length > 1 && x.id !== 'run-start')) {
+      let easy = 0;
+      let total = 0;
+      for (const ph of t.phases)
+        for (const d of ph.days)
+          for (const b of d.blocks)
+            for (const i of b.items) {
+              const p = i.prescription;
+              const sec = p.mode === 'time' ? p.seconds : p.mode === 'intervals' ? p.reps * p.segments.reduce((a, x) => a + x.seconds, 0) : 0;
+              if (!sec || i.exerciseId === 'time_trial' || i.exerciseId === 'cooldown_walk') continue;
+              total += sec;
+              const hard = p.mode === 'intervals' ? p.reps * p.segments.filter((x) => x.kind === 'work').reduce((a, x) => a + x.seconds, 0) : ['tempo_run', 'race_pace_run'].includes(i.exerciseId) ? sec : 0;
+              easy += sec - hard;
+            }
+      expect(easy / total, t.id).toBeGreaterThan(0.75);
+    }
+  });
+
+  const top = (over: Partial<Profile>) => rankTemplates(profile({ equipment: GYM, ...over }))[0].template.id;
+
+  it('picks running plans from focus and current running ability', () => {
+    expect(top({ goal: 'running' })).toBe('run-start');
+    expect(top({ goal: 'running', focus: '5k', ability: { runMinutes: 30 } })).toBe('run-5k');
+    expect(top({ goal: 'running', level: 'intermediate', focus: '10k', daysPerWeek: 4, ability: { runMinutes: 30 } })).toBe('run-10k');
+    expect(top({ goal: 'running', level: 'intermediate', focus: 'half', daysPerWeek: 4, sessionMinutes: 60, ability: { runMinutes: 30 } })).toBe('run-half');
+    expect(top({ goal: 'running', level: 'intermediate', focus: 'marathon', daysPerWeek: 5, sessionMinutes: 75, ability: { runMinutes: 60 } })).toBe('run-marathon');
+    // Not ready for a marathon yet.
+    expect(top({ goal: 'running', level: 'intermediate', focus: 'marathon', daysPerWeek: 5, ability: { runMinutes: 20 } })).not.toBe('run-marathon');
+    expect(top({ goal: 'running', focus: 'strength', daysPerWeek: 2, sessionMinutes: 30 })).toBe('run-strength-addon');
+  });
+
+  it('picks sport, senior, low-impact, home and strength plans for the right people', () => {
+    for (const sport of ['boxing', 'tennis', 'soccer', 'basketball']) expect(top({ goal: 'sport', focus: sport, level: 'intermediate' })).toBe(`spt-${sport}`);
+    expect(top({ goal: 'sport', focus: 'athlete', level: 'intermediate' })).toBe('spt-athlete-general');
+    expect(top({ goal: 'general_fitness', age: 68, daysPerWeek: 3 })).toBe('gf-senior');
+    expect(top({ goal: 'fat_loss', equipment: ['bands'], heightCm: 170, weightKg: 105 })).toBe('fat-home-lowimpact');
+    expect(top({ goal: 'muscle', equipment: ['dumbbells', 'bench'], sessionMinutes: 60 })).toBe('mus-3-home');
+    expect(top({ goal: 'muscle', level: 'intermediate', daysPerWeek: 6, sessionMinutes: 75 })).toBe('mus-6-ppl');
+    expect(top({ goal: 'muscle', level: 'intermediate', daysPerWeek: 5, sessionMinutes: 60 })).toBe('mus-5-ulppl');
+    expect(top({ goal: 'strength', level: 'intermediate', daysPerWeek: 4, sessionMinutes: 60 })).toBe('str-4-undulating');
+    expect(top({ goal: 'strength', level: 'advanced', daysPerWeek: 4, sessionMinutes: 75 })).toBe('str-4-block');
+    expect(top({ goal: 'general_fitness', daysPerWeek: 2, sessionMinutes: 30 })).toBe('gf-2-express');
+  });
+
+  it('never puts an add-on first unless asked for it', () => {
+    for (const goal of ['general_fitness', 'fat_loss', 'muscle'] as Goal[]) expect(top({ goal, sessionMinutes: 20, daysPerWeek: 5 })).not.toBe('mob-daily');
+    expect(top({ goal: 'general_fitness', focus: 'mobility', sessionMinutes: 20, daysPerWeek: 5 })).toBe('mob-daily');
+  });
+});
+
+describe('fitting quality', () => {
+  it('does not repeat an exercise within a session when a substitute is needed', () => {
+    const goals: Goal[] = ['muscle', 'strength', 'calisthenics', 'running', 'fat_loss', 'general_fitness', 'sport'];
+    for (const goal of goals)
+      for (const equipment of [[], ['dumbbells'], ['bands'], ['pullup_bar'], ['dumbbells', 'bench', 'pullup_bar']] as Equipment[][])
+        for (const { template: t, program } of rankTemplates(profile({ goal, equipment, sessionMinutes: 120 })).slice(0, 3)) {
+        for (const ph of program.phases)
+          for (const d of ph.days) {
+            const ids = d.blocks.flatMap((b) => b.items.map((i) => i.exerciseId));
+            const own = new Set(t.phases.flatMap((x) => x.days).find((x) => x.id === d.id)!.blocks.flatMap((b) => b.items.map((i) => i.exerciseId)).filter((id, i, a) => a.indexOf(id) !== i));
+            const dupes = ids.filter((id, i) => ids.indexOf(id) !== i && !own.has(id));
+            // A repeat is acceptable only when nothing else fits at all.
+            expect(dupes, `${t.id}/${d.id} with ${equipment.join('+') || 'nothing'}`).toEqual([]);
+          }
+        }
+  });
+
+  it('keeps the key prevention and power drills where possible', () => {
+    const ids = (id: string, equipment: Equipment[]) => items(instantiate(getTemplate(id)!, profile({ goal: 'sport', equipment, sessionMinutes: 120 })).program).map((i) => i.exerciseId);
+    expect(ids('spt-soccer', [])).toContain('nordic_curl');
+    expect(ids('spt-boxing', ['dumbbells'])).toContain('db_woodchop');
+    const senior = items(instantiate(getTemplate('gf-senior')!, profile({ age: 70, sessionMinutes: 60 })).program).map((i) => i.exerciseId);
+    expect(senior).not.toContain('pike_pushup');
+  });
+
+  it('raises the reps when a heavy lift becomes a bodyweight exercise', () => {
+    const soccer = instantiate(getTemplate('spt-soccer')!, profile({ goal: 'sport', sessionMinutes: 120 })).program;
+    const first = soccer.phases[0].days[0].blocks.find((b) => b.type === 'main')!.items[0];
+    expect(getExercise(first.exerciseId).logType).toBe('reps');
+    expect(first.prescription).toMatchObject({ reps: [8, 12] });
+  });
+});
+
+describe('history per prescription', () => {
+  const ul = instantiate(getTemplate('str-4-undulating')!, profile({ equipment: GYM, level: 'intermediate', sessionMinutes: 90 })).program;
+  const bench = (dayId: string) => ul.phases[0].days.find((d) => d.id === dayId)!.blocks.flatMap((b) => b.items).find((i) => i.exerciseId === 'bench_press')!;
+  const session = (itemId: string, kg: number, reps: number, date: string) => ({
+    id: date,
+    date,
+    dayName: '',
+    durationSeconds: 0,
+    entries: [{ itemId, exerciseId: 'bench_press', sets: [1, 2, 3, 4].map(() => ({ kg, reps, done: true })) }],
+  });
+
+  it('keeps heavy and volume days apart, and estimates a load for a new rep range', () => {
+    const heavy = bench('uh');
+    const volume = bench('uv');
+    const sessions = [session(heavy.id, 100, 5, '2026-11-02T10:00:00Z'), session(volume.id, 80, 8, '2026-11-04T10:00:00Z')];
+
+    const h = historyForItem(heavy, sessions, ul);
+    expect(h.matched).toBe(true);
+    expect(h.entries).toHaveLength(1);
+    expect(suggest(heavy, getExercise('bench_press'), ul.progression, h.entries, () => true, h.matched).kg).toBe(102.5);
+
+    // A program the person has never logged: every entry counts and the load comes from the 1RM estimate.
+    const block = instantiate(getTemplate('str-4-block')!, profile({ equipment: GYM, level: 'advanced', sessionMinutes: 90 })).program;
+    const peak = block.phases.find((p) => p.id === 'real')!.days[0].blocks.flatMap((b) => b.items).find((i) => i.exerciseId === 'bench_press')!;
+    const fresh = historyForItem(peak, sessions, block);
+    expect(fresh.matched).toBe(false);
+    const s = suggest(peak, getExercise('bench_press'), block.progression, fresh.entries, () => true, fresh.matched);
+    // Best e1RM is 100 x (1 + 5/30) = 116.7. Two reps with 1-2 in reserve is about 3.5 reps: 116.7 / 1.117 = 104.5, rounded down to 102.5.
+    expect(s.kg).toBe(102.5);
+    expect(s.reps).toBe(2);
   });
 });

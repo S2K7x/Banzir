@@ -12,7 +12,8 @@ Program
   goal, level, daysPerWeek, daysRange, sessionMinutes, loops
   progression (default rule), deloadEveryWeeks
   requires[]  equipment the plan makes no sense without
-  tags[]      matched against Profile.focus ('planche', 'handstand', ...)
+  tags[]      matched against Profile.focus ('planche', 'half', 'boxing', ...)
+  prerequisites  { runMinutes, pullups, pushups } compared with Profile.ability
   phases[]
     weeks
     days[]            DayTemplate
@@ -112,9 +113,37 @@ Volume charts count 1 set for `primary` muscles and 0.5 for `secondary`.
    (vertical ↔ horizontal pull, squat ↔ single-leg).
 6. Trim to the available time by dropping priority 3 items, then priority 2.
    Priority 1 items are never dropped for time.
-7. Rank templates by goal, level, weekly sessions, equipment fit and session
-   length; +35 when a template tag matches `Profile.focus`; −120 when
-   `requires` equipment is missing. A health flag caps the level at beginner.
+7. In a session, a substitute that repeats an exercise already chosen is
+   avoided when anything else fits. When nothing else fits, the repeat is
+   folded into the first occurrence as extra sets (max 6), or dropped if it
+   was optional.
+8. A heavy lift (`weight_reps`, top of range below 8) swapped for a
+   bodyweight exercise gets 8-12 reps, so the set is still hard.
+
+Ranking lives in `src/lib/ranking.ts` (separate so the template data loads
+only with screens that choose a plan): goal, level, weekly sessions,
+equipment fit and session length; +35 when a template tag matches
+`Profile.focus`; −120 when `requires` equipment is missing; −100 for each
+unmet prerequisite (unknown ability is not penalised, except that a running
+beginner who did not answer counts as 0 minutes); −80 for add-ons unless
+asked for; +30 for `senior` plans from age 60; +25 for `low-impact` plans
+with a BMI of 30 or more or a joint flag. A health flag caps the level at
+beginner.
+
+### Weekly-phase plans
+
+When a plan's content changes every week (one phase per week), its number of
+sessions per week is fixed (`daysRange` of one value) and each week's
+rotation has that many days, or a single day repeated. A test enforces it.
+
+### History per prescription
+
+`historyForItem` returns the entries logged for the same prescription (same
+exercise, mode and range, anywhere in the program) when there are any;
+otherwise all entries for the exercise with `matched: false`. With an
+unmatched history, loaded exercises get a starting weight from the best
+recent set: Epley e1RM ÷ (1 + (target reps + reps in reserve) / 30), rounded
+down to 2.5 kg on a barbell and 1 kg otherwise.
 
 "Too hard" means above the person's level, or above the rung their reported
 numbers map to. People in the top bucket (30+ push-ups, 12+ pull-ups) are not

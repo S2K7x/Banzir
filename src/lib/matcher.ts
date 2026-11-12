@@ -1,7 +1,6 @@
 import { EXERCISES, findExercise, getExercise, ladderSteps } from '../data/exercises';
-import { TEMPLATES } from '../data/templates';
 import { LEVELS } from './constants';
-import type { DayTemplate, Equipment, Exercise, Goal, Item, Level, Prescription, Profile, Program, Slot } from './schema';
+import type { DayTemplate, Equipment, Exercise, Item, Level, Prescription, Profile, Program, Slot } from './schema';
 
 /** Turns a template into a program that fits one person: equipment, time, starting level. */
 
@@ -40,7 +39,7 @@ const RELATED: Partial<Record<Slot, Slot[]>> = {
   grip: ['carry', 'arm_flex'],
 };
 
-const levelIndex = (l: Level) => LEVELS.indexOf(l);
+export const levelIndex = (l: Level) => LEVELS.indexOf(l);
 
 function bestInSlot(slot: Slot, original: Exercise, mode: Prescription['mode'], eq: ReadonlySet<Equipment>, level: Level): Exercise | undefined {
   const candidates = EXERCISES.filter((e) => e.slot === slot && e.id !== original.id && canDo(e, eq) && compatible(mode, e));
@@ -85,19 +84,35 @@ function ladderAbility(ladder: string, profile: Profile): { step: number; open: 
 
 export type Fit = { item: Item; swapped: boolean } | null;
 
-export function fitItem(item: Item, profile: Profile, programRule: Program['progression']): Fit {
+/**
+ * Picks the exercise for one template item. `taken` holds exercises already in
+ * the same session: a substitute that repeats one is avoided when anything else fits.
+ */
+export function fitItem(item: Item, profile: Profile, programRule: Program['progression'], taken: ReadonlySet<string> = new Set()): Fit {
+  return chooseExercise(item, profile, programRule, taken) ?? chooseExercise(item, profile, programRule, new Set());
+}
+
+function chooseExercise(item: Item, profile: Profile, programRule: Program['progression'], taken: ReadonlySet<string>): Fit {
   const eq = equipmentSet(profile.equipment);
   const mode = item.prescription.mode;
   const ex = getExercise(item.exerciseId);
   const rule = item.progression ?? programRule;
 
-  const usable = (e: Exercise) => canDo(e, eq) && compatible(mode, e);
+  const usable = (e: Exercise) => canDo(e, eq) && compatible(mode, e) && (e.id === ex.id || !taken.has(e.id));
   const tooHard = (e: Exercise) => {
     const ability = e.ladder ? ladderAbility(e.ladder, profile) : undefined;
     if (ability && !ability.open) return (e.step ?? 0) > ability.step;
     return levelIndex(e.level) > levelIndex(profile.level);
   };
-  const use = (pick: Exercise): Fit => (pick.id === ex.id ? { item, swapped: false } : { item: { ...item, exerciseId: pick.id, cue: undefined }, swapped: true });
+  const use = (pick: Exercise): Fit => {
+    if (pick.id === ex.id) return { item, swapped: false };
+    let prescription = item.prescription;
+    // A heavy, low-rep lift swapped for a bodyweight one needs more reps to be a hard set.
+    if (prescription.mode === 'reps' && ex.logType === 'weight_reps' && pick.logType === 'reps' && !pick.range && prescription.reps[1] < 8) {
+      prescription = { ...prescription, reps: [8, 12] };
+    }
+    return { item: { ...item, exerciseId: pick.id, cue: undefined, prescription }, swapped: true };
+  };
   /** Highest usable rung of the same ladder and slot that is not too hard. */
   const easierRung = (e: Exercise) => {
     if (!e.ladder) return undefined;
@@ -189,6 +204,45 @@ function trimDay(day: DayTemplate, minutes: number): DayTemplate {
   return current;
 }
 
+/**
+ * When substitution leaves the same exercise twice in a session (only one
+ * option fits the equipment), the repeat is folded into the first one: extra
+ * sets for core work, dropped when it was optional. Repeats written into the
+ * template on purpose are kept.
+ */
+function mergeRepeats(original: DayTemplate, day: DayTemplate): DayTemplate {
+  const intended = original.blocks.flatMap((b) => b.items.map((i) => i.exerciseId)).filter((id, i, a) => a.indexOf(id) !== i);
+  const first = new Map<string, Item>();
+  const extra = new Map<string, number>();
+  const blocks = day.blocks
+    .map((b) => ({
+      ...b,
+      items: b.items.filter((i) => {
+        const seen = first.get(i.exerciseId);
+        if (!seen || intended.includes(i.exerciseId)) {
+          if (!seen) first.set(i.exerciseId, i);
+          return true;
+        }
+        const p = i.prescription;
+        if (i.priority === 1 && (p.mode === 'reps' || p.mode === 'hold')) extra.set(seen.id, (extra.get(seen.id) ?? 0) + p.sets);
+        return false;
+      }),
+    }))
+    .filter((b) => b.items.length > 0);
+  if (!extra.size) return { ...day, blocks };
+  return {
+    ...day,
+    blocks: blocks.map((b) => ({
+      ...b,
+      items: b.items.map((i) => {
+        const more = extra.get(i.id);
+        const p = i.prescription;
+        return more && (p.mode === 'reps' || p.mode === 'hold') ? { ...i, prescription: { ...p, sets: Math.min(6, p.sets + more) } } : i;
+      }),
+    })),
+  };
+}
+
 export type Instance = { program: Program; swaps: number; droppedCore: number };
 
 export function instantiate(template: Program, profile: Profile): Instance {
@@ -197,11 +251,13 @@ export function instantiate(template: Program, profile: Profile): Instance {
   const phases = template.phases.map((phase) => ({
     ...phase,
     days: phase.days.map((day) => {
+      const taken = new Set<string>();
       const blocks = day.blocks
         .map((block) => ({
           ...block,
           items: block.items.flatMap((item) => {
-            const fit = fitItem(item, profile, template.progression);
+            const fit = fitItem(item, profile, template.progression, taken);
+            if (fit) taken.add(fit.item.exerciseId);
             if (!fit) {
               if (item.priority === 1) droppedCore++;
               return [];
@@ -211,7 +267,7 @@ export function instantiate(template: Program, profile: Profile): Instance {
           }),
         }))
         .filter((b) => b.items.length > 0);
-      return trimDay({ ...day, blocks }, profile.sessionMinutes);
+      return trimDay(mergeRepeats(day, { ...day, blocks }), profile.sessionMinutes);
     }),
   }));
   const [min, max] = template.daysRange;
@@ -224,51 +280,6 @@ export function instantiate(template: Program, profile: Profile): Instance {
     phases,
   };
   return { program, swaps, droppedCore };
-}
-
-const RELATED_GOALS: Partial<Record<Goal, Partial<Record<Goal, number>>>> = {
-  fat_loss: { general_fitness: 45, muscle: 30 },
-  general_fitness: { fat_loss: 35, muscle: 30, calisthenics: 20 },
-  muscle: { strength: 40, general_fitness: 30 },
-  strength: { muscle: 40 },
-  calisthenics: { general_fitness: 25 },
-  sport: { strength: 30, general_fitness: 30 },
-  running: { general_fitness: 10 },
-};
-
-export type Match = Instance & { template: Program; score: number };
-
-export function rankTemplates(profile: Profile): Match[] {
-  const cautious = profile.flags.length > 0;
-  return TEMPLATES.map((template) => {
-    const inst = instantiate(template, profile);
-    let score = template.goal === profile.goal ? 100 : (RELATED_GOALS[profile.goal]?.[template.goal] ?? 0);
-    const diff = levelIndex(template.level) - levelIndex(cautious ? 'beginner' : profile.level);
-    score += diff > 0 ? -40 * diff : 20 + 8 * diff;
-    const [min, max] = template.daysRange;
-    const d = profile.daysPerWeek;
-    if (d >= min && d <= max) score += 15 + (d === template.daysPerWeek ? 5 : 0);
-    else score -= 10 * Math.min(Math.abs(d - min), Math.abs(d - max));
-    score -= 30 * inst.droppedCore + 2 * inst.swaps;
-    const eq = equipmentSet(profile.equipment);
-    if (template.requires.some((e) => !eq.has(e))) score -= 120;
-    if (profile.focus && template.tags.includes(profile.focus)) score += 35;
-    // Add-ons (daily mobility) only come first when asked for by name.
-    if (template.tags.includes('addon') && !(profile.focus && template.tags.includes(profile.focus))) score -= 80;
-    // Things the plan assumes you can already do. Unknown means not penalised,
-    // except that a running beginner who did not answer is assumed to be starting out.
-    const able = { ...profile.ability };
-    if (able.runMinutes == null && profile.goal === 'running' && profile.level === 'beginner') able.runMinutes = 0;
-    for (const [k, need] of Object.entries(template.prerequisites ?? {}) as [keyof typeof able, number | undefined][]) {
-      const have = able[k];
-      if (need != null && have != null && have < need) score -= 60;
-    }
-    if ((profile.age ?? 0) >= 60 && template.tags.includes('senior')) score += 30;
-    const bmi = profile.weightKg && profile.heightCm ? profile.weightKg / (profile.heightCm / 100) ** 2 : 0;
-    if ((bmi >= 30 || profile.flags.includes('joint')) && template.tags.includes('low-impact')) score += 25;
-    score -= Math.abs(template.sessionMinutes - profile.sessionMinutes) / 5;
-    return { ...inst, template, score };
-  }).sort((a, b) => b.score - a.score);
 }
 
 /** Exercises that could replace one in a program, for the quick-swap sheet. */

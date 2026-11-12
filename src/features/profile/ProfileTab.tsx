@@ -6,7 +6,7 @@ import type { Profile, Program } from '../../lib/schema';
 import { updateSettings, useSettings } from '../../lib/settings';
 import { DISCLAIMER, EQUIPMENT_LABEL, GOAL_INFO, LEVEL_INFO, shortDate } from '../../lib/text';
 import { Icon, Segmented, Sheet, Toggle } from '../../ui/kit';
-import { InstallCard } from '../onboarding/Onboarding';
+import { InstallCard } from '../onboarding/Install';
 import { ThemePicker } from './ThemePicker';
 
 export function ProfileTab({ profile, program, sessionCount, editProfile }: { profile: Profile; program: Program | undefined; sessionCount: number; editProfile: () => void }) {

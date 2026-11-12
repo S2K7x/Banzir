@@ -65,7 +65,9 @@ Process
 - 2026-11-12: program builder, saved programs and the calisthenics skill
   plans added (most of phase 4). 15 templates exist. All flows verified in a
   phone-sized browser.
-- Not built yet: 20 more templates, AI coach, nutrition / fasting / running /
+- 2026-11-12: all 35 templates, focus questions for every goal, plan
+  prerequisites, per-prescription history with 1RM-based load estimates.
+- Not built yet: AI coach (in progress), nutrition / fasting / running /
   body-weight modules. The ordered list is under "Known gaps and next steps"
   in `docs/product/features.md`.
 
@@ -75,7 +77,8 @@ Full layout and commands: `docs/product/architecture.md`.
 
 - `src/lib/schema.ts` — the schema; source of truth for all stored shapes.
 - `src/data/exercises.ts`, `src/data/templates/` — library and templates.
-- `src/lib/matcher.ts` — fits and ranks templates for a profile.
+- `src/lib/matcher.ts` — fits a template to a profile; `src/lib/ranking.ts`
+  ranks the built-in plans (kept apart so template data loads lazily).
 - `src/lib/edit.ts` — pure program-editing operations used by the builder
   (`src/features/program/Builder.tsx`).
 - `src/lib/programState.ts`, `src/lib/progression.ts` — where someone is in a

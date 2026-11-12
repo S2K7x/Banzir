@@ -2,10 +2,10 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { db, getActive, getState } from './lib/db';
 import { Icon } from './ui/kit';
-import { Onboarding } from './features/onboarding/Onboarding';
 import { Today } from './features/today/Today';
 
 // Only the first screen is in the main bundle; the rest load on demand.
+const Onboarding = lazy(() => import('./features/onboarding/Onboarding').then((m) => ({ default: m.Onboarding })));
 const ProgramTab = lazy(() => import('./features/program/ProgramTab').then((m) => ({ default: m.ProgramTab })));
 const Progress = lazy(() => import('./features/progress/Progress').then((m) => ({ default: m.Progress })));
 const Coach = lazy(() => import('./features/coach/Coach').then((m) => ({ default: m.Coach })));
@@ -61,7 +61,12 @@ export default function App({ update }: { update?: { subscribe: (cb: () => void)
 
   if (!data) return null;
   const { profile, program, state, active, sessions } = data;
-  if (!profile) return <Onboarding onDone={() => setTab('today')} />;
+  if (!profile)
+    return (
+      <Suspense fallback={null}>
+        <Onboarding onDone={() => setTab('today')} />
+      </Suspense>
+    );
 
   return (
     <div className="app">
@@ -86,7 +91,11 @@ export default function App({ update }: { update?: { subscribe: (cb: () => void)
         {overlay === 'builder' && program && <Builder key={program.id} program={program} profile={profile} onClose={close} />}
         {overlay === 'player' && <Player initial={active} program={program} profile={profile} sessions={sessions} onClose={close} />}
       </Suspense>
-      {overlay === 'edit' && <Onboarding initial={profile} currentPlan={program?.name} onDone={close} onCancel={close} />}
+      {overlay === 'edit' && (
+        <Suspense fallback={null}>
+          <Onboarding initial={profile} currentPlan={program?.name} onDone={close} onCancel={close} />
+        </Suspense>
+      )}
 
       <nav className="tabbar" aria-label="Main">
         {TABS.map((t) => (

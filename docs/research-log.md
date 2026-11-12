@@ -191,3 +191,33 @@ Engineering findings
 - Text that lives in an input's value is not in `innerText`; browser checks
   must read input values.
 - Lazy-loaded tabs and live queries need an explicit wait in browser tests.
+
+## 2026-11-12 — remaining 20 plans
+
+No new web research; the plans apply the existing `docs/science/` files.
+
+Coaching decisions
+- Runs in minutes, long runs within 10 % of the longest of the previous four
+  weeks (Frandsen 2025), every fourth week lighter, 75 %+ of running time
+  easy. Both rules are unit tests over every distance plan.
+- Prerequisites in minutes of continuous running: 5 km 20, 10 km 30, half
+  30, marathon 60. Someone below is recommended the plan before it.
+- The Nordic curl is tagged beginner with a partial-range cue: injury
+  prevention programmes in amateur football use it at all levels, so it must
+  not be swapped away for beginners.
+- Senior plan: sit-to-stand with fast intent, balance holds next to a
+  support, carries, daily walk (NSCA older adults position). Pike push-ups
+  are never substituted in.
+- Low-impact plan: no jumps; recommended first for a BMI of 30 or more or a
+  joint flag.
+- Strength block: 3 + 1 lighter + 3 + 1 lighter + 3 + test week; heavy and
+  volume work keep separate histories; phase changes start from an Epley
+  estimate.
+- A heavy lift that becomes a bodyweight exercise moves to 8-12 reps.
+
+Engineering findings
+- Weekly-phase plans broke when the person chose a different number of
+  sessions (Planche OS with 5 days never reached its sixth session). Such
+  plans now have a fixed session count, enforced by a test.
+- Moving ranking out of the matcher and lazy-loading onboarding cut the main
+  bundle from 97 kB to 77 kB gzipped.

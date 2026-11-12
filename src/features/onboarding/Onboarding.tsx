@@ -2,13 +2,14 @@ import { useMemo, useState } from 'react';
 import { getExercise, rx } from '../../data/exercises';
 import { importBackup } from '../../lib/backup';
 import { activateProgram, db, requestPersistence } from '../../lib/db';
-import { rankTemplates, type Match } from '../../lib/matcher';
+import { rankTemplates, type Match } from '../../lib/ranking';
 import { EQUIPMENT, GOALS, LEVELS } from '../../lib/constants';
 import type { Equipment, Goal, Level, Profile } from '../../lib/schema';
-import { getSettings, updateSettings, useSettings } from '../../lib/settings';
+import { updateSettings, useSettings } from '../../lib/settings';
 import { DISCLAIMER, EQUIPMENT_LABEL, GOAL_INFO, LEVEL_INFO, describe } from '../../lib/text';
 import { Icon, NumInput, Segmented } from '../../ui/kit';
 import { ThemePicker } from '../profile/ThemePicker';
+import { InstallCard } from './Install';
 
 type Place = 'gym' | 'home' | 'none';
 
@@ -28,6 +29,7 @@ type Draft = {
   pushups?: number;
   pullups?: number;
   focus?: string;
+  runMinutes?: number;
 };
 
 const HOME_ITEMS: Equipment[] = ['dumbbells', 'bench', 'bands', 'pullup_bar', 'kettlebell', 'barbell', 'rack', 'rings', 'parallettes', 'dip_bars', 'jump_rope'];
@@ -56,14 +58,57 @@ const PULLUPS = [
   { label: '12+', value: 12 },
 ];
 
-const FOCUS: { id: string; label: string }[] = [
-  { id: 'foundation', label: 'Strong all round' },
-  { id: 'pullup', label: 'My first pull-up' },
-  { id: 'handstand', label: 'Handstand' },
-  { id: 'planche', label: 'Planche' },
-  { id: 'frontlever', label: 'Front lever' },
-  { id: 'muscleup', label: 'Muscle-up' },
+/** "What do you want most?" per goal. Ids match template tags. */
+const FOCUS: Partial<Record<Goal, { id: string; label: string }[]>> = {
+  calisthenics: [
+    { id: 'foundation', label: 'Strong all round' },
+    { id: 'pullup', label: 'My first pull-up' },
+    { id: 'handstand', label: 'Handstand' },
+    { id: 'planche', label: 'Planche' },
+    { id: 'frontlever', label: 'Front lever' },
+    { id: 'muscleup', label: 'Muscle-up' },
+  ],
+  running: [
+    { id: 'start', label: 'Start running' },
+    { id: '5k', label: '5 km' },
+    { id: '10k', label: '10 km' },
+    { id: 'half', label: 'Half marathon' },
+    { id: 'marathon', label: 'Marathon' },
+    { id: 'strength', label: 'Strength for my running' },
+  ],
+  sport: [
+    { id: 'boxing', label: 'Boxing' },
+    { id: 'tennis', label: 'Tennis' },
+    { id: 'soccer', label: 'Soccer' },
+    { id: 'basketball', label: 'Basketball' },
+    { id: 'athlete', label: 'Another sport' },
+  ],
+  general_fitness: [
+    { id: 'express', label: 'As little time as possible' },
+    { id: 'senior', label: 'Staying strong as I get older' },
+    { id: 'mobility', label: 'Only mobility for now' },
+  ],
+  fat_loss: [{ id: 'low-impact', label: 'Easy on my joints' }],
+  muscle: [{ id: 'home', label: 'Training at home' }],
+};
+
+const RUN_MINUTES = [
+  { label: 'Not yet', value: 0 },
+  { label: 'About 20 min', value: 20 },
+  { label: 'About 30 min', value: 30 },
+  { label: 'An hour or more', value: 60 },
 ];
+
+/** Shown when the focus asks for more than the person reported. */
+function focusNote(d: Draft): string | null {
+  if (d.goal === 'calisthenics' && ['planche', 'frontlever', 'muscleup'].includes(d.focus ?? '') && d.level === 'beginner')
+    return 'These skills need a base first. We will start you on foundations, and the skill plan stays available under other plans.';
+  const need: Record<string, number> = { '5k': 20, '10k': 30, half: 30, marathon: 60 };
+  const req = need[d.focus ?? ''];
+  if (d.goal === 'running' && req != null && (d.runMinutes ?? (d.level === 'beginner' ? 0 : req)) < req)
+    return `This plan starts from about ${req} minutes of easy running. We will build you up to that first; the plan stays available under other plans.`;
+  return null;
+}
 
 const STEPS = ['welcome', 'goal', 'level', 'equipment', 'schedule', 'about', 'plan', 'look', 'ready'] as const;
 
@@ -86,8 +131,8 @@ function toProfile(d: Draft, createdAt: string): Profile {
     heightCm: d.heightCm,
     weightKg: d.weightKg,
     flags: d.flags,
-    ability: { pushups: d.pushups, pullups: d.pullups },
-    focus: d.goal === 'calisthenics' ? d.focus : undefined,
+    ability: { pushups: d.pushups, pullups: d.pullups, runMinutes: d.runMinutes },
+    focus: FOCUS[d.goal]?.some((f) => f.id === d.focus) ? d.focus : undefined,
     createdAt,
   };
 }
@@ -124,6 +169,7 @@ export function Onboarding({ initial, currentPlan, onDone, onCancel }: Props) {
           pushups: initial.ability.pushups,
           pullups: initial.ability.pullups,
           focus: initial.focus,
+          runMinutes: initial.ability.runMinutes,
         }
       : { name: '', goal: 'general_fitness', level: 'beginner', place: 'gym', equipment: [], daysPerWeek: 3, sessionMinutes: 45, flags: [] },
   );
@@ -252,21 +298,31 @@ export function Onboarding({ initial, currentPlan, onDone, onCancel }: Props) {
                 </button>
               ))}
             </div>
-            {d.goal === 'calisthenics' && (
+            {FOCUS[d.goal] && (
               <div className="field">
                 <span>What do you want most?</span>
                 <div className="chips">
-                  {FOCUS.map((f) => (
+                  {FOCUS[d.goal]!.map((f) => (
                     <button key={f.id} className={`chip ${d.focus === f.id ? 'on' : ''}`} onClick={() => set({ focus: d.focus === f.id ? undefined : f.id })} aria-pressed={d.focus === f.id}>
                       {f.label}
                     </button>
                   ))}
                 </div>
-                {(d.focus === 'planche' || d.focus === 'frontlever' || d.focus === 'muscleup') && d.level === 'beginner' && (
-                  <p className="muted small">These skills need a base first. We will start you on foundations, and the skill plan stays available under other plans.</p>
-                )}
               </div>
             )}
+            {d.goal === 'running' && (
+              <div className="field">
+                <span>How long can you run without stopping?</span>
+                <div className="chips">
+                  {RUN_MINUTES.map((o) => (
+                    <button key={o.label} className={`chip ${d.runMinutes === o.value ? 'on' : ''}`} onClick={() => set({ runMinutes: d.runMinutes === o.value ? undefined : o.value })} aria-pressed={d.runMinutes === o.value}>
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {focusNote(d) && <p className="muted small">{focusNote(d)}</p>}
             <div className="field">
               <span>Push-ups in a row (optional)</span>
               <div className="chips">
@@ -497,37 +553,3 @@ function PlanCard({ match }: { match: Match }) {
   );
 }
 
-export function isStandalone(): boolean {
-  return window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
-}
-
-export function InstallCard() {
-  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  if (isStandalone()) {
-    return (
-      <div className="card accent row">
-        <Icon name="check" />
-        <p className="grow">Installed. Your training data is stored on this device.</p>
-      </div>
-    );
-  }
-  return (
-    <div className="card stack">
-      <b>Add Banzir to your home screen</b>
-      <p className="muted small">It opens like an app, works offline, and your browser keeps your data safe from automatic clean-up.</p>
-      {ios ? (
-        <ol className="small" style={{ margin: 0, paddingLeft: 18 }}>
-          <li>Open this page in Safari.</li>
-          <li>Tap the Share button.</li>
-          <li>Choose "Add to Home Screen".</li>
-        </ol>
-      ) : (
-        <ol className="small" style={{ margin: 0, paddingLeft: 18 }}>
-          <li>Open the browser menu.</li>
-          <li>Choose "Install app" or "Add to Home screen".</li>
-        </ol>
-      )}
-      <p className="muted small">Units: {getSettings().units === 'imperial' ? 'lb and miles' : 'kg and km'}. You can skip this and do it later from Profile.</p>
-    </div>
-  );
-}

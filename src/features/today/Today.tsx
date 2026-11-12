@@ -9,7 +9,7 @@ import { sessionsInWeek, totalMinutes, weekStreak } from '../../lib/stats';
 import { GOAL_INFO, describe, greeting, shortDate } from '../../lib/text';
 import { flatItems, startWorkout, unlockAudio } from '../../lib/workout';
 import { Icon, Ring } from '../../ui/kit';
-import { isStandalone } from '../onboarding/Onboarding';
+import { isStandalone } from '../onboarding/Install';
 
 type Props = {
   profile: Profile;

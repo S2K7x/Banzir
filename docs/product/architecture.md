@@ -33,7 +33,9 @@ vite.config.ts          Vite, React, PWA manifest and service worker, Vitest
     constants.ts        plain value lists (no Zod, cheap to import)
     db.ts               Dexie tables, program state, active session
     settings.ts         device preferences in localStorage, units, formatting
-    matcher.ts          template ranking and fitting to a person
+    matcher.ts          fitting a template to a person (equipment, level, time)
+    ranking.ts          ranking the built-in plans (loads the template data)
+    edit.ts             pure program-editing operations for the builder
     programState.ts     week/phase/day from completed sessions, lighter weeks
     progression.ts      next-load and next-rep suggestions
     workout.ts          start/finish a workout, sound, wake lock
@@ -65,15 +67,14 @@ running modules, the program builder.
 
 CI (`.github/workflows/ci.yml`) runs the tests and the build on every push.
 
-## Bundle (2026-11-12)
+## Bundle (2026-11-12, after all 35 plans)
 
-Initial load is about 125 kB gzipped: the main chunk (React, Dexie, shell,
-Today, onboarding) at 84 kB, shared data and labels at 37 kB, styles at 4 kB.
-Program, Progress, Coach, Profile and the Player are separate chunks of 1-5 kB
-loaded on first use; Zod (27 kB) loads only when restoring a backup. The
-service worker precaches everything, so later visits and offline use are
-instant. React itself is most of the main chunk; Preact would cut roughly
-40 kB if size ever becomes a problem.
+First load is about 120 kB gzipped: the main chunk (React, Dexie, shell,
+Today) at 77 kB, shared exercise data and labels at 41 kB, styles at 4 kB.
+Onboarding (5 kB) and the 35 templates with the ranking (16 kB) load only
+when someone chooses a plan; Program, Builder, Progress, Profile and the
+Player are 2-5 kB chunks loaded on first use; Zod (27 kB) only when
+restoring a backup. The service worker precaches everything.
 
 ## Data model (IndexedDB tables)
 

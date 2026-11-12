@@ -147,9 +147,9 @@ export const gfSenior = template({
           warmup: [t('warmup_general', 6, { cue: 'March on the spot, roll the shoulders, a few slow step-ups.' })],
           main: [
             r('step_up', 3, 8, 10, { rir: EASY, cue: 'A low step, hand on a rail or wall. Push through the top foot.' }),
-            r('band_shoulder_press', 2, 10, 12, { rir: EASY, alt: ['db_shoulder_press'] }),
+            r('band_shoulder_press', 2, 10, 12, { rir: EASY, alt: ['db_shoulder_press', 'wall_pushup'] }),
             r('band_pulldown', 3, 10, 12, { rir: EASY, alt: ['lat_pulldown', 'band_row', 'table_row'] }),
-            h('farmer_carry', 3, 30, 40, { rest: 60, alt: ['single_leg_balance'], cue: 'Light weights, tall posture, normal steps.' }),
+            h('farmer_carry', 3, 30, 40, { rest: 60, alt: ['tandem_stance'], cue: 'Light weights, tall posture, normal steps.' }),
             r('calf_raise', 2, 10, 15, { rest: 45, p: 2, cue: 'Hold a support for balance.' }),
             h('single_leg_balance', 2, 15, 30, { rest: 30, prog: NONE }),
           ],
