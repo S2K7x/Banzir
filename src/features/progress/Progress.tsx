@@ -47,95 +47,99 @@ export function Progress({ profile, sessions, target }: { profile: Profile; sess
     <div className="screen">
       <h1 className="h1">Progress</h1>
 
-      {modules.body && <WeightCard />}
-      {runs}
+      <div className="masonry">
+        {modules.body && <WeightCard />}
+        {runs}
 
-      <div className="card stack">
-        <div className="row between">
-          <b>Sessions per week</b>
-          <span className="muted small">target {target}</span>
-        </div>
-        <div className="bars" role="img" aria-label={`Sessions per week for the last ${weeks.length} weeks`}>
-          {weeks.map((w, i) => (
-            <div key={i}>
-              <span className="num">{w.count || ''}</span>
-              <i className={w.count ? '' : 'empty'} style={{ height: Math.round((w.count / max) * 76), opacity: w.count >= target ? 1 : 0.55 }} />
-              <span>{w.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {muscles.length > 0 && (
         <div className="card stack">
-          <div>
-            <b>Sets this week by muscle</b>
-            <p className="muted small">Main muscles count as one set, helpers as half.</p>
+          <div className="row between">
+            <b>Sessions per week</b>
+            <span className="muted small">target {target}</span>
           </div>
-          {muscles.map((m) => (
-            <div className="hbar" key={m.muscle}>
-              <span style={{ textTransform: 'capitalize' }}>{m.muscle}</span>
-              <span className="trk">
-                <i style={{ width: `${(m.sets / maxSets) * 100}%` }} />
-              </span>
-              <span className="num muted">{m.sets % 1 ? m.sets.toFixed(1) : m.sets}</span>
-            </div>
-          ))}
+          <div className="bars" role="img" aria-label={`Sessions per week for the last ${weeks.length} weeks`}>
+            {weeks.map((w, i) => (
+              <div key={i}>
+                <span className="num">{w.count || ''}</span>
+                <i className={w.count ? '' : 'empty'} style={{ height: Math.round((w.count / max) * 76), opacity: w.count >= target ? 1 : 0.55 }} />
+                <span>{w.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      )}
 
-      {best.length > 0 && (
-        <>
+        {muscles.length > 0 && (
+          <div className="card stack">
+            <div>
+              <b>Sets this week by muscle</b>
+              <p className="muted small">Main muscles count as one set, helpers as half.</p>
+            </div>
+            {muscles.map((m) => (
+              <div className="hbar" key={m.muscle}>
+                <span style={{ textTransform: 'capitalize' }}>{m.muscle}</span>
+                <span className="trk">
+                  <i style={{ width: `${(m.sets / maxSets) * 100}%` }} />
+                </span>
+                <span className="num muted">{m.sets % 1 ? m.sets.toFixed(1) : m.sets}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {best.length > 0 && (
+          <section className="stack">
+            <div className="section-title">
+              <h2 className="h2">Personal bests</h2>
+            </div>
+            <div className="card list">
+              {best.slice(0, 12).map((r) => {
+                const ex = findExercise(r.exerciseId);
+                const label = ex?.logType === 'weight_reps' ? r.label.replace(/^([\d.]+) kg/, (_, kg) => `${showWeight(Number(kg), units)} ${weightUnit(units)}`) : r.label;
+                return (
+                  <div key={r.exerciseId}>
+                    <span style={{ color: 'var(--accent)' }}>
+                      <Icon name="trophy" size={18} />
+                    </span>
+                    <span className="grow">
+                      {r.name}
+                      <span className="muted small" style={{ display: 'block' }}>
+                        {shortDate(r.date)}
+                      </span>
+                    </span>
+                    <b className="num">{label}</b>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        <section className="stack">
           <div className="section-title">
-            <h2 className="h2">Personal bests</h2>
+            <h2 className="h2">History</h2>
+            <span className="muted small">
+              {sessions.length} session{sessions.length === 1 ? '' : 's'}
+            </span>
           </div>
           <div className="card list">
-            {best.slice(0, 12).map((r) => {
-              const ex = findExercise(r.exerciseId);
-              const label = ex?.logType === 'weight_reps' ? r.label.replace(/^([\d.]+) kg/, (_, kg) => `${showWeight(Number(kg), units)} ${weightUnit(units)}`) : r.label;
-              return (
-                <div key={r.exerciseId}>
-                  <span style={{ color: 'var(--accent)' }}>
-                    <Icon name="trophy" size={18} />
+            {sorted.slice(0, 50).map((s) => (
+              <button
+                key={s.id}
+                onClick={() => {
+                  setConfirmDelete(false);
+                  setOpen(s);
+                }}
+              >
+                <span className="grow">
+                  <b>{s.dayName}</b>
+                  <span className="muted small" style={{ display: 'block' }}>
+                    {shortDate(s.date)} · {formatDuration(s.durationSeconds)} · {s.entries.reduce((n, e) => n + e.sets.length, 0)} sets
                   </span>
-                  <span className="grow">
-                    {r.name}
-                    <span className="muted small" style={{ display: 'block' }}>
-                      {shortDate(r.date)}
-                    </span>
-                  </span>
-                  <b className="num">{label}</b>
-                </div>
-              );
-            })}
+                </span>
+                <Icon name="right" size={18} />
+              </button>
+            ))}
           </div>
-        </>
-      )}
-
-      <div className="section-title">
-        <h2 className="h2">History</h2>
-        <span className="muted small">
-          {sessions.length} session{sessions.length === 1 ? '' : 's'}
-        </span>
-      </div>
-      <div className="card list">
-        {sorted.slice(0, 50).map((s) => (
-          <button
-            key={s.id}
-            onClick={() => {
-              setConfirmDelete(false);
-              setOpen(s);
-            }}
-          >
-            <span className="grow">
-              <b>{s.dayName}</b>
-              <span className="muted small" style={{ display: 'block' }}>
-                {shortDate(s.date)} · {formatDuration(s.durationSeconds)} · {s.entries.reduce((n, e) => n + e.sets.length, 0)} sets
-              </span>
-            </span>
-            <Icon name="right" size={18} />
-          </button>
-        ))}
+        </section>
       </div>
 
       {open && (

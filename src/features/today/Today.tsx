@@ -12,7 +12,7 @@ import { GOAL_INFO, describe, greeting, shortDate } from '../../lib/text';
 import { flatItems, startWorkout, unlockAudio } from '../../lib/workout';
 import { Icon, Ring } from '../../ui/kit';
 import { fastingBlocked } from '../../lib/fastingSafety';
-import { isStandalone } from '../onboarding/Install';
+import { isDesktop, isStandalone } from '../onboarding/Install';
 
 // Module cards load only when the module is on.
 const QuickWeigh = lazy(() => import('../body/Weight').then((m) => ({ default: m.QuickWeigh })));
@@ -74,165 +74,170 @@ export function Today({ profile, program, state, sessions, active, openPlayer, o
           {profile.name ? `, ${profile.name}` : ''}
         </h1>
       </header>
+      <div className="cols">
+        <div className="col">
 
-      <div className="card row">
-        <Ring value={target ? week.length / target : 0} size={68}>
-          {week.length}/{target}
-        </Ring>
-        <div className="grow">
-          <b>This week</b>
-          <p className="muted small">
-            {week.length >= target ? 'Weekly target reached.' : `${target - week.length} session${target - week.length > 1 ? 's' : ''} to go.`}
-            {pos && program && (program.loops ? ` Week ${pos.week + 1}.` : ` Week ${Math.min(pos.week + 1, pos.totalWeeks)} of ${pos.totalWeeks}.`)}
-          </p>
-        </div>
-      </div>
+          <div className="card row">
+            <Ring value={target ? week.length / target : 0} size={68}>
+              {week.length}/{target}
+            </Ring>
+            <div className="grow">
+              <b>This week</b>
+              <p className="muted small">
+                {week.length >= target ? 'Weekly target reached.' : `${target - week.length} session${target - week.length > 1 ? 's' : ''} to go.`}
+                {pos && program && (program.loops ? ` Week ${pos.week + 1}.` : ` Week ${Math.min(pos.week + 1, pos.totalWeeks)} of ${pos.totalWeeks}.`)}
+              </p>
+            </div>
+          </div>
 
-      {active ? (
-        <div className="hero" style={{ ['--g1' as string]: info.g1, ['--g2' as string]: info.g2 }}>
-          <span className="chip">In progress</span>
-          <h2 className="h1" style={{ fontSize: 24, margin: '10px 0 14px' }}>
-            {active.dayName}
-          </h2>
-          <button className="btn big block" onClick={start}>
-            <Icon name="play" size={18} /> Resume workout
-          </button>
-        </div>
-      ) : pos?.finished ? (
-        <div className="card accent stack">
-          <div className="row">
-            <Icon name="trophy" />
-            <b className="grow">Program complete</b>
-          </div>
-          <p className="small">You finished {program?.name}. Choose what comes next.</p>
-          <button className="btn primary block" onClick={() => goTo('program')}>
-            Choose a new plan
-          </button>
-        </div>
-      ) : program && day ? (
-        <div className="hero" style={{ ['--g1' as string]: info.g1, ['--g2' as string]: info.g2 }}>
-          <div className="chips">
-            <span className="chip">Next session</span>
-            {light && <span className="chip">Lighter week</span>}
-          </div>
-          <h2 className="h1" style={{ fontSize: 26, margin: '10px 0 4px' }}>
-            {day.name}
-          </h2>
-          <p className="muted small" style={{ marginBottom: 14 }}>
-            {flatItems(day).length === 0 ? 'No exercises yet' : `${flatItems(day).length} exercises · about ${estimateMinutes(day)} min${day.focus.length ? ` · ${day.focus.slice(0, 3).join(', ')}` : ''}`}
-          </p>
-          {flatItems(day).length === 0 ? (
-            <button className="btn big block" onClick={() => goTo('program')}>
-              Add exercises to this day
-            </button>
+          {active ? (
+            <div className="hero" style={{ ['--g1' as string]: info.g1, ['--g2' as string]: info.g2 }}>
+              <span className="chip">In progress</span>
+              <h2 className="h1" style={{ fontSize: 24, margin: '10px 0 14px' }}>
+                {active.dayName}
+              </h2>
+              <button className="btn big block" onClick={start}>
+                <Icon name="play" size={18} /> Resume workout
+              </button>
+            </div>
+          ) : pos?.finished ? (
+            <div className="card accent stack">
+              <div className="row">
+                <Icon name="trophy" />
+                <b className="grow">Program complete</b>
+              </div>
+              <p className="small">You finished {program?.name}. Choose what comes next.</p>
+              <button className="btn primary block" onClick={() => goTo('program')}>
+                Choose a new plan
+              </button>
+            </div>
+          ) : program && day ? (
+            <div className="hero" style={{ ['--g1' as string]: info.g1, ['--g2' as string]: info.g2 }}>
+              <div className="chips">
+                <span className="chip">Next session</span>
+                {light && <span className="chip">Lighter week</span>}
+              </div>
+              <h2 className="h1" style={{ fontSize: 26, margin: '10px 0 4px' }}>
+                {day.name}
+              </h2>
+              <p className="muted small" style={{ marginBottom: 14 }}>
+                {flatItems(day).length === 0 ? 'No exercises yet' : `${flatItems(day).length} exercises · about ${estimateMinutes(day)} min${day.focus.length ? ` · ${day.focus.slice(0, 3).join(', ')}` : ''}`}
+              </p>
+              {flatItems(day).length === 0 ? (
+                <button className="btn big block" onClick={() => goTo('program')}>
+                  Add exercises to this day
+                </button>
+              ) : (
+                <button className="btn big block" onClick={start}>
+                  <Icon name="play" size={18} /> Start workout
+                </button>
+              )}
+            </div>
           ) : (
-            <button className="btn big block" onClick={start}>
-              <Icon name="play" size={18} /> Start workout
-            </button>
+            <div className="card stack">
+              <b>No plan yet</b>
+              <button className="btn primary block" onClick={() => goTo('program')}>
+                Choose a plan
+              </button>
+            </div>
+          )}
+
+          {pos?.deloadSuggested && !light && !active && state && !pos.finished && (
+            <div className="card stack">
+              <b>Lighter week suggested</b>
+              <p className="muted small">You have trained hard for several weeks. Half the sets at the same loads lets your body catch up.</p>
+              <button className="btn block" onClick={() => setState({ ...state, lightWeek: pos.week })}>
+                Use a lighter week
+              </button>
+            </div>
+          )}
+
+          {day && !active && !pos?.finished && flatItems(day).length > 0 && (
+            <div className="card">
+              <div className="list">
+                {flatItems(day)
+                  .filter((i) => getExercise(i.exerciseId).slot !== 'mobility')
+                  .map((item) => (
+                    <div key={item.id} style={{ minHeight: 0, padding: '9px 0' }}>
+                      <span className="grow">{getExercise(item.exerciseId).name}</span>
+                      <span className="muted small num">{describe(rx(item))}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
           )}
         </div>
-      ) : (
-        <div className="card stack">
-          <b>No plan yet</b>
-          <button className="btn primary block" onClick={() => goTo('program')}>
-            Choose a plan
-          </button>
-        </div>
-      )}
+        <div className="col">
+          <Suspense fallback={null}>
+            {settings.modules.body && <QuickWeigh />}
+            {settings.modules.fasting && !fastingBlocked(profile) && <FastingCard onOpen={openFasting} />}
+            {settings.modules.nutrition && <FoodToday profile={profile} onOpen={() => goTo('food')} />}
+            {settings.modules.running && <RunToday profile={profile} runDay={day?.kind === 'run'} onOpen={() => goTo('progress')} />}
+          </Suspense>
 
-      {pos?.deloadSuggested && !light && !active && state && !pos.finished && (
-        <div className="card stack">
-          <b>Lighter week suggested</b>
-          <p className="muted small">You have trained hard for several weeks. Half the sets at the same loads lets your body catch up.</p>
-          <button className="btn block" onClick={() => setState({ ...state, lightWeek: pos.week })}>
-            Use a lighter week
-          </button>
-        </div>
-      )}
-
-      {day && !active && !pos?.finished && flatItems(day).length > 0 && (
-        <div className="card">
-          <div className="list">
-            {flatItems(day)
-              .filter((i) => getExercise(i.exerciseId).slot !== 'mobility')
-              .map((item) => (
-                <div key={item.id} style={{ minHeight: 0, padding: '9px 0' }}>
-                  <span className="grow">{getExercise(item.exerciseId).name}</span>
-                  <span className="muted small num">{describe(rx(item))}</span>
-                </div>
-              ))}
+          <div className="tiles">
+            <div className="tile">
+              <b className="num">{sessions.length}</b>
+              <span>Sessions</span>
+            </div>
+            <div className="tile">
+              <b className="num">{weekStreak(sessions, target)}</b>
+              <span>Week streak</span>
+            </div>
+            <div className="tile">
+              <b className="num">{totalMinutes(sessions)}</b>
+              <span>Minutes</span>
+            </div>
           </div>
-        </div>
-      )}
 
-      <Suspense fallback={null}>
-        {settings.modules.body && <QuickWeigh />}
-        {settings.modules.fasting && !fastingBlocked(profile) && <FastingCard onOpen={openFasting} />}
-        {settings.modules.nutrition && <FoodToday profile={profile} onOpen={() => goTo('food')} />}
-        {settings.modules.running && <RunToday profile={profile} runDay={day?.kind === 'run'} onOpen={() => goTo('progress')} />}
-      </Suspense>
-
-      <div className="tiles">
-        <div className="tile">
-          <b className="num">{sessions.length}</b>
-          <span>Sessions</span>
-        </div>
-        <div className="tile">
-          <b className="num">{weekStreak(sessions, target)}</b>
-          <span>Week streak</span>
-        </div>
-        <div className="tile">
-          <b className="num">{totalMinutes(sessions)}</b>
-          <span>Minutes</span>
-        </div>
-      </div>
-
-      <div className="card accent stack">
-        <div className="row">
-          <Icon name="spark" size={20} />
-          <b className="grow">Coach tip</b>
-        </div>
-        <p className="small">{sessions.length === 0 ? TIPS.first : TIPS[program?.goal ?? profile.goal]}</p>
-        {last && (
-          <p className="muted small">
-            Last session: {last.dayName}, {shortDate(last.date)}.
-          </p>
-        )}
-        <button className="btn sm" style={{ justifySelf: 'start' }} onClick={() => goTo('coach')}>
-          <Icon name="chat" size={14} /> {coachReady ? 'Ask your coach' : 'Set up your AI coach'}
-        </button>
-      </div>
-
-      {!hideInstall && (
-        <div className="card stack">
-          <b>Install Banzir on your home screen</b>
-          <p className="muted small">Browsers can clear the data of sites that are not installed. Installing keeps your training log safe.</p>
-          <div className="row">
-            <button className="btn sm" onClick={() => goTo('profile')}>
-              How to install
-            </button>
-            <button
-              className="btn sm ghost"
-              onClick={() => {
-                sessionStorage.setItem('banzir.hideInstall', '1');
-                setHideInstall(true);
-              }}
-            >
-              Not now
+          <div className="card accent stack">
+            <div className="row">
+              <Icon name="spark" size={20} />
+              <b className="grow">Coach tip</b>
+            </div>
+            <p className="small">{sessions.length === 0 ? TIPS.first : TIPS[program?.goal ?? profile.goal]}</p>
+            {last && (
+              <p className="muted small">
+                Last session: {last.dayName}, {shortDate(last.date)}.
+              </p>
+            )}
+            <button className="btn sm" style={{ justifySelf: 'start' }} onClick={() => goTo('coach')}>
+              <Icon name="chat" size={14} /> {coachReady ? 'Ask your coach' : 'Set up your AI coach'}
             </button>
           </div>
-        </div>
-      )}
 
-      {sessions.length >= 3 && daysSinceBackup > 30 && (
-        <div className="card stack">
-          <b>Back up your data</b>
-          <p className="muted small">{settings.lastBackup ? 'Your last backup is more than a month old.' : 'You have not saved a backup yet.'}</p>
-          <button className="btn sm" onClick={() => goTo('profile')}>
-            Go to backup
-          </button>
+          {!hideInstall && (
+            <div className="card stack">
+              <b>{isDesktop() ? 'Install Banzir as an app' : 'Install Banzir on your home screen'}</b>
+              <p className="muted small">Browsers can clear the data of sites that are not installed. Installing keeps your training log safe.</p>
+              <div className="row">
+                <button className="btn sm" onClick={() => goTo('profile')}>
+                  How to install
+                </button>
+                <button
+                  className="btn sm ghost"
+                  onClick={() => {
+                    sessionStorage.setItem('banzir.hideInstall', '1');
+                    setHideInstall(true);
+                  }}
+                >
+                  Not now
+                </button>
+              </div>
+            </div>
+          )}
+
+          {sessions.length >= 3 && daysSinceBackup > 30 && (
+            <div className="card stack">
+              <b>Back up your data</b>
+              <p className="muted small">{settings.lastBackup ? 'Your last backup is more than a month old.' : 'You have not saved a backup yet.'}</p>
+              <button className="btn sm" onClick={() => goTo('profile')}>
+                Go to backup
+              </button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -70,115 +70,120 @@ export function Nutrition({ profile, editProfile }: { profile: Profile; editProf
         </button>
       </div>
 
-      <div className="card row">
-        <button className="icon-btn" onClick={() => setDate(addDays(date, -1))} aria-label="Previous day">
-          <Icon name="left" size={18} />
-        </button>
-        <b className="grow center">{dayLabel(date)}</b>
-        <button className="icon-btn" onClick={() => setDate(addDays(date, 1))} disabled={date >= dayKey()} aria-label="Next day">
-          <Icon name="right" size={18} />
-        </button>
-      </div>
-
-      {fast && (
-        <div className="note warn">
-          Your weight has been falling by more than 1 % a week for two weeks. That is faster than the app recommends: eat a little more, and talk to a professional if you also feel constantly tired or cold, or your periods have changed.
-        </div>
-      )}
-
-      {t.kcal == null ? (
-        <div className="card stack">
-          <b>Set up your targets</b>
-          <p className="muted small">The app needs your {t.missing.join(', ')} to estimate your calories. You can also type your own targets.</p>
-          <div className="row">
-            <button className="btn sm primary" onClick={editProfile}>
-              Add them to my profile
+      <div className="cols lead">
+        <div className="col">
+          <div className="card row">
+            <button className="icon-btn" onClick={() => setDate(addDays(date, -1))} aria-label="Previous day">
+              <Icon name="left" size={18} />
             </button>
-            <button className="btn sm" onClick={() => setEditingTargets(true)}>
-              Set my own
+            <b className="grow center">{dayLabel(date)}</b>
+            <button className="icon-btn" onClick={() => setDate(addDays(date, 1))} disabled={date >= dayKey()} aria-label="Next day">
+              <Icon name="right" size={18} />
             </button>
           </div>
-        </div>
-      ) : (
-        <div className="card stack">
-          <div className="row">
-            <Ring value={day.kcal / t.kcal} size={84} stroke={8}>
-              <span className="small num">{day.kcal}</span>
-            </Ring>
-            <div className="grow">
-              <b className="num">
-                {Math.max(0, t.kcal - day.kcal)} kcal left
-              </b>
-              <p className="muted small num">
-                {day.kcal} of {t.kcal} kcal · {t.goal === 'lose' ? 'losing' : t.goal === 'gain' ? 'gaining' : 'maintaining'}
-              </p>
+
+          {fast && (
+            <div className="note warn">
+              Your weight has been falling by more than 1 % a week for two weeks. That is faster than the app recommends: eat a little more, and talk to a professional if you also feel constantly tired or cold, or your periods have changed.
             </div>
-          </div>
-          <Macro label="Protein" value={day.protein} target={t.protein} />
-          <Macro label="Carbs" value={day.carbs} target={t.carbs} />
-          <Macro label="Fat" value={day.fat} target={t.fat} />
-          {profile.weightKg && <p className="muted small">Protein-rich meals: {day.proteinMeals} (aim for 3 to 4 spread over the day).</p>}
-        </div>
-      )}
+          )}
 
-      {correction && (
-        <div className="card accent stack">
-          <b>Adjust your calories?</b>
-          <p className="small">{correction.reason}</p>
-          <div className="row">
-            <button className="btn sm primary" onClick={() => void saveNutritionSettings({ ...s, adjustKcal: s.adjustKcal + correction.kcal, adjustedAt: dayKey() })}>
-              {correction.kcal > 0 ? '+' : ''}
-              {correction.kcal} kcal a day
-            </button>
-            <button className="btn sm ghost" onClick={() => void saveNutritionSettings({ ...s, adjustedAt: dayKey() })}>
-              Not now
-            </button>
-          </div>
-        </div>
-      )}
-
-      <button className="btn primary big block" onClick={() => setAdding(true)}>
-        <Icon name="plus" size={18} /> Add food
-      </button>
-
-      {foods.length === 0 ? (
-        <p className="muted small center">Nothing logged {date === dayKey() ? 'yet today' : 'for this day'}. Logging most days, even roughly, is what helps.</p>
-      ) : (
-        meals.map((time) => (
-          <div className="card" key={time}>
-            <p className="muted small">{time}</p>
-            <div className="list">
-              {foods
-                .filter((f) => f.time === time)
-                .map((f) => (
-                  <button key={f.id} onClick={() => setOpen(f)}>
-                    <span className="grow">
-                      {f.name}
-                      {f.grams ? <span className="muted small"> · {f.grams} g</span> : null}
-                    </span>
-                    <span className="small num">
-                      {f.kcal} kcal{f.protein != null ? ` · ${Math.round(f.protein)} g P` : ''}
-                    </span>
-                  </button>
-                ))}
+          {t.kcal == null ? (
+            <div className="card stack">
+              <b>Set up your targets</b>
+              <p className="muted small">The app needs your {t.missing.join(', ')} to estimate your calories. You can also type your own targets.</p>
+              <div className="row">
+                <button className="btn sm primary" onClick={editProfile}>
+                  Add them to my profile
+                </button>
+                <button className="btn sm" onClick={() => setEditingTargets(true)}>
+                  Set my own
+                </button>
+              </div>
             </div>
-          </div>
-        ))
-      )}
+          ) : (
+            <div className="card stack">
+              <div className="row">
+                <Ring value={day.kcal / t.kcal} size={84} stroke={8}>
+                  <span className="small num">{day.kcal}</span>
+                </Ring>
+                <div className="grow">
+                  <b className="num">
+                    {Math.max(0, t.kcal - day.kcal)} kcal left
+                  </b>
+                  <p className="muted small num">
+                    {day.kcal} of {t.kcal} kcal · {t.goal === 'lose' ? 'losing' : t.goal === 'gain' ? 'gaining' : 'maintaining'}
+                  </p>
+                </div>
+              </div>
+              <Macro label="Protein" value={day.protein} target={t.protein} />
+              <Macro label="Carbs" value={day.carbs} target={t.carbs} />
+              <Macro label="Fat" value={day.fat} target={t.fat} />
+              {profile.weightKg && <p className="muted small">Protein-rich meals: {day.proteinMeals} (aim for 3 to 4 spread over the day).</p>}
+            </div>
+          )}
 
-      <div className="card row">
-        <span className="grow">
-          <b>Water</b>
-          <span className="muted small num" style={{ display: 'block' }}>
-            {water} of about {waterTarget(profile.weightKg)} ml
-          </span>
-        </span>
-        <button className="btn sm ghost" onClick={() => void addWater(date, -250)} disabled={water <= 0} aria-label="Remove 250 ml of water">
-          <Icon name="minus" size={14} />
-        </button>
-        <button className="btn sm" onClick={() => void addWater(date, 250)}>
-          +250 ml
-        </button>
+          {correction && (
+            <div className="card accent stack">
+              <b>Adjust your calories?</b>
+              <p className="small">{correction.reason}</p>
+              <div className="row">
+                <button className="btn sm primary" onClick={() => void saveNutritionSettings({ ...s, adjustKcal: s.adjustKcal + correction.kcal, adjustedAt: dayKey() })}>
+                  {correction.kcal > 0 ? '+' : ''}
+                  {correction.kcal} kcal a day
+                </button>
+                <button className="btn sm ghost" onClick={() => void saveNutritionSettings({ ...s, adjustedAt: dayKey() })}>
+                  Not now
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="card row">
+            <span className="grow">
+              <b>Water</b>
+              <span className="muted small num" style={{ display: 'block' }}>
+                {water} of about {waterTarget(profile.weightKg)} ml
+              </span>
+            </span>
+            <button className="btn sm ghost" onClick={() => void addWater(date, -250)} disabled={water <= 0} aria-label="Remove 250 ml of water">
+              <Icon name="minus" size={14} />
+            </button>
+            <button className="btn sm" onClick={() => void addWater(date, 250)}>
+              +250 ml
+            </button>
+          </div>
+        </div>
+        <div className="col">
+          <button className="btn primary big block" onClick={() => setAdding(true)}>
+            <Icon name="plus" size={18} /> Add food
+          </button>
+
+          {foods.length === 0 ? (
+            <p className="muted small center">Nothing logged {date === dayKey() ? 'yet today' : 'for this day'}. Logging most days, even roughly, is what helps.</p>
+          ) : (
+            meals.map((time) => (
+              <div className="card" key={time}>
+                <p className="muted small">{time}</p>
+                <div className="list">
+                  {foods
+                    .filter((f) => f.time === time)
+                    .map((f) => (
+                      <button key={f.id} onClick={() => setOpen(f)}>
+                        <span className="grow">
+                          {f.name}
+                          {f.grams ? <span className="muted small"> · {f.grams} g</span> : null}
+                        </span>
+                        <span className="small num">
+                          {f.kcal} kcal{f.protein != null ? ` · ${Math.round(f.protein)} g P` : ''}
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {adding && <AddFood date={date} favourites={favourites} onClose={() => setAdding(false)} />}
@@ -222,7 +227,7 @@ export function Nutrition({ profile, editProfile }: { profile: Profile; editProf
 
 function Macro({ label, value, target }: { label: string; value: number; target?: number }) {
   return (
-    <div className="hbar" style={{ gridTemplateColumns: '64px 1fr auto' }}>
+    <div className="hbar" style={{ gridTemplateColumns: '64px 1fr 76px' }}>
       <span>{label}</span>
       <span className="trk">
         <i style={{ width: `${target ? Math.min(100, (value / target) * 100) : 0}%` }} />

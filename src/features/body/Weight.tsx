@@ -28,8 +28,9 @@ function Chart({ entries }: { entries: BodyEntry[] }) {
   const pad = Math.max(0.5, (max - min) * 0.15);
   const lo = min - pad;
   const hi = max + pad;
-  const W = 320;
-  const H = 120;
+  // Wide enough that the chart keeps its proportions from a phone to a desktop column.
+  const W = 480;
+  const H = 150;
   const x = (i: number) => (i / (points.length - 1)) * W;
   const y = (v: number) => H - ((v - lo) / (hi - lo)) * H;
   const line = points
@@ -37,7 +38,7 @@ function Chart({ entries }: { entries: BodyEntry[] }) {
     .filter(Boolean)
     .join(' ');
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label="Body weight over the last 8 weeks" style={{ overflow: 'visible' }}>
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Body weight over the last 8 weeks" style={{ overflow: 'visible', height: 'auto', display: 'block' }}>
       {points.map((p, i) => (p.kg != null ? <circle key={p.date} cx={x(i)} cy={y(p.kg)} r={2.6} fill="var(--text-muted)" opacity={0.6} /> : null))}
       {line && <polyline points={line} fill="none" stroke="var(--accent)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />}
     </svg>

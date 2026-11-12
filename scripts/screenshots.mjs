@@ -1,113 +1,117 @@
-// Regenerates docs/screenshots/banzir.png for the README from the real app,
-// with a fixed clock and sample data. Usage: npm run build && npx vite preview
-// --port 4173 & node scripts/screenshots.mjs
+// Screenshots of every main screen with the demo account (scripts/demo.mjs).
+// Usage (app served on port 4173, for example `npx vite preview --port 4173`):
+//   node scripts/screenshots.mjs [--device phone|desktop|tablet] [--theme midnight] [--out dir] [--strip]
+// --strip also writes docs/screenshots/banzir.png, the five-phone strip in the README.
 import { mkdirSync } from 'node:fs';
 import { chromium, devices } from 'playwright';
+import { clicker, onboard, seed } from './demo.mjs';
 
+const arg = (name, fallback) => {
+  const i = process.argv.indexOf(`--${name}`);
+  return i > -1 ? process.argv[i + 1] : fallback;
+};
 const APP = process.env.APP_URL || 'http://localhost:4173/';
-const OUT = new URL('../docs/screenshots/', import.meta.url).pathname;
-mkdirSync(OUT, { recursive: true });
+const DEVICE = arg('device', 'phone');
+const THEME = arg('theme', 'midnight');
+const OUT = arg('out', new URL(`../docs/screenshots/${DEVICE}/`, import.meta.url).pathname).replace(/\/?$/, '/');
+const STRIP = process.argv.includes('--strip');
+// A Thursday evening: the eating window is open and a fast follows tonight.
+const NOW = new Date(arg('time', '2026-11-12T17:40:00Z'));
 
+const VIEWPORTS = {
+  phone: { ...devices['iPhone 13'], deviceScaleFactor: 3 },
+  tablet: { viewport: { width: 834, height: 1112 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+  desktop: { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 },
+};
+
+mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch();
-const ctx = await browser.newContext({ ...devices['iPhone 13'], deviceScaleFactor: 2, timezoneId: 'Europe/London' });
-const page = await ctx.newPage();
-await page.clock.setFixedTime(new Date('2026-11-12T17:40:00Z'));
-const click = (name) => page.locator('button', { hasText: name }).first().click({ timeout: 8000 });
+
+async function newPage() {
+  const ctx = await browser.newContext({ ...VIEWPORTS[DEVICE], timezoneId: 'Europe/London', colorScheme: 'dark' });
+  const page = await ctx.newPage();
+  await page.clock.setFixedTime(NOW);
+  await page.addInitScript((theme) => {
+    const s = JSON.parse(localStorage.getItem('banzir.settings') || '{}');
+    if (s.theme !== theme) localStorage.setItem('banzir.settings', JSON.stringify({ ...s, theme }));
+  }, THEME);
+  return page;
+}
+
+const saved = {};
+const shot = async (page, name) => {
+  await page.waitForTimeout(450);
+  saved[name] = await page.screenshot({ path: `${OUT}${name}.png` });
+};
+
+// Onboarding screens, from a fresh start.
+{
+  const page = await newPage();
+  const click = clicker(page);
+  await page.goto(APP);
+  await page.fill('input[placeholder="First name"]', 'Alex');
+  await shot(page, '01-welcome');
+  await click('Continue');
+  await click('Build muscle');
+  await shot(page, '02-goal');
+  for (let i = 0; i < 12; i++) {
+    if (await page.locator('button', { hasText: 'Use this plan' }).count()) break;
+    await click('Continue');
+  }
+  await shot(page, '03-plan');
+  await page.context().close();
+}
+
+// The app in use.
+const page = await newPage();
+const click = clicker(page);
 const tab = async (t) => {
   await page.locator('nav.tabbar button', { hasText: t }).click();
   await page.waitForTimeout(500);
 };
-
 await page.goto(APP);
-await page.fill('input[placeholder="First name"]', 'Alex');
-await click('Continue');
-await click('Build muscle');
-for (let i = 0; i < 16; i++) {
-  if ((await page.locator('body').innerText()).includes('Make it yours')) break;
-  const age = page.getByLabel('Age');
-  if ((await age.count()) && !(await age.inputValue())) {
-    await age.fill('31');
-    await click('Female');
-    await page.getByLabel('Height').fill('168');
-    await page.getByLabel('Weight').fill('64');
-  }
-  if (await page.locator('button', { hasText: 'Use this plan' }).count()) await click('Use this plan');
-  else await click('Continue');
-}
-for (const m of ['Food and calories', 'Runs and heart rate', 'Fasting']) {
-  const chip = page.locator('button[aria-pressed=false]', { hasText: m });
-  if (await chip.count()) await chip.click();
-}
-await click('Continue');
-await click('Start training');
-await page.waitForTimeout(500);
+await onboard(page);
+await seed(page);
 
-// Three weeks of history so charts and suggestions have something to show.
-await page.evaluate(async () => {
-  const db = await new Promise((res, rej) => {
-    const r = indexedDB.open('banzir');
-    r.onsuccess = () => res(r.result);
-    r.onerror = rej;
-  });
-  const put = (store, rows) =>
-    new Promise((res, rej) => {
-      const tx = db.transaction(store, 'readwrite');
-      rows.forEach((r) => tx.objectStore(store).put(r));
-      tx.oncomplete = res;
-      tx.onerror = rej;
-    });
-  const day = (n, h = 7) => {
-    const d = new Date(Date.now() - n * 86400000);
-    d.setHours(h, 30, 0, 0);
-    return d;
-  };
-  const key = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  await put('body', Array.from({ length: 21 }, (_, i) => ({ date: key(day(i)), kg: Math.round((63.2 + i * 0.045 + (i % 3) * 0.15) * 10) / 10 })));
-  await put('foods', [
-    { id: 'f1', date: key(day(0)), time: '08:10', name: 'Greek yoghurt, oats and berries', kcal: 420, protein: 28, carbs: 52, fat: 10 },
-    { id: 'f2', date: key(day(0)), time: '13:00', name: 'Chicken, rice and greens', kcal: 610, protein: 45, carbs: 70, fat: 14 },
-  ]);
-  await put('runs', [
-    { id: 'r1', date: day(2, 18).toISOString(), seconds: 1860, meters: 5200, kind: 'easy', source: 'gpx', avgHr: 142 },
-    { id: 'r2', date: day(6, 9).toISOString(), seconds: 2700, meters: 7400, kind: 'long', source: 'gpx', avgHr: 145 },
-    { id: 'r3', date: day(10, 18).toISOString(), seconds: 1500, meters: 4300, kind: 'easy', source: 'manual' },
-  ]);
-  await put('fasts', [
-    { id: 'x1', start: day(1, 20).toISOString(), end: day(0, 8).toISOString(), feel: 4 },
-    { id: 'x2', start: day(2, 20).toISOString(), end: day(1, 8).toISOString(), feel: 5 },
-    { id: 'x3', start: day(3, 20).toISOString(), end: day(2, 7).toISOString(), feel: 3 },
-  ]);
-});
-await page.reload();
-await page.waitForTimeout(800);
-
-const shots = [];
-const shot = async (name) => {
-  await page.waitForTimeout(400);
-  shots.push(await page.screenshot());
-};
-await shot('today');
+await shot(page, '04-today');
 await click('Start workout');
 await page.waitForSelector('.overlay');
 await click('Mark as done');
 await page.getByRole('button', { name: /^Next/ }).click();
-await shot('player');
+// Log two sets so the rest timer and ticks show.
+for (const n of [1, 2]) {
+  const b = page.getByRole('button', { name: `Set ${n} not done` });
+  if (await b.count()) await b.click();
+}
+await shot(page, '05-workout');
 await page.getByLabel('Close workout').click();
 await page.locator('.sheet button', { hasText: 'Discard' }).click();
 await page.waitForTimeout(300);
+await tab('Program');
+await shot(page, '06-program');
 await tab('Progress');
-await shot('progress');
+await shot(page, '07-progress');
 await tab('Food');
-await shot('food');
+await shot(page, '08-food');
+await tab('Coach');
+await shot(page, '09-coach');
+await tab('Profile');
+await shot(page, '10-profile');
 await tab('Today');
 await page.getByLabel('Open fasting').click();
-await shot('fasting');
+await shot(page, '11-fasting');
+await page.getByLabel('Close fasting').click();
+await tab('Progress');
+await click('Zones and paces');
+await shot(page, '12-zones');
 
-// One strip, five phones.
-const imgs = shots.map((b) => `<img src="data:image/png;base64,${b.toString('base64')}" width="236">`).join('');
-const strip = await browser.newPage({ deviceScaleFactor: 2 });
-await strip.setViewportSize({ width: 5 * 236 + 6 * 12, height: 536 });
-await strip.setContent(`<body style="margin:0;padding:12px;display:flex;gap:12px;background:#0e1113">${imgs.replaceAll('<img ', '<img style="border-radius:18px" ')}</body>`);
-await strip.screenshot({ path: `${OUT}banzir.png` });
+if (STRIP) {
+  const pick = ['04-today', '05-workout', '07-progress', '09-coach', '11-fasting'].map((n) => saved[n]);
+  const strip = await browser.newPage({ deviceScaleFactor: 2 });
+  const imgs = pick.map((b) => `<img style="border-radius:18px" src="data:image/png;base64,${b.toString('base64')}" width="236">`).join('');
+  await strip.setViewportSize({ width: 5 * 236 + 6 * 12, height: 536 });
+  await strip.setContent(`<body style="margin:0;padding:12px;display:flex;gap:12px;background:#0e1113">${imgs}</body>`);
+  await strip.screenshot({ path: new URL('../docs/screenshots/banzir.png', import.meta.url).pathname });
+}
 await browser.close();
-console.log(`wrote ${OUT}banzir.png`);
+console.log(`wrote ${Object.keys(saved).length} screenshots to ${OUT}`);

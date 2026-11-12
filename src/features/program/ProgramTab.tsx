@@ -56,78 +56,83 @@ export function ProgramTab({ profile, program, state, sessions, active, openPlay
     <div className="screen">
       <h1 className="h1">Program</h1>
 
-      <div className="hero" style={{ ['--g1' as string]: info.g1, ['--g2' as string]: info.g2 }}>
-        <div className="chips" style={{ marginBottom: 10 }}>
-          <span className="chip">{info.label}</span>
-          <span className="chip">{program.source === 'template' ? LEVEL_INFO[program.level].label : 'Customised'}</span>
-          <span className="chip">{perWeek} days a week</span>
-        </div>
-        <h2 className="h1" style={{ fontSize: 24 }}>
-          {program.name}
-        </h2>
-        <p className="muted small" style={{ margin: '6px 0 14px' }}>
-          {program.description}
-        </p>
-        <button className="btn block" onClick={openBuilder} disabled={!!active}>
-          <Icon name="pen" size={18} /> Edit plan
-        </button>
-        {active && (
-          <p className="muted small" style={{ marginTop: 8 }}>
-            Finish or discard the workout in progress to edit the plan.
-          </p>
-        )}
-      </div>
-
-      <div className="card row">
-        <button className="icon-btn" onClick={() => shiftWeek(-1)} disabled={pos.week === 0} aria-label="Go back a week">
-          <Icon name="left" size={18} />
-        </button>
-        <div className="grow center">
-          <b>{program.loops ? `Week ${pos.week + 1}` : `Week ${Math.min(pos.week + 1, pos.totalWeeks)} of ${pos.totalWeeks}`}</b>
-          <p className="muted small">{pos.finished ? 'Complete' : `${pos.phase.name} · ${pos.doneThisWeek}/${perWeek} sessions done`}</p>
-        </div>
-        <button className="icon-btn" onClick={() => shiftWeek(1)} disabled={pos.finished} aria-label="Skip to next week">
-          <Icon name="right" size={18} />
-        </button>
-      </div>
-      <p className="muted small" style={{ marginTop: -8 }}>
-        Use the arrows to repeat a week or jump ahead.
-      </p>
-
-      {pos.phase.days.map((day) => (
-        <div className="card stack" key={day.id}>
-          <div className="row between">
-            <div>
-              <b>{day.name}</b>
-              <p className="muted small">
-                {dayItemCount(day) === 0 ? 'No exercises yet' : `about ${estimateMinutes(day)} min`}
-                {day.id === pos.day.id && !pos.finished ? ' · up next' : ''}
-              </p>
+      <div className="cols lead">
+        <div className="col">
+          <div className="hero" style={{ ['--g1' as string]: info.g1, ['--g2' as string]: info.g2 }}>
+            <div className="chips" style={{ marginBottom: 10 }}>
+              <span className="chip">{info.label}</span>
+              <span className="chip">{program.source === 'template' ? LEVEL_INFO[program.level].label : 'Customised'}</span>
+              <span className="chip">{perWeek} days a week</span>
             </div>
-            <button className="btn sm" onClick={() => startDay(day)} disabled={!!active || dayItemCount(day) === 0}>
-              <Icon name="play" size={14} /> Start
+            <h2 className="h1" style={{ fontSize: 24 }}>
+              {program.name}
+            </h2>
+            <p className="muted small" style={{ margin: '6px 0 14px' }}>
+              {program.description}
+            </p>
+            <button className="btn block" onClick={openBuilder} disabled={!!active}>
+              <Icon name="pen" size={18} /> Edit plan
             </button>
-          </div>
-          <div className="list">
-            {day.blocks.flatMap((b) =>
-              b.items.map((item) => (
-                <button key={item.id} onClick={() => setSwap(item.id)} style={{ minHeight: 0, padding: '9px 0' }}>
-                  <span className="grow">
-                    {getExercise(item.exerciseId).name}
-                    {b.type !== 'main' && <span className="muted small"> · {b.type === 'warmup' ? 'warm-up' : 'cool-down'}</span>}
-                  </span>
-                  <span className="muted small num">{describe(rx(item))}</span>
-                </button>
-              )),
+            {active && (
+              <p className="muted small" style={{ marginTop: 8 }}>
+                Finish or discard the workout in progress to edit the plan.
+              </p>
             )}
           </div>
-          {day.notes && <p className="muted small">{day.notes}</p>}
-        </div>
-      ))}
 
-      <button className="btn block" onClick={() => setChoosing(true)}>
-        <Icon name="swap" size={18} /> Change plan
-      </button>
+          <div className="card row">
+            <button className="icon-btn" onClick={() => shiftWeek(-1)} disabled={pos.week === 0} aria-label="Go back a week">
+              <Icon name="left" size={18} />
+            </button>
+            <div className="grow center">
+              <b>{program.loops ? `Week ${pos.week + 1}` : `Week ${Math.min(pos.week + 1, pos.totalWeeks)} of ${pos.totalWeeks}`}</b>
+              <p className="muted small">{pos.finished ? 'Complete' : `${pos.phase.name} · ${pos.doneThisWeek}/${perWeek} sessions done`}</p>
+            </div>
+            <button className="icon-btn" onClick={() => shiftWeek(1)} disabled={pos.finished} aria-label="Skip to next week">
+              <Icon name="right" size={18} />
+            </button>
+          </div>
+          <p className="muted small" style={{ marginTop: -8 }}>
+            Use the arrows to repeat a week or jump ahead.
+          </p>
+        </div>
+        <div className="col">
+          {pos.phase.days.map((day) => (
+            <div className="card stack" key={day.id}>
+              <div className="row between">
+                <div>
+                  <b>{day.name}</b>
+                  <p className="muted small">
+                    {dayItemCount(day) === 0 ? 'No exercises yet' : `about ${estimateMinutes(day)} min`}
+                    {day.id === pos.day.id && !pos.finished ? ' · up next' : ''}
+                  </p>
+                </div>
+                <button className="btn sm" onClick={() => startDay(day)} disabled={!!active || dayItemCount(day) === 0}>
+                  <Icon name="play" size={14} /> Start
+                </button>
+              </div>
+              <div className="list">
+                {day.blocks.flatMap((b) =>
+                  b.items.map((item) => (
+                    <button key={item.id} onClick={() => setSwap(item.id)} style={{ minHeight: 0, padding: '9px 0' }}>
+                      <span className="grow">
+                        {getExercise(item.exerciseId).name}
+                        {b.type !== 'main' && <span className="muted small"> · {b.type === 'warmup' ? 'warm-up' : 'cool-down'}</span>}
+                      </span>
+                      <span className="muted small num">{describe(rx(item))}</span>
+                    </button>
+                  )),
+                )}
+              </div>
+              {day.notes && <p className="muted small">{day.notes}</p>}
+            </div>
+          ))}
+
+          <button className="btn block" onClick={() => setChoosing(true)}>
+            <Icon name="swap" size={18} /> Change plan
+          </button>
+        </div>
+      </div>
 
       {swapItem && (
         <Sheet title={getExercise(swapItem.exerciseId).name} onClose={() => setSwap(null)}>

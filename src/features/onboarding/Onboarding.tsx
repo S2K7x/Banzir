@@ -211,7 +211,7 @@ export function Onboarding({ initial, currentPlan, onDone, onCancel }: Props) {
 
   return (
     <div ref={trapRef} tabIndex={-1} className="overlay" role="dialog" aria-modal="true" aria-label={editing ? 'Edit profile' : 'Set up Banzir'}>
-      <div className="overlay-inner">
+      <div className="overlay-inner panel">
         <div className="topbar">
           {(step > 0 || onCancel) && (
             <button className="icon-btn" onClick={back} aria-label="Back">

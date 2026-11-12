@@ -408,7 +408,7 @@ export function FastingScreen({ profile, onClose }: { profile: Profile; onClose:
 
   return (
     <div ref={trapRef} tabIndex={-1} className="overlay" role="dialog" aria-modal="true" aria-label="Fasting">
-      <div className="overlay-inner" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+      <div className="overlay-inner wide" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
         <div className="topbar">
           <button className="icon-btn" onClick={onClose} aria-label="Close fasting">
             <Icon name="left" size={18} />
@@ -420,50 +420,56 @@ export function FastingScreen({ profile, onClose }: { profile: Profile; onClose:
           <p className="note warn">{blocked}</p>
         ) : (
           <>
-            <div className="hero center stack">
-              <span className="chip" style={{ justifySelf: 'center' }}>
-                {d.eyebrow}
-              </span>
-              <div style={{ display: 'grid', placeItems: 'center' }}>
-                <Ring value={d.frac} size={200} stroke={12}>
-                  <span style={{ display: 'grid', gap: 6, justifyItems: 'center', maxWidth: 150, textAlign: 'center' }}>
-                    <span className="num" style={{ fontSize: 44, fontWeight: 300, letterSpacing: '-0.03em', lineHeight: 1 }}>
-                      {d.big}
-                    </span>
-                    <span className="small" style={{ fontWeight: 500, opacity: 0.8 }}>
-                      {d.label}
-                    </span>
+            <div className="cols lead">
+              <div className="col">
+                <div className="hero center stack">
+                  <span className="chip" style={{ justifySelf: 'center' }}>
+                    {d.eyebrow}
                   </span>
-                </Ring>
-              </div>
-              <div className="tiles">
-                {d.meta.map(([k, v]) => (
-                  <div className="tile" key={k}>
-                    <b className="num" style={{ fontSize: 17 }}>
-                      {v}
-                    </b>
-                    <span>{k}</span>
+                  <div style={{ display: 'grid', placeItems: 'center' }}>
+                    <Ring value={d.frac} size={200} stroke={12}>
+                      <span style={{ display: 'grid', gap: 6, justifyItems: 'center', maxWidth: 150, textAlign: 'center' }}>
+                        <span className="num" style={{ fontSize: 44, fontWeight: 300, letterSpacing: '-0.03em', lineHeight: 1 }}>
+                          {d.big}
+                        </span>
+                        <span className="small" style={{ fontWeight: 500, opacity: 0.8 }}>
+                          {d.label}
+                        </span>
+                      </span>
+                    </Ring>
                   </div>
-                ))}
-              </div>
-              <div className="row">
-                <Actions f={f} onEdit={setEditing} />
-              </div>
-            </div>
+                  <div className="tiles">
+                    {d.meta.map(([k, v]) => (
+                      <div className="tile" key={k}>
+                        <b className="num" style={{ fontSize: 17 }}>
+                          {v}
+                        </b>
+                        <span>{k}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="row">
+                    <Actions f={f} onEdit={setEditing} />
+                  </div>
+                </div>
 
-            <FeelPrompt fasts={fasts} now={now} />
-            <WeekChart fasts={fasts} s={s} now={now} />
-            <Log fasts={fasts} s={s} now={now} onEdit={setEditing} />
-            <button className="btn block" onClick={() => setEditing({ id: `fast_${Date.now()}`, start: plannedFast(now, s).start.toISOString(), end: plannedFast(now, s).end.toISOString() })}>
-              <Icon name="plus" size={16} /> Log a past fast
-            </button>
-            <Schedule s={s} />
+                <FeelPrompt fasts={fasts} now={now} />
+              </div>
+              <div className="col">
+                <WeekChart fasts={fasts} s={s} now={now} />
+                <Log fasts={fasts} s={s} now={now} onEdit={setEditing} />
+                <button className="btn block" onClick={() => setEditing({ id: `fast_${Date.now()}`, start: plannedFast(now, s).start.toISOString(), end: plannedFast(now, s).end.toISOString() })}>
+                  <Icon name="plus" size={16} /> Log a past fast
+                </button>
+                <Schedule s={s} />
 
-            <div className="card stack">
-              <b>Good to know</b>
-              <p className="small">During the fast: water, sparkling water, black coffee and unsweetened tea. Milk, juice and sweets end it.</p>
-              <p className="small">With the same food, a shorter eating window gives no extra fat loss: it is a way to organise your meals, not a tool on its own. With strength training and enough protein, muscle is kept.</p>
-              <p className="muted small">{FASTING_CAUTION}</p>
+                <div className="card stack">
+                  <b>Good to know</b>
+                  <p className="small">During the fast: water, sparkling water, black coffee and unsweetened tea. Milk, juice and sweets end it.</p>
+                  <p className="small">With the same food, a shorter eating window gives no extra fat loss: it is a way to organise your meals, not a tool on its own. With strength training and enough protein, muscle is kept.</p>
+                  <p className="muted small">{FASTING_CAUTION}</p>
+                </div>
+              </div>
             </div>
           </>
         )}

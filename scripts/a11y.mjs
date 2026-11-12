@@ -11,7 +11,8 @@ const THEMES = (process.env.THEMES || 'midnight,sky,contrast').split(',');
 const axeSource = readFileSync(createRequire(import.meta.url).resolve('axe-core/axe.min.js'), 'utf8');
 
 const browser = await chromium.launch();
-const ctx = await browser.newContext({ ...devices['iPhone 13'], deviceScaleFactor: 1 });
+// DESKTOP=1 audits the desktop layout (sidebar, columns, centred dialogs) instead of a phone.
+const ctx = await browser.newContext(process.env.DESKTOP ? { viewport: { width: 1440, height: 900 } } : { ...devices['iPhone 13'], deviceScaleFactor: 1 });
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));

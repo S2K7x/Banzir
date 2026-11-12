@@ -124,12 +124,18 @@ export default function App({ update }: { update?: { subscribe: (cb: () => void)
       )}
 
       <nav className="tabbar" aria-label="Main">
+        {/* Brand and footer show only in the desktop sidebar. */}
+        <div className="nav-brand">
+          <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width={34} height={34} />
+          <span>Banzir</span>
+        </div>
         {TABS.filter((t) => t.id !== 'food' || modules.nutrition).map((t) => (
           <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)} aria-current={tab === t.id ? 'page' : undefined}>
             <Icon name={t.icon} size={22} />
             {t.label}
           </button>
         ))}
+        <p className="nav-foot">Your data stays on this device.</p>
       </nav>
     </div>
   );
