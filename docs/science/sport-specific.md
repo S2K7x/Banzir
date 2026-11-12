@@ -80,8 +80,10 @@ Program elements
 ## Soccer (football)
 
 Demands
-- About 10-12 km per match for outfield players with frequent high-speed runs
-  and sprints, accelerations and decelerations `[recall]`.
+- About 10-12 km per match for outfield players `[recall]`. In professional
+  men's matches, high-speed running totals 618-1,001 m and sprinting 153-295 m,
+  roughly 7-11 % and 1-3 % of total distance; speed thresholds are not
+  standardised (2023 systematic review) `[verified abstract]`.
 
 Program elements
 - Strength: squat or split squat, hip thrust/deadlift, Nordic curl, adductor
@@ -98,7 +100,11 @@ Program elements
   - Nordic hamstring exercise: programmes including it roughly halve
     hamstring injuries (van Dyk et al. 2019; pooled risk ratio about 0.49 in a
     2020 meta-analysis across interventions) `[verified abstract / secondary]`.
-  - Copenhagen adduction for groin problems `[recall]`.
+  - Copenhagen adduction exercise: in a cluster-randomised trial of 35
+    semi-professional teams, one adductor exercise (3 times a week in
+    pre-season, once a week in season) lowered the risk of groin problems by
+    41 % (odds ratio 0.59; prevalence 13.5 % vs 21.3 %) (Harøy et al. 2019)
+    `[verified abstract]`.
 
 The app ships its own warm-up built on the same components (running drills,
 strength, balance, plyometrics, cutting) rather than reproducing FIFA
@@ -137,6 +143,8 @@ before a template is added to the catalog.
 - FIFA 11+ meta-analyses: https://pubmed.ncbi.nlm.nih.gov/28087568/ ; https://www.pubmed.gov/26403470/
 - Hamstring injury prevention meta-analysis: https://pubmed.ncbi.nlm.nih.gov/31680644/
 - van Dyk et al. 2019: https://bjsm.bmj.com/content/53/21/1362
+- Harøy et al. 2019, adductor strengthening: https://researchprofiles.ku.dk/da/publications/the-adductor-strengthening-programme-prevents-groin-problems-amon/
+- High-speed running in professional soccer (2023 review): https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9968809/
 - Strength training in professional soccer: https://pubmed.ncbi.nlm.nih.gov/34560812/
 - Soccer training methods network meta-analysis: https://www.jssm.org/jssm-25-405.xml-abst
 - Plyometric training umbrella/meta-analyses: https://pmc.ncbi.nlm.nih.gov/articles/PMC10692103

@@ -4,8 +4,12 @@ Specification of every built-in program. Each will become a JSON file in
 `src/data/templates/` matching `schema.md`. Evidence for the choices is in
 `docs/science/`. Notation: sets × reps (or seconds); RIR = reps in reserve.
 
-Status: specified, not yet implemented. Exercise lists name the default; the
-matcher substitutes by movement slot and equipment.
+Status: 8 of 35 are implemented in `src/data/templates/` (2026-11-12):
+`gf-3-start`, `mus-3-fullbody`, `mus-4-upperlower`, `str-3-linear`,
+`cal-3-foundation`, `run-start`, `fat-3-lift-walk`, `spt-athlete-general`.
+The rest are specified only. Exercise lists name the default; the matcher
+substitutes by movement slot, equipment and level. Where code and this
+document differ, the code is current.
 
 ## Index
 
@@ -230,14 +234,14 @@ RPE/heart rate or from a recent 5 km time.
 | 2 | 6 × (1.5 min run / 2 min walk) |
 | 3 | 2 × (1.5 min run, 1.5 walk, 3 run, 3 walk) |
 | 4 | 3 min run, 1.5 walk, 5 run, 2.5 walk, 3 run, 1.5 walk, 5 run |
-| 5 | Progress from 3 × 5 min to one 20 min run |
-| 6 | Mix of 5-10 min runs, then 25 min |
+| 5 | 8 min run, 3 walk, 8 run |
+| 6 | 12 min run, 2 walk, 10 run |
 | 7 | 25 min continuous |
 | 8 | 28 min continuous |
 | 9 | 30 min continuous |
 
-Follows the widely used nine-week run-walk structure; any week can be
-repeated.
+Follows the widely used nine-week run-walk structure with Banzir's own
+progression in the middle weeks; any week can be repeated from the Program tab.
 
 ### `run-5k` (8 weeks)
 Three runs: easy 25-40 min + strides; quality (alternating 5 × 3 min at RPE

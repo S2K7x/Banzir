@@ -7,56 +7,96 @@
 | Build | Vite | Auto-detected by Vercel, no config. |
 | UI | React + TypeScript | Component model suits the builder, player, chat and theming. Types keep the program schema honest. |
 | Storage | IndexedDB via Dexie | Asynchronous, large quota, indexed queries for history. |
-| Validation | Zod | One schema validates templates, imports and AI output. |
+| Validation | Zod, loaded on demand | One schema validates templates (in tests), backups and later AI output. It is only imported at runtime when a backup is restored, so it stays out of the main bundle. |
 | PWA | vite-plugin-pwa (Workbox) | Offline shell, install prompt, update flow. |
-| State | Small store (Zustand) + Dexie live queries | No server state to manage. |
-| Charts | Lightweight SVG charts written in-house or a small library | Keep the bundle small. |
+| State | Dexie live queries + a tiny settings store | No state library. `App.tsx` runs one live query and passes data down. |
+| Routing | None | Five tabs in React state; full-screen overlays push a history entry so the back button closes them. |
+| Styling | One plain CSS file with custom properties | No CSS framework. |
+| Charts | Plain HTML/CSS bars | Keep the bundle small. |
 | Server | None, except one optional Vercel edge function for AI relay | Keeps deployment zero-config. |
 
 No remote fonts, no analytics, no third-party scripts.
 
-## Repository layout (planned)
+## Repository layout (as built)
 
 ```
+index.html              applies the saved theme before first paint
+vite.config.ts          Vite, React, PWA manifest and service worker, Vitest
+/public                 icon.svg and generated PNG icons
+/scripts/make-icons.mjs regenerates the PNG icons from icon.svg
 /src
-  /app            routes, shell, tab bar
-  /features
-    /onboarding
-    /program      builder, schema, template matching
-    /player       workout player, timers
-    /history      logs, charts, records
-    /coach        AI chat, tools, memory
-    /nutrition    optional module
-    /fasting      optional module
-    /settings     profile, themes, modules, data
+  main.tsx              entry: service worker registration, error boundary
+  App.tsx               shell: one live query, tabs, overlays, lazy screens
+  styles.css            tokens, ten themes, all component styles
+  /lib
+    schema.ts           Zod schemas and types (source of truth)
+    constants.ts        plain value lists (no Zod, cheap to import)
+    db.ts               Dexie tables, program state, active session
+    settings.ts         device preferences in localStorage, units, formatting
+    matcher.ts          template ranking and fitting to a person
+    programState.ts     week/phase/day from completed sessions, lighter weeks
+    progression.ts      next-load and next-rep suggestions
+    workout.ts          start/finish a workout, sound, wake lock
+    stats.ts            weekly counts, streak, muscle sets, records
+    backup.ts           JSON backup/restore, CSV export
+    text.ts             every user-facing label and formatter
+    themes.ts           theme preset list
+    core.test.ts        unit tests
   /data
-    /templates    built-in programs as JSON
-    /exercises    exercise library (from free-exercise-db) + Banzir additions
-  /lib            db, units, progression engine, ai providers
-  /theme          tokens, presets
-/api
-  llm.ts          optional edge relay for AI providers
+    exercises.ts        curated exercise library and ladders
+    /templates          built-in programs (plain data via build.ts helpers)
+  /ui                   kit.tsx (icons, ring, sheet, inputs), ErrorBoundary
+  /features             onboarding, today, program, player, progress, coach, profile
 /docs
 ```
 
+Planned and not there yet: `/api/llm.ts` (AI relay), nutrition, fasting and
+running modules, the program builder.
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | Development server |
+| `npm test` | Unit tests (Vitest) |
+| `npm run build` | Type-check, then production build into `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `node scripts/make-icons.mjs` | Regenerate PNG icons (needs Playwright's Chromium) |
+
+CI (`.github/workflows/ci.yml`) runs the tests and the build on every push.
+
+## Bundle (2026-11-12)
+
+Initial load is about 125 kB gzipped: the main chunk (React, Dexie, shell,
+Today, onboarding) at 84 kB, shared data and labels at 37 kB, styles at 4 kB.
+Program, Progress, Coach, Profile and the Player are separate chunks of 1-5 kB
+loaded on first use; Zod (27 kB) loads only when restoring a backup. The
+service worker precaches everything, so later visits and offline use are
+instant. React itself is most of the main chunk; Preact would cut roughly
+40 kB if size ever becomes a problem.
+
 ## Data model (IndexedDB tables)
+
+Built (Dexie database `banzir`, version 1):
 
 | Table | Contents |
 |---|---|
-| `profile` | Name, age, sex, height, weight, units, goal, level, equipment, schedule, injuries/limits, modules enabled. |
-| `programs` | Programs in the schema of `docs/programs/schema.md`. One is active. |
-| `exercises` | Library entries plus user-created exercises. |
-| `sessions` | Completed workouts: date, program/day reference, sets performed, RPE, notes, duration. |
-| `activeSession` | The in-progress workout, so it survives a reload. |
-| `bodyLog` | Weight and optional measurements by date. |
-| `nutritionLog`, `fastLog` | Optional modules. |
-| `coachMemory` | Coach notes, conversation summaries (see `ai-coach.md`). |
-| `chats` | Coach conversations. |
-| `settings` | Theme, timers, sounds, AI provider and key. |
-| `meta` | Schema version for migrations, last backup date. |
+| `profile` | One row (`id: 'me'`): name, goal, level, equipment, weekly sessions, session length, age, sex, height, weight, health flags, reported ability. |
+| `programs` | Programs in the schema of `docs/programs/schema.md`. |
+| `sessions` | Completed workouts, indexed by date. |
+| `kv` | `state` (active program id, completed session count, lighter week) and `active` (the in-progress workout, saved after every change so it survives a reload). |
 
-Every table has a version and Dexie migrations. The export file is a single
-JSON document containing all tables plus the schema version.
+Device preferences (theme, accent, corners, units, timer and sound options,
+last backup date) live in `localStorage` under `banzir.settings`, so the
+theme can be applied synchronously before first paint.
+
+Planned tables: `exercises` (user-created), `bodyLog`, `nutritionLog`,
+`fastLog`, `coachMemory`, `chats`.
+
+The backup file is one JSON document (`app: 'banzir'`, `format: 1`) holding
+all tables plus the settings. Restore validates it with the schema and
+replaces local data. Add a Dexie version and a migration whenever a table or
+stored shape changes, and bump `format` when the backup shape changes.
 
 ## Storage safety
 

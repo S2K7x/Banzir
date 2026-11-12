@@ -21,7 +21,7 @@ optional; these rules drive its targets and the coach's advice.
 
 | Goal | Energy target | Rate target |
 |---|---|---|
-| Fat loss | About 15-25 % below maintenance | 0.5-1 % of body weight per week; slower when already lean `[recall: Helms 2014; commonly recommended]` |
+| Fat loss | About 15-25 % below maintenance | 0.5-1 % of body weight per week to maximise muscle retention (Helms, Aragon, Fitschen 2014, written for lean bodybuilders) `[verified abstract]`; slower when already lean |
 | Recomposition | Maintenance | Stable weight, improving performance; realistic for beginners, returners and people with more body fat |
 | Lean gain | About 5-10 % above maintenance | Roughly 0.25-0.5 % of body weight per week for novices, slower for advanced `[recall: Slater 2019, not verified]` |
 
@@ -34,8 +34,12 @@ Evidence notes
 - Diet breaks: a trial in resistance-trained women found no body-composition
   or metabolic advantage over continuous dieting; the benefit is mainly
   psychological `[verified: PMC10170537]`. Offer them as an adherence tool.
-- HIIT and steady cardio give similar fat loss when energy expenditure is
-  matched `[recall]`; pick what the person will do.
+- Intervals and steady cardio give the same fat loss: no difference for any
+  body-fat outcome across 31 studies (Keating et al. 2017), and a trivial
+  difference with high certainty in a 2021 meta-analysis (Steele et al.)
+  `[verified abstracts]`. One 2019 analysis claiming an interval advantage is
+  disputed. Short-term cardio alone produces little fat loss either way, so
+  pick what the person will keep doing and manage food intake.
 - Daily movement matters: non-exercise activity differs hugely between people
   `[secondary]`; a step goal is the simplest lever.
 
@@ -51,8 +55,9 @@ pregnancy `[app policy, conservative]`.
   studies, 1,863 participants) `[verified abstract; 2.2 bound recall]`.
 - ISSN range for active people: 1.4-2.0 g/kg/day; for women athletes 1.4-2.2
   `[secondary]`.
-- In a deficit, lean trained people may need more: 2.3-3.1 g per kg of
-  fat-free mass `[recall: Helms 2014]`.
+- In a deficit, lean trained people may need more: 2.3-3.1 g per kg of lean
+  body mass (not total weight), with fat at 15-30 % of calories and
+  carbohydrate as the remainder (Helms et al. 2014) `[verified abstract]`.
 - Per meal: about 0.4-0.55 g/kg across 3-4 meals (Schoenfeld & Aragon 2018)
   `[secondary]`. Timing around training matters little.
 
@@ -64,8 +69,9 @@ up to 2.4. For people with obesity, base it on a reference weight (height in cm
 
 - Fat: at least about 0.6-1.0 g/kg/day `[recall]`.
 - Carbohydrate fills the rest. Guideline bands by training load: 3-5 g/kg
-  light, 5-7 g/kg about 1 h/day, 6-10 g/kg 1-3 h/day, 8-12 g/kg extreme
-  `[recall: Burke et al. 2011]`.
+  light, 5-7 g/kg moderate (about 1 h/day), 6-10 g/kg high, 8-12 g/kg very
+  high (Burke, Hawley, Wong, Jeukendrup 2011, as reproduced in later tables)
+  `[secondary]`. Sources adapt the bands slightly differently.
 - During long exercise: 30-60 g/h in a 6-8 % solution `[secondary: ISSN]`.
 
 ## Hydration
@@ -77,8 +83,8 @@ as the practical check `[recall]`.
 
 | Supplement | Dose | Evidence |
 |---|---|---|
-| Creatine monohydrate | 3-5 g/day, every day | Strong (ISSN) `[secondary]` |
-| Caffeine | 3-6 mg/kg, 30-60 min before; avoid late in the day | Strong (ISSN 2021) `[secondary]` |
+| Creatine monohydrate | 3-5 g/day, every day; an optional loading phase of about 20 g/day (0.3 g/kg) for 5-7 days only fills stores faster | Strong (ISSN 2017) `[secondary]` |
+| Caffeine | 3-6 mg/kg (dose `[recall]`), most often taken 60 min before (`[secondary]`); avoid late in the day | Strong (ISSN 2021) |
 | Protein powder | To reach the protein target | Convenience |
 | Vitamin D | Only if deficient / low sun; ideally after a blood test | Conditional |
 | Omega-3 | 1-2 g EPA+DHA or oily fish twice a week | Moderate |
@@ -120,6 +126,10 @@ default; it lets users log symptoms and adjust by feel.
 - Mifflin-St Jeor accuracy: https://www.andeal.org/topic.cfm?cat=1291 ; https://link.springer.com/article/10.1186/s13690-025-01727-9
 - Morton et al. 2018: https://pubmed.ncbi.nlm.nih.gov/28698222/
 - Helms et al. 2023, surplus size: https://openrepository.aut.ac.nz/items/de93156f-23a9-492a-8a85-438233a7e6bf
+- Helms, Aragon, Fitschen 2014: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4033492/
+- Keating et al. 2017, intervals vs continuous: https://read.qxmd.com/read/28513103
+- Steele et al. 2021, intervals vs continuous: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8619923/
+- Burke et al. 2011 carbohydrate targets (table reproduced): https://pmc.ncbi.nlm.nih.gov/articles/PMC6950062/table/nutrients-11-03017-t002
 - Slater et al. 2019: https://www.frontiersin.org/articles/10.3389/fnut.2019.00131/text
 - Diet breaks trial: https://pmc.ncbi.nlm.nih.gov/articles/PMC10170537
 - Protein per meal: https://pmc.ncbi.nlm.nih.gov/articles/PMC5828430/

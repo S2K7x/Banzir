@@ -62,13 +62,55 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
 
 ## Roadmap
 
-| Phase | Deliverable |
-|---|---|
-| 0 | Research and docs (done 2026-11-12). |
-| 1 | Scaffold; schema + Zod; Dexie; exercise library import; theme tokens with 3 presets. |
-| 2 | Onboarding; template matching; first 3 templates (full body 3-day, beginner calisthenics, start running). |
-| 3 | Workout player; history; progression engine; records. |
-| 4 | Program builder; remaining templates; backup/export; install flow. |
-| 5 | AI coach: providers, relay, tools, memory. |
-| 6 | Modules: running, body weight, nutrition, fasting. Remaining themes. |
-| 7 | Polish, accessibility pass, README with Deploy button, first release. |
+| Phase | Deliverable | Status |
+|---|---|---|
+| 0 | Research and docs | Done 2026-11-12 |
+| 1 | Scaffold; schema + Zod; Dexie; exercise library; theme tokens | Done 2026-11-12 (curated library of 99 exercises; all 10 themes) |
+| 2 | Onboarding; template matching; first templates | Done 2026-11-12 (8 templates, one per goal at least) |
+| 3 | Workout player; history; progression engine; records | Done 2026-11-12 |
+| 4 | Program builder; remaining templates; backup/export; install flow | Partly: backup, restore, CSV, install card, exercise swap and plan switch are done. Builder and 27 templates remain. |
+| 5 | AI coach: providers, relay, tools, memory | Not started (Coach tab is a placeholder) |
+| 6 | Modules: running, body weight, nutrition, fasting | Not started |
+| 7 | Polish, accessibility pass, first release | Not started |
+
+## What works today (2026-11-12)
+
+- Onboarding: name, units, goal, level, push-up and pull-up ability,
+  equipment, schedule, optional body data and health flags, ranked plan with
+  preview, theme, install instructions. Every step can be skipped. A backup
+  file can be restored from the first screen.
+- Today: weekly ring, next session, resume in-progress workout, lighter-week
+  suggestion, stats, goal-based tip, install and backup reminders.
+- Program: plan overview, week navigation (repeat or skip), day lists, tap an
+  exercise to swap it, start any day, change plan (ranked list, history kept).
+- Player: per-set logging with weight carry-down, last-time values, load and
+  rep suggestions, ladder "move up" button, automatic rest timer with +15 s,
+  hold stopwatch, countdown and interval timers with beeps (timestamp-based,
+  so they survive a locked screen), add/remove sets, swap, pause and resume,
+  finish with effort and note, summary screen, screen wake lock.
+- Progress: sessions per week, sets per muscle this week, personal bests,
+  history with detail and delete.
+- Profile: edit profile and plan, 10 themes, accent hue, corner style, units,
+  timer/sound/wake-lock toggles, backup, restore, CSV export, storage
+  protection status, erase everything, install card, disclaimer.
+- Offline: verified with the network disabled (shell, all tabs, player).
+
+## Known gaps and next steps
+
+1. Program builder: add/remove/reorder exercises, edit sets, reps and rest,
+   create a program from scratch.
+2. More templates from the catalog (priority: `cal-handstand`, `cal-planche`,
+   `cal-6-planche-os`, `run-5k`, `mus-6-ppl`, `gf-2-express`, sport-specific
+   ones), and sub-goal questions in onboarding (which skill, which distance,
+   which sport).
+3. Full exercise database import (free-exercise-db) with images and
+   instructions, loaded on demand.
+4. AI coach (phase 5).
+5. Modules: body weight and adaptive calories, running (distance, pace,
+   heart-rate zones), nutrition, fasting.
+6. Readiness check, plate calculator, warm-up sets, per-exercise charts.
+7. Supersets as a player mode; voice announcements (legacy app has them).
+8. Accessibility pass (contrast check of every theme, screen-reader labels),
+   and tests for the React screens.
+9. Preferred training weekdays and reminders.
+10. Legacy App-Sport backup importer.

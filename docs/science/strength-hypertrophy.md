@@ -9,7 +9,7 @@ Confidence tags as in `training-principles.md`.
 | Weekly volume | More weekly sets per muscle → more growth, with diminishing returns. Dose-response confirmed up to 10+ sets (Schoenfeld, Ogborn, Krieger 2016/17) `[verified abstract]`; a larger meta-regression (Pelland et al., 67 studies) shows continued but shrinking gains and a minimum effective dose near 4 sets `[secondary]`. | Beginner 6-10, intermediate 10-16, advanced 12-20+ hard sets per muscle per week. |
 | How sets are counted | Pelland counts sets that hit a muscle indirectly as half a set `[secondary]`. | Volume chart uses 1.0 for primary and 0.5 for secondary muscles. |
 | Frequency | With weekly volume equal, frequency has little effect on growth `[secondary]`. Training each muscle at least twice a week is a practical way to fit the volume (ACSM 2026: all major groups ≥ 2 days/week) `[secondary]`. | Each muscle 2×/week where the schedule allows. |
-| Load / rep range | Growth is similar across a wide range of loads when sets are taken close to failure; heavier loads are better for maximal strength (Schoenfeld et al. 2017) `[recall for hypertrophy; strength part secondary]`. | Mostly 6-15 reps; 5-30 allowed. Lower reps for heavy compounds, higher for isolation and joint-friendly work. |
+| Load / rep range | With sets taken to failure, growth was similar for loads at or below 60 % 1RM and above 60 % 1RM; heavy loads gave greater 1RM gains, isometric strength did not differ (Schoenfeld, Grgic, Ogborn, Krieger 2017, 21 studies) `[verified abstract]`. | Mostly 6-15 reps; 5-30 allowed. Lower reps for heavy compounds, higher for isolation and joint-friendly work. |
 | Proximity to failure | Growth improves as sets end closer to failure; strength gains do not depend on it (Robinson et al. 2024 meta-regressions) `[verified via university release]`. ACSM 2026: failure is not required for the average adult `[secondary]`. | Hypertrophy sets at 0-3 RIR (compounds 1-3, isolation 0-2); strength sets at 2-4 RIR. |
 | Rest | See principles §6. | 2-3 min compounds, 60-90 s isolation. |
 | Range of motion / muscle length | Training with the muscle loaded in a lengthened position gives a modest, consistent growth advantage (meta-analysis cited in the legacy app) `[secondary]`. | Prefer full range and stretch-biased variations (incline curl, deficit push-up, Romanian deadlift, deep squat). |
@@ -69,6 +69,7 @@ and a slow rate of weight gain, since larger surpluses mostly add fat.
 - Summary of Pelland ("King of volume metas"): https://biolayne.com/reps/issue-31/the-king-of-volume-metas/
 - Robinson et al. 2024, proximity to failure: https://www.fau.edu/newsdesk/articles/muscle-growth-strength-study
 - Singer et al. 2024, rest: https://www.frontiersin.org/articles/10.3389/fspor.2024.1429789/full
+- Schoenfeld et al. 2017, low vs high load: https://pubmed.ncbi.nlm.nih.gov/28834797/
 - Low vs high load (Swinton/Schoenfeld 2024 discussion): https://link.springer.com/article/10.1007/s40279-024-02006-3
 - Schoenfeld frequency 2016: https://pubmed.ncbi.nlm.nih.gov/27102172/
 - Lengthened-position training meta-analysis: https://pmc.ncbi.nlm.nih.gov/articles/PMC12869050

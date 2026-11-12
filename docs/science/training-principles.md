@@ -24,8 +24,10 @@ a summary, `[recall]` model knowledge not re-checked.
 ## 2. Baseline health targets (WHO 2020)
 
 Adults: 150-300 min of moderate or 75-150 min of vigorous aerobic activity per
-week, plus muscle-strengthening work for all major muscle groups on 2 or more
-days `[recall, well established]`. Every general-fitness template meets this.
+week, or an equivalent mix (Bull et al. 2020, BJSM) `[verified abstract]`,
+plus regular muscle-strengthening work; the "2 or more days a week" frequency
+is `[recall]` (not in the abstract). Some activity is better than none, more
+is better. Every general-fitness template meets this.
 
 Steps: compared with 2,000 steps/day, 7,000 steps/day was associated with 47 %
 lower all-cause mortality (Ding et al. 2025, Lancet Public Health, 57 studies;
@@ -40,8 +42,8 @@ observational) `[verified abstract]`. Earlier pooled data showed a plateau near
 | RIR | Reps in reserve: how many more good reps were possible. |
 | RPE (lifting) | 10 − RIR, so RPE 8 = 2 reps left. |
 | RPE (cardio) | 1-10 effort; 3-4 easy conversational, 6-7 comfortably hard, 9-10 all-out. |
-| % 1RM | Percent of one-rep maximum; estimated from logged sets (Epley: weight × (1 + reps/30)) `[recall]`. |
-| HR zones | Five zones from max HR (Tanaka 208 − 0.7 × age) or heart-rate reserve. |
+| % 1RM | Percent of one-rep maximum; estimated from logged sets (Epley 1985: weight × (1 + reps/30)). Reasonable up to about 10 reps; estimates can be off by 10 % or more, worse at high reps `[secondary, calculator and coaching sources]`. |
+| HR zones | Five zones from max HR (Tanaka et al. 2001: 208 − 0.7 × age `[verified]`) or heart-rate reserve. Individual max HR can differ from the prediction by many beats, so let users enter a measured value. |
 
 Beginners are poor at judging RIR, so beginner templates use simple rules
 ("stop when the rep slows down or form changes") and fixed progressions.
@@ -113,11 +115,17 @@ mood) removes one set per exercise or swaps to an easy session.
 
 ## 10. Minimum effective dose (for short-on-time users)
 
-- Strength and size: roughly 4 weekly sets per muscle group already produces
-  measurable growth (Pelland et al. meta-regression) `[secondary]`.
-- A 2-day full-body routine with one hard set of 6-12 reps on multi-joint
-  lifts is a legitimate time-efficient option `[recall: Iversen et al. 2021]`.
-- Templates tagged "express" use this.
+- Iversen, Norum, Schoenfeld, Fimland 2021 (narrative review, Sports Medicine)
+  `[verified abstract]`: prioritise bilateral multi-joint lifts through a full
+  range; include at least one leg press/squat pattern, one upper-body pull and
+  one upper-body push; at least 4 weekly sets per muscle group at 6-15 RM;
+  weekly volume matters more than frequency; supersets, drop sets and
+  rest-pause roughly halve session time at similar volume; warm up with
+  exercise-specific sets only; stretch only if flexibility is the goal.
+  Aimed at the general public, not at people optimising results.
+- Pelland et al. also find a minimum effective dose near 4 sets `[secondary]`.
+- Templates tagged "express" use this. The matcher's time trimming keeps the
+  priority-1 items, which are the multi-joint lifts.
 
 ## Sources
 
@@ -132,4 +140,7 @@ mood) removes one set per exercise or swaps to an easy session.
 - Static stretching meta-analysis 2012: https://www.anatomytrains.com/wp-content/uploads/manual/meta-analysis.pdf
 - Stretching and injury (AAFP 2016): https://www.aafp.org/pubs/afp/issues/2016/1001/p547
 - HRV-guided training 2021: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8507742/
+- WHO 2020 guidelines (Bull et al.): https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7719906/
+- Iversen et al. 2021, time-efficient training: https://pubmed.ncbi.nlm.nih.gov/34125411/
+- Tanaka et al. 2001, max heart rate: https://webs.um.es/jlyuste/documts/tanaka.pdf
 - Sleep and performance: https://journal.aspetar.com/en/journals/volume-4-targeted-topic-post-exercise-recovery/sleep-and-sporting-performance

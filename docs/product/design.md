@@ -70,6 +70,17 @@ clamp lightness if it fails.
 Apply the theme before first paint (inline script reading the stored setting),
 as the legacy app does, to avoid a flash.
 
+## Implementation (2026-11-12)
+
+Tokens and all ten presets are in `src/styles.css`; the preset list for the
+picker is `src/lib/themes.ts`. The accent is `oklch(L C H)` with the hue in
+`--accent-h`, which the picker overrides inline on `<html>`. Corner style is
+`data-radius` (sharp / round / pill). Density, font choice, tab-bar style and
+card style are not user options yet; each theme fixes them. Goal cards and
+heroes use a fixed gradient per goal (`GOAL_INFO` in `src/lib/text.ts`), the
+same in every theme. Contrast of every theme/accent pair has not been
+measured yet.
+
 ## Theme presets (first set)
 
 | Name | Mode | Character | From |

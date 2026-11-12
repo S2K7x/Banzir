@@ -18,12 +18,12 @@ Target user: anyone from complete beginner to advanced athlete, with any goal
 
 | Topic | Decision |
 |---|---|
-| Stack | Vite + React + TypeScript, Dexie (IndexedDB), PWA plugin. No backend, no accounts, no env vars. |
+| Stack | Vite + React + TypeScript, Dexie (IndexedDB), PWA plugin. No backend, no accounts, no env vars. No router, state library or CSS framework: keep the bundle small. |
 | Hosting | Vercel, zero config. One optional edge function relays AI calls. |
 | Language | English only at launch. Keep strings in one place so languages can be added later. |
 | Licence | MIT. |
 | Data | Local-first. All user data in the browser (IndexedDB) + JSON export/import. |
-| Programs | Programs are data (JSON matching one schema), never code. Templates, user edits and AI output share the schema. |
+| Programs | Programs are data (JSON matching one schema), never code. Templates, user edits and AI output share the schema. Programs follow completed sessions, not weekdays. |
 | Customisation | Users never edit the repo. Everything is configured in the app, so "Sync fork" updates never conflict. |
 | AI coach | Optional, bring-your-own-key. OpenAI-compatible, Anthropic and Gemini adapters. Never required for onboarding. |
 | Modules | Nutrition, fasting, running, body-weight tracking are optional modules toggled in onboarding/settings. |
@@ -58,10 +58,27 @@ Process
 
 ## Status
 
-- 2026-11-12: research and documentation written. No application code yet.
-- Next step: scaffold the app (Vite/React/TS), implement the program schema,
-  storage, onboarding and the first three templates. See the roadmap in
-  `docs/product/features.md`.
+- 2026-11-12: research and documentation written.
+- 2026-11-12: first working version built (roadmap phases 1-3 and part of 4):
+  onboarding, 8 templates, matcher, workout player, progression engine,
+  history, 10 themes, backup/restore, offline support. Verified end to end in
+  a phone-sized browser, including offline.
+- Not built yet: program builder, 27 more templates, AI coach, nutrition /
+  fasting / running / body-weight modules. The ordered list is under "Known
+  gaps and next steps" in `docs/product/features.md`.
+
+## Code map
+
+Full layout and commands: `docs/product/architecture.md`.
+
+- `src/lib/schema.ts` — the schema; source of truth for all stored shapes.
+- `src/data/exercises.ts`, `src/data/templates/` — library and templates.
+- `src/lib/matcher.ts` — fits and ranks templates for a profile.
+- `src/lib/programState.ts`, `src/lib/progression.ts` — where someone is in a
+  program and what to suggest next.
+- `src/features/*` — one folder per screen; `src/App.tsx` is the shell.
+- `src/lib/text.ts` — all user-facing labels (for future languages).
+- `npm test` (Vitest), `npm run build` (type-check + build), `npm run dev`.
 
 ## Working rules
 
@@ -83,3 +100,27 @@ Process
   wger data (share-alike) or ExerciseDB media (unclear rights).
 - The legacy app lives in `S2K7x/App-Sport` (`index.html`, `MonAppTacking.md`).
   Port ideas and logic from it; do not modify that repo for Banzir work.
+
+## Engineering rules learned the hard way
+
+- Before calling work done: `npm test`, `npm run build`, then drive the real
+  app in a browser (Playwright, phone viewport) through the changed flow and
+  check for console errors. Unit tests alone missed two real bugs.
+- A React effect must return nothing or a cleanup function. Write
+  `useEffect(() => { window.scrollTo(0, 0); }, [x])` with braces: newer
+  browsers return a promise from `scrollTo`, which crashed the app.
+- Timers compute from timestamps (`Date.now()`), never from tick counts, so
+  they stay right when the phone locks.
+- Import value lists from `src/lib/constants.ts` and types with `import type`
+  from `schema.ts`; importing Zod at runtime pulls 27 kB gzipped into the
+  main bundle.
+- New screens are lazy-loaded in `App.tsx`. Check the build output sizes after
+  adding a dependency.
+- When a template or library exercise changes, keep item and exercise IDs
+  stable: logged history refers to them.
+- Any change to stored shapes needs a Dexie version bump and a migration, and
+  the backup `format` number if the file shape changes.
+- Think in every role before shipping a feature: engineer (tests, bundle),
+  coach and scientist (is the prescription sensible for this level, is the
+  claim sourced), nutritionist (safe floors), designer (thumb reach, contrast,
+  all themes), researcher (log sources in `docs/research-log.md`).
