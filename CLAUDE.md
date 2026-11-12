@@ -70,8 +70,10 @@ Process
 - 2026-11-12: AI coach (phase 5): Claude via the Anthropic SDK, other
   providers via the OpenAI-compatible format and the `/api/llm` relay,
   tools, memory, proposals, summaries. Verified with mocked providers.
-- Not built yet: nutrition / fasting / running / body-weight modules
-  (phase 6), polish and first release (phase 7). The ordered list is under "Known gaps and next steps"
+- 2026-11-12: body weight and nutrition modules (most of phase 6), with
+  Open Food Facts search, weight-trend calorie corrections and safety rules.
+- Not built yet: fasting and running-log modules, polish and first release
+  (phase 7). Ordered list in `docs/product/features.md`. The ordered list is under "Known gaps and next steps"
   in `docs/product/features.md`.
 
 ## Code map
@@ -89,6 +91,8 @@ Full layout and commands: `docs/product/architecture.md`.
 - `src/features/*` — one folder per screen; `src/App.tsx` is the shell.
 - `src/lib/coach/` — AI coach; `api/llm.ts` — relay for providers that block
   browser calls. Read `docs/product/ai-coach.md` ("As built") first.
+- `src/lib/body.ts`, `src/lib/nutrition.ts` — optional modules; screens in
+  `src/features/body` and `src/features/nutrition`.
 - `src/lib/text.ts` — all user-facing labels (for future languages).
 - `npm test` (Vitest), `npm run build` (type-check + build), `npm run dev`.
 
@@ -148,6 +152,10 @@ Full layout and commands: `docs/product/architecture.md`.
   replayed thinking blocks after a prefix change. Append instead.
 - Browser tests mock providers with Playwright routes (`api.anthropic.com`,
   `/api/llm`); the build sandbox cannot reach OpenAI or Gemini.
+- Body weight is shown to one decimal (`showBodyWeight`); gym loads round to
+  plates (`showWeight`). Mixing them showed 80.2 kg as 80.25.
+- Optional-module cards on Today are lazy-loaded so people without the
+  module do not pay for them in the main bundle.
 - Think in every role before shipping a feature: engineer (tests, bundle),
   coach and scientist (is the prescription sensible for this level, is the
   claim sourced), nutritionist (safe floors), designer (thumb reach, contrast,

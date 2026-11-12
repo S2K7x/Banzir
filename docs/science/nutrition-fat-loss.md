@@ -11,11 +11,34 @@ optional; these rules drive its targets and the coach's advice.
    `[verified abstract]`.
    - Men: 10 × kg + 6.25 × cm − 5 × age + 5
    - Women: 10 × kg + 6.25 × cm − 5 × age − 161 `[recall]`
-2. Multiply by an activity factor (about 1.2 sedentary to 1.7-1.9 very active)
-   `[recall]`.
+2. Multiply by a physical activity level (PAL = total energy / basal energy).
+   FAO/WHO/UNU 2001 ranges: sedentary or light 1.40-1.69, active or moderately
+   active 1.70-1.99, vigorous 2.00-2.39 `[secondary: FAO report via search]`.
+   The common 1.2 / 1.375 / 1.55 / 1.725 multipliers have no traceable source,
+   so the app uses 1.45, 1.6, 1.75, 1.95 and 2.2 with plain descriptions of
+   the whole day (training included).
 3. **Correct from reality.** Compare the 7-day average body weight with the
    previous 7 days; if the trend is off target, move calories by about 150
    kcal, at most every two weeks (the legacy app's rule).
+
+Why the correction matters: the "7,700 kcal per kg" rule (3,500 kcal per
+pound) comes from 1930s data and overestimates weight loss. Early loss is
+largely glycogen, protein and water; the measured energy content of weight
+change was about 4,860 kcal/kg at week 4 and 6,570 kcal/kg at week 24 in the
+CALERIE study, and energy expenditure adapts as weight changes (Hall and
+colleagues) `[verified abstracts]`. The app uses 7,700 kcal/kg only to turn a
+target pace into a starting deficit, then lets the weight trend decide.
+
+Weighing: adding self-weighing to a weight-loss programme may help; daily
+and weekly weighing did not differ in trials (Madigan et al. 2015,
+meta-analysis) `[verified abstract]`. The app suggests weighing a few
+mornings a week and trusts only 7-day averages (at least 3 weigh-ins).
+
+Food logging: more frequent logging goes with more weight loss in cohorts and
+reviews, but perfect logging is not required; logging at least two eating
+occasions a day was the best marker of adherence in one study; engagement
+falls over weeks `[secondary: reviews and cohorts, observational]`. The app
+keeps logging fast (recents, favourites, search) and never scolds.
 
 ## Goals
 
@@ -123,6 +146,10 @@ default; it lets users log symptoms and adjust by feel.
 
 ## Sources
 
+- Energy content of weight change (Hall et al.): https://pmc.ncbi.nlm.nih.gov/articles/PMC4035446 ; https://pmc.ncbi.nlm.nih.gov/articles/PMC3859816
+- FAO/WHO/UNU human energy requirements (PAL): https://www.fao.org/4/y5686e/y5686e08.htm
+- Self-weighing meta-analysis (Madigan 2015): https://pubmed.ncbi.nlm.nih.gov/26293454/
+- Dietary self-monitoring adherence: https://pubmed.ncbi.nlm.nih.gov/30115555/ ; https://pmc.ncbi.nlm.nih.gov/articles/PMC6856872
 - Mifflin-St Jeor accuracy: https://www.andeal.org/topic.cfm?cat=1291 ; https://link.springer.com/article/10.1186/s13690-025-01727-9
 - Morton et al. 2018: https://pubmed.ncbi.nlm.nih.gov/28698222/
 - Helms et al. 2023, surplus size: https://openrepository.aut.ac.nz/items/de93156f-23a9-492a-8a85-438233a7e6bf

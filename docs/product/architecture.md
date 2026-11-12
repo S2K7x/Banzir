@@ -54,6 +54,8 @@ vite.config.ts          Vite, React, PWA manifest and service worker, Vitest
 
 /api/llm.ts            optional AI relay (Vercel function; also mounted by vite dev/preview)
 /src/lib/coach         AI coach: providers, tools, prompt, agent loop, storage
+/src/lib/body.ts       weigh-ins, 7-day trend
+/src/lib/nutrition.ts  targets, safety rules, food log, corrections, Open Food Facts
 
 Planned and not there yet: nutrition, fasting and running modules.
 
@@ -71,10 +73,11 @@ CI (`.github/workflows/ci.yml`) runs the tests and the build on every push.
 
 ## Bundle (2026-11-12, with the coach)
 
-First load is about 128 kB gzipped: the main chunk (React, Dexie, shell,
-Today) at 77 kB, shared exercise data and labels at 46 kB, styles at 5 kB.
+First load is about 130 kB gzipped: the main chunk (React, Dexie, shell,
+Today) at 79.5 kB, shared exercise data and labels at 46 kB, styles at 5 kB.
 Loaded on demand: onboarding (5 kB), templates and ranking (16 kB), the coach
-(17 kB), the Anthropic SDK (84 kB, only when Claude is the provider), Zod
+(18 kB), the Food tab (5 kB), the weight and food cards on Today (only
+when the modules are on), the Anthropic SDK (84 kB, only when Claude is the provider), Zod
 (28 kB, coach and backup restore), and 2-5 kB chunks for the other screens.
 The service worker precaches everything.
 
@@ -89,15 +92,27 @@ Built (Dexie database `banzir`, version 1):
 | `sessions` | Completed workouts, indexed by date. |
 | `kv` | `state` (active program id, completed session count, lighter week) and `active` (the in-progress workout, saved after every change so it survives a reload). |
 
+Version 2 (2026-11-12) added:
+
+| Table | Contents |
+|---|---|
+| `body` | One weigh-in per day: `{ date: 'YYYY-MM-DD', kg }`. |
+| `foods` | Food log entries: id, date, time, name, kcal, protein, carbs, fat, grams, Open Food Facts code. |
+
+and these `kv` keys: `nutrition.settings` (goal, pace, activity level,
+correction, manual targets), `nutrition.favourites`, `nutrition.water`
+(date → ml, last 90 days), `coach.config`, `coach.chat`, `coach.memory`.
+
 Device preferences (theme, accent, corners, units, timer and sound options,
-last backup date) live in `localStorage` under `banzir.settings`, so the
+last backup date, enabled modules) live in `localStorage` under `banzir.settings`, so the
 theme can be applied synchronously before first paint.
 
 Planned tables: `exercises` (user-created), `bodyLog`, `nutritionLog`,
 `fastLog`, `coachMemory`, `chats`.
 
-The backup file is one JSON document (`app: 'banzir'`, `format: 1`) holding
-all tables plus the settings. Restore validates it with the schema and
+The backup file is one JSON document (`app: 'banzir'`, `format: 2`; format 1
+files still restore) holding all tables plus the settings, without the AI
+key. A key already on the device survives a restore. Restore validates it with the schema and
 replaces local data. Add a Dexie version and a migration whenever a table or
 stored shape changes, and bump `format` when the backup shape changes.
 

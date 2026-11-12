@@ -222,12 +222,12 @@ export function Nutrition({ profile, editProfile }: { profile: Profile; editProf
 
 function Macro({ label, value, target }: { label: string; value: number; target?: number }) {
   return (
-    <div className="hbar">
+    <div className="hbar" style={{ gridTemplateColumns: '64px 1fr auto' }}>
       <span>{label}</span>
       <span className="trk">
         <i style={{ width: `${target ? Math.min(100, (value / target) * 100) : 0}%` }} />
       </span>
-      <span className="num muted" style={{ minWidth: 64, textAlign: 'right' }}>
+      <span className="num muted small" style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
         {value}
         {target != null ? `/${target}` : ''} g
       </span>

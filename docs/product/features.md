@@ -70,7 +70,7 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
 | 3 | Workout player; history; progression engine; records | Done 2026-11-12 |
 | 4 | Program builder; remaining templates; backup/export; install flow | Done 2026-11-12: builder, saved programs, all 35 templates, backup, restore, CSV, install card. |
 | 5 | AI coach: providers, relay, tools, memory | Done 2026-11-12 (see `ai-coach.md`, "As built") |
-| 6 | Modules: running, body weight, nutrition, fasting | Not started |
+| 6 | Modules: running, body weight, nutrition, fasting | Body weight and nutrition done 2026-11-12; fasting and a running log not started |
 | 7 | Polish, accessibility pass, first release | Not started |
 
 ## What works today (2026-11-12)
@@ -112,6 +112,17 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
 - Coach: bring-your-own-key chat with Claude, OpenAI, Gemini, OpenRouter,
   Groq, Mistral or any OpenAI-compatible server; reads the plan and log,
   remembers notes, proposes plan changes as cards to accept or dismiss.
+- Body weight (optional module): morning weigh-in card on Today, weight card
+  on Progress with latest, 7-day average, weekly rate, chart and history.
+- Nutrition (optional module, Food tab): calorie and macro targets from
+  Mifflin-St Jeor, activity level, goal and pace, with safety rules (no
+  deficit under 18, in pregnancy or when underweight; deficit at most 25 %;
+  floors of 1200/1500 kcal); food log by day with Open Food Facts search,
+  recents, favourites and manual entry; protein-rich meal count; water;
+  weight-trend calorie corrections (±150 kcal, at most every 14 days); a
+  warning when weight falls faster than 1 % a week for two weeks.
+- Modules are chosen in onboarding (preselected from the goal) and in
+  Profile. The coach reads both and can propose new nutrition targets.
 - Offline: verified with the network disabled (shell, all tabs, player).
 
 ## Known gaps and next steps
@@ -125,8 +136,9 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
    instructions, loaded on demand.
 4. Coach follow-ups: automatic weekly review (opt-in), several saved
    conversations, effort setting per provider.
-5. Modules: body weight and adaptive calories, running (distance, pace,
-   heart-rate zones), nutrition, fasting.
+5. Modules: fasting (port from the legacy app), running log (distance, pace,
+   heart-rate zones, GPX import), barcode scanning for food (BarcodeDetector
+   where available), editing a logged food, meal templates.
 6. Readiness check, plate calculator, warm-up sets, per-exercise charts.
 7. Supersets as a player mode; voice announcements (legacy app has them).
 8. Accessibility pass (contrast check of every theme, screen-reader labels),

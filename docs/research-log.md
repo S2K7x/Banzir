@@ -251,3 +251,42 @@ Not verified (no access from the sandbox)
   was tested with mocks only; the Gemini OpenAI-compatible endpoint's exact
   field for thought signatures (`extra_content`) is assumed from reports.
 - The relay on a real Vercel deployment (tested only in `vite preview`).
+
+## 2026-11-12 — nutrition and body weight
+
+Findings → `docs/science/nutrition-fat-loss.md`
+- The 7,700 kcal/kg rule overestimates loss; measured energy content of
+  weight change 4,858 kcal/kg at week 4 and 6,569 at week 24 (CALERIE); use
+  dynamic correction from the trend. https://pmc.ncbi.nlm.nih.gov/articles/PMC4035446 ;
+  https://pmc.ncbi.nlm.nih.gov/articles/PMC3859816 ; https://www.doi.org/10.1038/ijo.2013.51
+- FAO/WHO/UNU PAL ranges 1.40-1.69 / 1.70-1.99 / 2.00-2.39; the usual 1.2 to
+  1.9 multipliers could not be traced. https://www.fao.org/4/y5686e/y5686e08.htm
+- Self-weighing: daily and weekly no different; helpful within a programme.
+  https://pubmed.ncbi.nlm.nih.gov/26293454/
+- Food logging: frequency associated with loss, perfection not required.
+  https://pubmed.ncbi.nlm.nih.gov/30115555/ ; https://pmc.ncbi.nlm.nih.gov/articles/PMC6856872 ;
+  https://www.jmir.org/2026/1/e98144
+- Open Food Facts: reads need no key, about 10 searches a minute, a custom
+  User-Agent is requested (browsers cannot set one). CORS from a browser not
+  confirmed. https://openfoodfacts.github.io/openfoodfacts-server/api
+
+Decisions
+- Starting targets: Mifflin-St Jeor × PAL; pace in % of body weight a week
+  (lose 0.25-1, default 0.5; gain 0.1-0.5, default 0.25); protein 2.0 g/kg
+  losing, 1.6 otherwise, reference weight (height − 100) from BMI 30; fat 25 %
+  of energy, at least 0.6 g/kg; carbohydrate the rest.
+- Safety: no deficit under 18, when pregnant or recently gave birth, or with
+  BMI under 18.5; deficit at most 25 % of maintenance; floors 1200 kcal
+  (women) and 1500 kcal (men or unknown) even for manual targets; warning when
+  losing more than 1 % a week two weeks running.
+- Corrections: ±150 kcal at most every 14 days, total ±600, suggested and
+  applied only on a tap.
+- Water: "about 35 ml per kg" is a rough starting point `[recall]`, shown as
+  "about".
+- No built-in food database: values would need a sourced dataset. Search
+  uses Open Food Facts on request; manual entry, recents and favourites
+  always work offline.
+
+Not verified
+- Open Food Facts from a real phone browser (CORS, rate limits). The search
+  was tested with a mocked response only.

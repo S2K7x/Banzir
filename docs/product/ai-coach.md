@@ -52,7 +52,9 @@ Decisions that differ from or refine the design below:
   told to the model with the next message.
 - **Read tools.** `get_profile`, `get_program` (with item and day ids),
   `get_recent_sessions`, `get_exercise_history`, `get_stats`,
-  `search_exercises`, `list_plans`.
+  `search_exercises`, `list_plans`, and (when the modules are on)
+  `get_body_weight` and `get_nutrition`. `propose_nutrition_targets` goes
+  through the same safety rules as the Food tab (tools version `t2`).
 - **Key handling.** Stored in `kv` `coach.config` on the device; always
   stripped from backup files (no opt-in). "Disconnect" removes it.
 - **Entry points.** Coach tab; "Ask your coach" on Today; "Review it with

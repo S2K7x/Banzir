@@ -87,6 +87,11 @@ export function showWeight(kg: number, units: Settings['units']): number {
   return units === 'imperial' ? Math.round(kg * LB * 2) / 2 : Math.round(kg * 4) / 4;
 }
 
+/** Body weight to one decimal (gym loads round to plates instead, see showWeight). */
+export function showBodyWeight(kg: number, units: Settings['units']): number {
+  return Math.round((units === 'imperial' ? kg * LB : kg) * 10) / 10;
+}
+
 export function toKg(value: number, units: Settings['units']): number {
   return units === 'imperial' ? value / LB : value;
 }

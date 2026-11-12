@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { COACH_CONFIG_KEY } from '../../lib/coach/draft';
 import { getExercise, rx } from '../../data/exercises';
 import { getKV, setState, type ActiveSession } from '../../lib/db';
@@ -12,10 +12,11 @@ import { GOAL_INFO, describe, greeting, shortDate } from '../../lib/text';
 import { flatItems, startWorkout, unlockAudio } from '../../lib/workout';
 import { Icon, Ring } from '../../ui/kit';
 import { isStandalone } from '../onboarding/Install';
-import { QuickWeigh } from '../body/Weight';
-import { dayKey } from '../../lib/body';
-import { defaultSettings, targets, totals, type NutritionSettings } from '../../lib/nutrition';
-import { db as database } from '../../lib/db';
+
+// Module cards load only when the module is on.
+const QuickWeigh = lazy(() => import('../body/Weight').then((m) => ({ default: m.QuickWeigh })));
+const FoodToday = lazy(() => import('../nutrition/FoodToday').then((m) => ({ default: m.FoodToday })));
+
 
 type Props = {
   profile: Profile;
@@ -160,8 +161,10 @@ export function Today({ profile, program, state, sessions, active, openPlayer, g
         </div>
       )}
 
-      {settings.modules.body && <QuickWeigh />}
-      {settings.modules.nutrition && <FoodToday profile={profile} onOpen={() => goTo('food')} />}
+      <Suspense fallback={null}>
+        {settings.modules.body && <QuickWeigh />}
+        {settings.modules.nutrition && <FoodToday profile={profile} onOpen={() => goTo('food')} />}
+      </Suspense>
 
       <div className="tiles">
         <div className="tile">
@@ -228,22 +231,3 @@ export function Today({ profile, program, state, sessions, active, openPlayer, g
   );
 }
 
-/** Today's food at a glance, linking to the Food tab. */
-function FoodToday({ profile, onOpen }: { profile: Profile; onOpen: () => void }) {
-  const foods = useLiveQuery(() => database.foods.where('date').equals(dayKey()).toArray(), [], []);
-  const stored = useLiveQuery(() => getKV<NutritionSettings>('nutrition.settings'), [], undefined);
-  const t = targets(profile, stored ?? defaultSettings(profile));
-  const day = totals(foods, profile.weightKg);
-  return (
-    <button className="card tap row" onClick={onOpen}>
-      <Icon name="food" />
-      <span className="grow">
-        <b>Food today</b>
-        <span className="muted small num" style={{ display: 'block' }}>
-          {t.kcal ? `${day.kcal} of ${t.kcal} kcal · protein ${day.protein}${t.protein ? ` of ${t.protein}` : ''} g` : `${day.kcal} kcal logged`}
-        </span>
-      </span>
-      <Icon name="right" size={18} />
-    </button>
-  );
-}

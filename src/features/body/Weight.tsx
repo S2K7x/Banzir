@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { dayKey, deleteWeight, logWeight, series, trend } from '../../lib/body';
 import { db } from '../../lib/db';
 import type { BodyEntry } from '../../lib/schema';
-import { showWeight, toKg, useSettings, weightUnit } from '../../lib/settings';
+import { showBodyWeight, toKg, useSettings, weightUnit } from '../../lib/settings';
 import { shortDate } from '../../lib/text';
 import { Icon, NumInput, Sheet } from '../../ui/kit';
 
@@ -17,7 +17,10 @@ function rateText(rate: number | undefined): string {
 
 /** Daily weigh-ins as dots and the 7-day average as a line. */
 function Chart({ entries }: { entries: BodyEntry[] }) {
-  const points = series(entries, 56);
+  // From the first weigh-in (at least two weeks), up to eight weeks.
+  const first = entries[0]?.date;
+  const span = first ? Math.round((Date.now() - new Date(`${first}T12:00:00`).getTime()) / 86400000) + 1 : 14;
+  const points = series(entries, Math.min(56, Math.max(14, span)));
   const values = points.flatMap((p) => [p.kg, p.avg]).filter((v): v is number => v != null);
   if (values.length < 2) return null;
   const min = Math.min(...values);
@@ -47,7 +50,7 @@ export function WeightSheet({ onClose }: { onClose: () => void }) {
   const today = dayKey();
   const latest = entries[entries.length - 1];
   const [date, setDate] = useState(today);
-  const [value, setValue] = useState<number | undefined>(latest ? showWeight(latest.kg, units) : undefined);
+  const [value, setValue] = useState<number | undefined>(latest ? showBodyWeight(latest.kg, units) : undefined);
   return (
     <Sheet title="Log your weight" onClose={onClose}>
       <p className="muted small">Weigh yourself in the morning, after the toilet and before eating, a few times a week. Single days move with water and food; the 7-day average shows the real trend.</p>
@@ -83,7 +86,7 @@ export function WeightCard() {
   const [logging, setLogging] = useState(false);
   const [history, setHistory] = useState(false);
   const t = trend(entries);
-  const fmt = (kg: number) => `${showWeight(kg, units)} ${weightUnit(units)}`;
+  const fmt = (kg: number) => `${showBodyWeight(kg, units)} ${weightUnit(units)}`;
   return (
     <div className="card stack">
       <div className="row between">
@@ -98,11 +101,11 @@ export function WeightCard() {
         <>
           <div className="tiles">
             <div className="tile">
-              <b className="num">{t.latest ? showWeight(t.latest.kg, units) : '-'}</b>
+              <b className="num">{t.latest ? showBodyWeight(t.latest.kg, units) : '-'}</b>
               <span>Latest</span>
             </div>
             <div className="tile">
-              <b className="num">{t.average != null ? showWeight(t.average, units) : '-'}</b>
+              <b className="num">{t.average != null ? showBodyWeight(t.average, units) : '-'}</b>
               <span>7-day average</span>
             </div>
             <div className="tile">
@@ -151,8 +154,8 @@ export function QuickWeigh() {
       <div className="card row">
         <Icon name="scale" />
         <span className="grow small">
-          Today {showWeight(latest.kg, units)} {weightUnit(units)}
-          {t.average != null ? ` · 7-day average ${showWeight(t.average, units)}` : ''}
+          Today {showBodyWeight(latest.kg, units)} {weightUnit(units)}
+          {t.average != null ? ` · 7-day average ${showBodyWeight(t.average, units)}` : ''}
         </span>
       </div>
     );
@@ -165,7 +168,7 @@ export function QuickWeigh() {
       </div>
       <div className="row">
         <div className="grow">
-          <NumInput value={value} onChange={setValue} label={`Today's weight in ${weightUnit(units)}`} placeholder={latest ? String(showWeight(latest.kg, units)) : weightUnit(units)} step={0.1} />
+          <NumInput value={value} onChange={setValue} label={`Today's weight in ${weightUnit(units)}`} placeholder={latest ? String(showBodyWeight(latest.kg, units)) : weightUnit(units)} step={0.1} />
         </div>
         <button className="btn primary" disabled={!value || value < 20} onClick={() => value && void logWeight(toKg(value, units))}>
           Save
