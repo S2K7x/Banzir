@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { setCoachDraft } from './lib/coach/draft';
 import { db, getActive, getState } from './lib/db';
+import { useSettings } from './lib/settings';
 import { Icon } from './ui/kit';
 import { Today } from './features/today/Today';
 
@@ -11,16 +12,18 @@ const ProgramTab = lazy(() => import('./features/program/ProgramTab').then((m) =
 const Progress = lazy(() => import('./features/progress/Progress').then((m) => ({ default: m.Progress })));
 const Coach = lazy(() => import('./features/coach/Coach').then((m) => ({ default: m.Coach })));
 const ProfileTab = lazy(() => import('./features/profile/ProfileTab').then((m) => ({ default: m.ProfileTab })));
+const Nutrition = lazy(() => import('./features/nutrition/Nutrition').then((m) => ({ default: m.Nutrition })));
 const Builder = lazy(() => import('./features/program/Builder').then((m) => ({ default: m.Builder })));
 const Player = lazy(() => import('./features/player/Player').then((m) => ({ default: m.Player })));
 
-type Tab = 'today' | 'program' | 'progress' | 'coach' | 'profile';
+type Tab = 'today' | 'program' | 'progress' | 'food' | 'coach' | 'profile';
 type Overlay = 'player' | 'edit' | 'builder' | null;
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'today', label: 'Today', icon: 'home' },
   { id: 'program', label: 'Program', icon: 'list' },
   { id: 'progress', label: 'Progress', icon: 'chart' },
+  { id: 'food', label: 'Food', icon: 'food' },
   { id: 'coach', label: 'Coach', icon: 'chat' },
   { id: 'profile', label: 'Profile', icon: 'user' },
 ];
@@ -51,6 +54,7 @@ export default function App({ update }: { update?: { subscribe: (cb: () => void)
     return { profile: profile ?? null, state, active, sessions, program };
   }, []);
   const [tab, setTab] = useState<Tab>('today');
+  const { modules } = useSettings();
   const [overlay, open, close] = useOverlay();
   const [updateReady, setUpdateReady] = useState(false);
 
@@ -87,6 +91,7 @@ export default function App({ update }: { update?: { subscribe: (cb: () => void)
         {tab === 'program' && <ProgramTab profile={profile} program={program} state={state} sessions={sessions} active={active} openPlayer={() => open('player')} openBuilder={() => open('builder')} />}
         {tab === 'progress' && <Progress sessions={sessions} target={program?.daysPerWeek ?? profile.daysPerWeek} />}
         {tab === 'coach' && <Coach />}
+        {tab === 'food' && <Nutrition profile={profile} editProfile={() => open('edit')} />}
         {tab === 'profile' && <ProfileTab profile={profile} program={program} sessionCount={sessions.length} editProfile={() => open('edit')} />}
 
         {overlay === 'builder' && program && <Builder key={program.id} program={program} profile={profile} onClose={close} />}
@@ -112,7 +117,7 @@ export default function App({ update }: { update?: { subscribe: (cb: () => void)
       )}
 
       <nav className="tabbar" aria-label="Main">
-        {TABS.map((t) => (
+        {TABS.filter((t) => t.id !== 'food' || modules.nutrition).map((t) => (
           <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)} aria-current={tab === t.id ? 'page' : undefined}>
             <Icon name={t.icon} size={22} />
             {t.label}

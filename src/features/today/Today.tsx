@@ -12,6 +12,10 @@ import { GOAL_INFO, describe, greeting, shortDate } from '../../lib/text';
 import { flatItems, startWorkout, unlockAudio } from '../../lib/workout';
 import { Icon, Ring } from '../../ui/kit';
 import { isStandalone } from '../onboarding/Install';
+import { QuickWeigh } from '../body/Weight';
+import { dayKey } from '../../lib/body';
+import { defaultSettings, targets, totals, type NutritionSettings } from '../../lib/nutrition';
+import { db as database } from '../../lib/db';
 
 type Props = {
   profile: Profile;
@@ -20,7 +24,7 @@ type Props = {
   sessions: Session[];
   active: ActiveSession | undefined;
   openPlayer: () => void;
-  goTo: (tab: 'program' | 'profile' | 'coach') => void;
+  goTo: (tab: 'program' | 'profile' | 'coach' | 'food') => void;
 };
 
 const TIPS: Record<string, string> = {
@@ -156,6 +160,9 @@ export function Today({ profile, program, state, sessions, active, openPlayer, g
         </div>
       )}
 
+      {settings.modules.body && <QuickWeigh />}
+      {settings.modules.nutrition && <FoodToday profile={profile} onOpen={() => goTo('food')} />}
+
       <div className="tiles">
         <div className="tile">
           <b className="num">{sessions.length}</b>
@@ -218,5 +225,25 @@ export function Today({ profile, program, state, sessions, active, openPlayer, g
         </div>
       )}
     </div>
+  );
+}
+
+/** Today's food at a glance, linking to the Food tab. */
+function FoodToday({ profile, onOpen }: { profile: Profile; onOpen: () => void }) {
+  const foods = useLiveQuery(() => database.foods.where('date').equals(dayKey()).toArray(), [], []);
+  const stored = useLiveQuery(() => getKV<NutritionSettings>('nutrition.settings'), [], undefined);
+  const t = targets(profile, stored ?? defaultSettings(profile));
+  const day = totals(foods, profile.weightKg);
+  return (
+    <button className="card tap row" onClick={onOpen}>
+      <Icon name="food" />
+      <span className="grow">
+        <b>Food today</b>
+        <span className="muted small num" style={{ display: 'block' }}>
+          {t.kcal ? `${day.kcal} of ${t.kcal} kcal · protein ${day.protein}${t.protein ? ` of ${t.protein}` : ''} g` : `${day.kcal} kcal logged`}
+        </span>
+      </span>
+      <Icon name="right" size={18} />
+    </button>
   );
 }

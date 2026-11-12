@@ -10,6 +10,9 @@ import { closeOpenCalls, runTurn, setProposalStatus, upgradeChat } from './agent
 import { PROMPT_VERSION } from './prompt';
 import { sseEvents, toAnthropicMessages, toOpenAIMessages } from './providers';
 import { getMemory, newChat } from './store';
+import { updateSettings } from '../settings';
+import { logWeight, addDays, dayKey } from '../body';
+import { getNutritionSettings } from '../nutrition';
 import { acceptProposal, applyChanges, buildProgram, runTool, TOOL_SPECS } from './tools';
 import type { Chat, CoachConfig, CoachMessage, Completion, CompletionRequest } from './types';
 
@@ -193,6 +196,30 @@ describe('tools and proposals', () => {
     expect((await getMemory()).map((n) => n.id)).toEqual([saved.saved]);
     await runTool({ id: '2', name: 'forget_memory', input: { id: saved.saved } }, { proposals: [] });
     expect(await getMemory()).toEqual([]);
+  });
+
+  it('reads weight and food only when the modules are on, and proposes safe nutrition targets', async () => {
+    updateSettings({ modules: { nutrition: false, body: false } });
+    expect((await runTool({ id: '1', name: 'get_body_weight', input: {} }, { proposals: [] })).content).toContain('module is off');
+
+    updateSettings({ modules: { nutrition: true, body: true } });
+    for (let i = 13; i >= 0; i--) await logWeight(80 + i * 0.05, addDays(dayKey(), -i));
+    await db.foods.put({ id: 'f', date: dayKey(), time: '08:00', name: 'Oats', kcal: 350, protein: 12 });
+    const weight = JSON.parse((await runTool({ id: '2', name: 'get_body_weight', input: { days: 14 } }, { proposals: [] })).content);
+    expect(weight.weighIns).toHaveLength(14);
+    expect(weight.weeklyRatePct).toBeLessThan(0);
+    const food = JSON.parse((await runTool({ id: '3', name: 'get_nutrition', input: { days: 3 } }, { proposals: [] })).content);
+    expect(food.days[0]).toMatchObject({ kcal: 350, protein: 12 });
+
+    // A 16-year-old never gets a deficit, even if the model asks for one.
+    await db.profile.put({ ...profile, age: 16, sex: 'male', heightCm: 175, weightKg: 70 });
+    const ctx = { proposals: [] as never[] };
+    const r = JSON.parse((await runTool({ id: '4', name: 'propose_nutrition_targets', input: { reason: 'Cut for summer', goal: 'lose', ratePct: -1 } }, ctx)).content);
+    expect(r.resultingTargets.goal).toBe('maintain');
+    expect(r.notes.join(' ')).toContain('Under 18');
+    await acceptProposal(ctx.proposals[0]);
+    expect((await getNutritionSettings(undefined)).goal).toBe('lose');
+    updateSettings({ modules: { nutrition: false, body: false } });
   });
 
   it('a lighter-week proposal marks the current week', async () => {

@@ -11,6 +11,9 @@ import { rankTemplates } from '../ranking';
 import { Program as ProgramSchema, type Item, type Prescription, type Profile, type Program, type Session } from '../schema';
 import { muscleSets, records, sessionsInWeek, weekStreak, weeklyCounts } from '../stats';
 import { describe as describeRx } from '../text';
+import { addDays, dayKey, trend } from '../body';
+import { getNutritionSettings, saveNutritionSettings, targets as nutritionTargets, totals, type NutritionSettings } from '../nutrition';
+import { getSettings } from '../settings';
 import { addMemory, removeMemory } from './store';
 import type { Proposal, ToolResult, ToolSpec } from './types';
 
@@ -320,6 +323,71 @@ const TOOLS = [
     },
   }),
   def({
+    name: 'get_body_weight',
+    description: 'Weigh-ins (kg), the 7-day average and the weekly rate of change in % of body weight. Only when the body weight module is on.',
+    input: z.object({ days: z.number().int().min(7).max(180).optional() }),
+    run: async ({ days }) => {
+      if (!getSettings().modules.body) return { note: 'The body weight module is off. The person can turn it on in Profile.' };
+      const entries = await db.body.orderBy('date').toArray();
+      const from = addDays(dayKey(), -(days ?? 28));
+      const t = trend(entries);
+      return {
+        weighIns: entries.filter((e) => e.date >= from).map((e) => ({ date: e.date, kg: e.kg })),
+        latestKg: t.latest?.kg,
+        sevenDayAverageKg: t.average != null ? roundKg(t.average) : undefined,
+        weeklyRatePct: t.weeklyRatePct != null ? Math.round(t.weeklyRatePct * 100) / 100 : undefined,
+        note: t.weeklyRatePct == null ? 'Not enough weigh-ins for a trend (3 per week for 2 weeks).' : undefined,
+      };
+    },
+  }),
+  def({
+    name: 'get_nutrition',
+    description: "The person's nutrition targets and settings, and the food logged per day (totals and items). Only when the nutrition module is on.",
+    input: z.object({ days: z.number().int().min(1).max(30).optional() }),
+    run: async ({ days }) => {
+      if (!getSettings().modules.nutrition) return { note: 'The nutrition module is off. The person can turn it on in Profile.' };
+      const { profile } = await load();
+      const settings = await getNutritionSettings(profile);
+      const t = nutritionTargets(profile, settings);
+      const from = addDays(dayKey(), -((days ?? 7) - 1));
+      const foods = await db.foods.where('date').aboveOrEqual(from).sortBy('date');
+      const byDay = new Map<string, typeof foods>();
+      for (const f of foods) byDay.set(f.date, [...(byDay.get(f.date) ?? []), f]);
+      return {
+        settings: { goal: settings.goal, ratePctPerWeek: settings.ratePct, activityLevel: settings.pal, correctionKcal: settings.adjustKcal, manualKcal: settings.manualKcal, manualProtein: settings.manualProtein },
+        targets: { kcal: t.kcal, protein: t.protein, carbs: t.carbs, fat: t.fat, maintenance: t.maintenance, safetyNotes: t.notes, missingProfileData: t.missing },
+        days: [...byDay.entries()].map(([date, list]) => ({ date, ...totals(list, profile?.weightKg), items: list.map((f) => `${f.time} ${f.name}${f.grams ? ` ${f.grams}g` : ''}: ${f.kcal} kcal, P ${f.protein ?? '?'}`) })),
+        unloggedDays: (days ?? 7) - byDay.size,
+      };
+    },
+  }),
+  def({
+    name: 'propose_nutrition_targets',
+    description: 'Propose new nutrition settings: goal (lose, maintain, gain), pace in % of body weight per week (lose -0.25 to -1, gain 0.1 to 0.5), and optionally fixed calories or protein. The app applies its safety rules (no deficit under 18, in pregnancy or when underweight; calorie floors). Nothing changes until the person accepts.',
+    input: z.object({
+      reason: z.string().min(3).max(200),
+      goal: z.enum(['lose', 'maintain', 'gain']),
+      ratePct: z.number().min(-1).max(0.5).optional(),
+      manualKcal: z.number().int().min(1200).max(6000).optional(),
+      manualProtein: z.number().int().min(40).max(300).optional(),
+    }),
+    run: async ({ reason, goal, ratePct, manualKcal, manualProtein }, ctx) => {
+      const { profile } = await load();
+      const current = await getNutritionSettings(profile);
+      const next: NutritionSettings = { ...current, goal, ratePct: goal === 'maintain' ? 0 : (ratePct ?? (goal === 'lose' ? -0.5 : 0.25)), manualKcal, manualProtein, adjustKcal: 0, adjustedAt: undefined };
+      if (next.goal === 'lose' && next.ratePct > 0) throw new Error('A losing pace must be negative.');
+      if (next.goal === 'gain' && next.ratePct < 0) throw new Error('A gaining pace must be positive.');
+      const t = nutritionTargets(profile, next);
+      const lines = [
+        `Goal: ${t.goal}${t.goal !== 'maintain' ? `, ${t.ratePct > 0 ? '+' : ''}${t.ratePct} % a week` : ''}`,
+        t.kcal ? `About ${t.kcal} kcal and ${t.protein} g protein a day` : 'Targets need age, sex, height and weight in the profile',
+        ...t.notes,
+      ];
+      ctx.proposals.push({ id: uid('pr'), kind: 'nutrition_targets', title: reason, lines, payload: next, status: 'pending' });
+      return { proposed: true, resultingTargets: { kcal: t.kcal, protein: t.protein, goal: t.goal }, notes: t.notes, note: 'Shown to the person as a card to accept or dismiss.' };
+    },
+  }),
+  def({
     name: 'save_memory',
     description: 'Remember a durable fact for future conversations: a goal, an injury or limitation, a preference, a decision, what worked or did not. One short fact per call. Not for one-off details.',
     input: z.object({ text: z.string().min(3).max(300) }),
@@ -378,7 +446,7 @@ const TOOLS = [
 ];
 
 /** Bump when tool names, descriptions or schemas change: running conversations then drop their thinking blocks. */
-export const TOOLS_VERSION = 't1';
+export const TOOLS_VERSION = 't2';
 
 export const TOOL_SPECS: ToolSpec[] = TOOLS.map((t) => {
   const schema = z.toJSONSchema(t.input) as Record<string, unknown>;
@@ -386,7 +454,7 @@ export const TOOL_SPECS: ToolSpec[] = TOOLS.map((t) => {
   return { name: t.name, description: t.description, schema };
 });
 
-export const READ_TOOLS = new Set(['get_profile', 'get_program', 'get_recent_sessions', 'get_exercise_history', 'get_stats', 'search_exercises', 'list_plans']);
+export const READ_TOOLS = new Set(['get_profile', 'get_program', 'get_recent_sessions', 'get_exercise_history', 'get_stats', 'search_exercises', 'list_plans', 'get_body_weight', 'get_nutrition']);
 
 /** Validates and runs one tool call. Errors become `isError` results the model can correct. */
 export async function runTool(call: { id: string; name: string; input: unknown }, ctx: Ctx): Promise<ToolResult> {
@@ -421,6 +489,8 @@ export async function acceptProposal(proposal: Proposal): Promise<void> {
     const template = getTemplate(String(proposal.payload));
     if (!template || !profile) throw new Error('This plan is not available.');
     await activateProgram(instantiate(template, profile).program);
+  } else if (proposal.kind === 'nutrition_targets') {
+    await saveNutritionSettings(proposal.payload as NutritionSettings);
   } else {
     const state = await getState();
     if (!state || !program) throw new Error('There is no active plan.');

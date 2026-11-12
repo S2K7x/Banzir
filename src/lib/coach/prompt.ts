@@ -4,6 +4,9 @@ import { position } from '../programState';
 import { getSettings } from '../settings';
 import { sessionsInWeek } from '../stats';
 import { EQUIPMENT_LABEL, GOAL_INFO, LEVEL_INFO } from '../text';
+import { trend } from '../body';
+import { dayKey } from '../body';
+import { getNutritionSettings, targets as nutritionTargets, totals } from '../nutrition';
 import { getMemory } from './store';
 import { TOOLS_VERSION } from './tools';
 
@@ -23,10 +26,11 @@ export const SYSTEM_PROMPT = `You are the coach inside Banzir, a training app. Y
 How to work
 - Facts about the person come from tools or the <app_context> block. Never invent workouts, numbers or history. If something is not logged, say so.
 - Look before you advise: check get_program, get_recent_sessions or get_exercise_history when the question depends on them. Keep tool use proportionate; a greeting needs none.
-- Plan changes are proposals. Use propose_program_change, propose_new_program, propose_plan_switch or propose_lighter_week; the person sees a card and decides. Never claim a change is made before they accept. Prefer small, targeted changes to rewrites, and explain the reason in one or two sentences.
+- Plan changes are proposals. Use propose_program_change, propose_new_program, propose_plan_switch, propose_lighter_week or propose_nutrition_targets; the person sees a card and decides. Never claim a change is made before they accept. Prefer small, targeted changes to rewrites, and explain the reason in one or two sentences.
 - Only exercises from the app's library can go into a plan. Find ids with search_exercises, and respect the person's equipment and level.
 - Save durable facts with save_memory (a goal and date, an injury, a preference, a decision). One fact per note, written so it makes sense months later. Do not save one-off details. Remove notes that became wrong with forget_memory.
 - Reply in the language the person writes in. Be warm, direct and brief: a few short paragraphs or a short list. No preamble, no repeating the question.
+- Food and body weight are optional modules: use get_nutrition and get_body_weight when they are on, and do not push food tracking on someone who has not turned it on.
 - Weights in the log are in kilograms; the context says which units the person reads. Convert when you quote numbers.
 - When evidence is weak or mixed, say so plainly instead of sounding certain.
 
@@ -88,6 +92,25 @@ export async function contextSnapshot(now = new Date()): Promise<string> {
       ? `Log: ${sessions.length} sessions in total, ${week} this week. Last: ${last.dayName} on ${last.date.slice(0, 10)} (${last.entries.map((e) => getExercise(e.exerciseId).name).slice(0, 6).join(', ')}).`
       : 'Log: no workouts yet.',
   );
+
+  const { modules } = getSettings();
+  if (modules.body) {
+    const t = trend(await db.body.orderBy('date').toArray(), dayKey(now));
+    lines.push(
+      t.latest
+        ? `Body weight: latest ${t.latest.kg} kg on ${t.latest.date}${t.average != null ? `, 7-day average ${t.average.toFixed(1)} kg` : ''}${t.weeklyRatePct != null ? `, ${t.weeklyRatePct.toFixed(2)} % a week` : ''}.`
+        : 'Body weight: module on, no weigh-ins yet.',
+    );
+  }
+  if (modules.nutrition) {
+    const s = await getNutritionSettings(profile);
+    const t = nutritionTargets(profile, s);
+    const today = totals(await db.foods.where('date').equals(dayKey(now)).toArray(), profile?.weightKg);
+    lines.push(
+      `Nutrition: goal ${t.goal}${t.goal !== 'maintain' ? ` (${t.ratePct} % a week)` : ''}${t.kcal ? `, target ${t.kcal} kcal and ${t.protein} g protein` : ', targets not set'}; logged today ${today.kcal} kcal and ${today.protein} g protein.`,
+    );
+  }
+  if (!modules.body || !modules.nutrition) lines.push(`Modules off: ${[!modules.nutrition && 'nutrition', !modules.body && 'body weight'].filter(Boolean).join(', ')} (turned on in Profile).`);
 
   lines.push(notes.length ? `Coach notes (your memory):\n${notes.map((n) => `- [${n.id}] ${n.text}`).join('\n')}` : 'Coach notes: none yet.');
   return lines.join('\n');

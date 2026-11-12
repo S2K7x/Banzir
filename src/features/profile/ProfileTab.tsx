@@ -63,6 +63,14 @@ export function ProfileTab({ profile, program, sessionCount, editProfile }: { pr
       </div>
 
       <div className="section-title">
+        <h2 className="h2">Modules</h2>
+      </div>
+      <div className="card list">
+        <Toggle label="Nutrition" hint="Food log, calorie and protein targets, water" value={s.modules.nutrition} onChange={(nutrition) => updateSettings({ modules: { ...s.modules, nutrition } })} />
+        <Toggle label="Body weight" hint="Weigh-ins, 7-day trend, calorie corrections" value={s.modules.body} onChange={(body) => updateSettings({ modules: { ...s.modules, body } })} />
+      </div>
+
+      <div className="section-title">
         <h2 className="h2">Workout</h2>
       </div>
       <div className="card stack">

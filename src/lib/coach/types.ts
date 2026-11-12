@@ -14,7 +14,7 @@ export type CoachConfig = {
 export type ToolCall = { id: string; name: string; input: unknown };
 export type ToolResult = { id: string; name: string; content: string; isError?: boolean };
 
-export type ProposalKind = 'program_change' | 'new_program' | 'plan_switch' | 'lighter_week';
+export type ProposalKind = 'program_change' | 'new_program' | 'plan_switch' | 'lighter_week' | 'nutrition_targets';
 
 export type Proposal = {
   id: string;

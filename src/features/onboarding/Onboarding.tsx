@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { getExercise, rx } from '../../data/exercises';
 import { importBackup } from '../../lib/backup';
 import { activateProgram, db, requestPersistence } from '../../lib/db';
@@ -151,6 +151,7 @@ export function Onboarding({ initial, currentPlan, onDone, onCancel }: Props) {
   const [step, setStep] = useState(editing ? 1 : 0);
   const [chosen, setChosen] = useState<string | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
+  const modulesTouched = useRef(false);
   const [d, setD] = useState<Draft>(() =>
     initial
       ? {
@@ -180,7 +181,14 @@ export function Onboarding({ initial, currentPlan, onDone, onCancel }: Props) {
   const pick: Match | undefined = matches.find((m) => m.template.id === chosen) ?? matches[0];
   const imperial = settings.units === 'imperial';
 
-  const next = () => setStep((s) => Math.min(STEPS.length - 1, s + 1));
+  const next = () => {
+    // Suggest the modules that fit the goal the first time the person reaches the look step.
+    if (!editing && STEPS[step + 1] === 'look' && !modulesTouched.current) {
+      modulesTouched.current = true;
+      updateSettings({ modules: { nutrition: d.goal === 'fat_loss' || settings.modules.nutrition, body: d.goal === 'fat_loss' || d.goal === 'muscle' || settings.modules.body } });
+    }
+    setStep((s) => Math.min(STEPS.length - 1, s + 1));
+  };
   const back = () => (step === (editing ? 1 : 0) ? onCancel?.() : setStep((s) => s - 1));
 
   async function finish(keepPlan: boolean) {
@@ -477,7 +485,18 @@ export function Onboarding({ initial, currentPlan, onDone, onCancel }: Props) {
         {id === 'look' && (
           <>
             <h1 className="h1">Make it yours</h1>
-            <p className="muted small">Pick a look. You can change it any time in Profile.</p>
+            <div className="field">
+              <span>Also track (optional)</span>
+              <div className="chips">
+                <button className={`chip ${settings.modules.nutrition ? 'on' : ''}`} onClick={() => updateSettings({ modules: { ...settings.modules, nutrition: !settings.modules.nutrition } })} aria-pressed={settings.modules.nutrition}>
+                  Food and calories
+                </button>
+                <button className={`chip ${settings.modules.body ? 'on' : ''}`} onClick={() => updateSettings({ modules: { ...settings.modules, body: !settings.modules.body } })} aria-pressed={settings.modules.body}>
+                  Body weight
+                </button>
+              </div>
+            </div>
+            <p className="muted small">Pick a look. You can change all of this any time in Profile.</p>
             <ThemePicker />
           </>
         )}

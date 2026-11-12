@@ -212,7 +212,7 @@ textarea.input { padding: 12px 14px; min-height: 80px; resize: vertical; }
 /* ---------- Tab bar ---------- */
 .tabbar {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom) + 12px);
-  width: min(calc(100% - 28px), 492px); display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px;
+  width: min(calc(100% - 28px), 492px); display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 6px;
   background: var(--tabbar-bg); border: 1px solid var(--border); border-radius: 999px; box-shadow: var(--shadow);
   backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4); z-index: 20;
 }
