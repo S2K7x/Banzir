@@ -64,7 +64,9 @@ vite.config.ts          Vite, React, PWA manifest and service worker, Vitest
 /scripts/a11y.mjs      axe-core audit of every screen in three themes
 /scripts/contrast.mjs  WCAG contrast of every theme at every accent hue
 /scripts/serve.mjs     serves dist/ with the vercel.json headers, to test the security policy
-/scripts/screenshots.mjs  regenerates docs/screenshots/banzir.png
+/scripts/demo.mjs      demo account (onboarding plus three weeks of sample data) for screenshots and marketing
+/scripts/screenshots.mjs  every main screen, phone, tablet or desktop, any theme; README strip
+/marketing             presentation video, Reel, Instagram carousel and their generators
 vercel.json            security headers and caching
 
 ## Commands
@@ -79,7 +81,8 @@ vercel.json            security headers and caching
 | `npm run a11y` | axe-core audit (needs the app on port 4173) |
 | `npm run contrast` | Contrast of every theme and accent hue (app on port 4173) |
 | `npm run serve` | Serve `dist/` with the production headers on port 4174 |
-| `node scripts/screenshots.mjs` | Regenerate the README screenshot (app on port 4173) |
+| `node scripts/screenshots.mjs --device phone --strip` | Screenshots and the README strip (app on port 4173; convert to WebP, see the script) |
+| `node marketing/make-video.mjs`, `node marketing/make-posts.mjs` | Presentation video, Reel, Instagram slides (app on port 4173, ffmpeg) |
 | `node scripts/make-icons.mjs` | Regenerate PNG icons (needs Playwright's Chromium) |
 
 CI (`.github/workflows/ci.yml`) runs the unit tests and the build, then, in a

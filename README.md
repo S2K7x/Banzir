@@ -7,7 +7,14 @@ builds a training plan for your goal: muscle, strength, calisthenics skills,
 running, fat loss, general fitness or sport support. Everything is stored on
 your device. No account, no database, nothing to configure.
 
-![Banzir on a phone: Today, a workout, Progress, Food and Fasting](docs/screenshots/banzir.png)
+![Banzir on a phone: Today, a workout, Progress, the AI coach and Fasting](docs/screenshots/banzir.webp)
+
+On a computer it gets a sidebar and two columns:
+
+![Banzir on a desktop screen: the Today dashboard](docs/screenshots/desktop/04-today.webp)
+
+More screenshots: [phone](docs/screenshots/phone) and [desktop](docs/screenshots/desktop).
+A 47-second tour: [`marketing/banzir-presentation.mp4`](marketing/banzir-presentation.mp4).
 
 ## What it does
 

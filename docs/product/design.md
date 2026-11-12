@@ -80,6 +80,20 @@ card style are not user options yet; each theme fixes them. Goal cards and
 heroes use a fixed gradient per goal (`GOAL_INFO` in `src/lib/text.ts`), the
 same in every theme.
 
+## Layout by screen size (2026-11-12)
+
+| Width | Navigation | Content |
+|---|---|---|
+| Under 700 px (phones) | Floating bottom tab bar | One column, bottom sheets |
+| 700-1023 px (tablets) | Bottom tab bar | 680 px column; sheets and onboarding are centred panels |
+| 1024 px and up (desktop) | 248 px sidebar with the mark and a privacy line | Up to 1120 px: Today in main and side columns (`.cols`); Progress and Profile in balanced columns (`.masonry`, CSS columns with grouped sections); Program, Food and Fasting with a sticky summary column (`.cols.lead`); Coach in an 820 px reading column; the fasting screen widens to 1080 px |
+
+Rules: phone order is always the reading order (columns stack in source
+order); never show a sidebar and a bottom bar together; hover styles only
+under `(hover: hover) and (pointer: fine)`; a section title stays grouped
+with its card so CSS columns never split them. Checked by `e2e/desktop.cjs`
+and `DESKTOP=1 npm run a11y`.
+
 ## Contrast and accessibility (measured 2026-11-12)
 
 `npm run contrast` (scripts/contrast.mjs) renders every theme, at every accent

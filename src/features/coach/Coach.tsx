@@ -44,9 +44,12 @@ export function Coach() {
   useEffect(() => {
     void getChat().then((c) => setChat(upgradeChat(c)));
   }, []);
+  const loaded = config !== undefined && !!chat;
   useEffect(() => {
-    end.current?.scrollIntoView({ block: 'end' });
-  }, [chat?.messages.length, streaming]);
+    // To the very bottom: the page's bottom padding keeps the last message clear of the composer and tab bar.
+    if (end.current) window.scrollTo({ top: document.documentElement.scrollHeight });
+    // `loaded`: the chat and the settings load separately; scroll once both are there.
+  }, [chat?.messages.length, streaming, loaded]);
   useEffect(() => () => abort.current?.abort(), []);
 
   if (config === undefined || !chat) return <div className="screen" />;

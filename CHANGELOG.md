@@ -4,6 +4,16 @@ User-facing changes, newest first. Your data is kept across updates: every
 version so far only adds to what is stored, and older backup files still
 restore.
 
+## 1.1.0 (2026-11-12)
+
+- Desktop and tablet layouts: a sidebar with the Banzir mark on computers,
+  two columns on Today, balanced columns on Progress and Profile, a sticky
+  summary beside Program, Food and Fasting, and centred dialogs. Hover
+  feedback with a mouse or trackpad.
+- Install instructions for computers (Chrome, Edge, Safari on Mac).
+- Fixes: the coach opens on the latest message; macro bars line up; the
+  weight chart fills its card.
+
 ## 1.0.0 (2026-11-12)
 
 First release.

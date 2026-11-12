@@ -29,7 +29,7 @@
   --r-s: 10px;
   --r-m: 16px;
   --r-l: 22px;
-  --font: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, Inter, 'Helvetica Neue', Arial, sans-serif;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, system-ui, 'Helvetica Neue', Arial, sans-serif;
   --rail: 248px;
   --font-display: var(--font);
   color-scheme: dark;

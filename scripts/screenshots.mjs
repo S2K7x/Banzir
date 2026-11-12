@@ -2,6 +2,8 @@
 // Usage (app served on port 4173, for example `npx vite preview --port 4173`):
 //   node scripts/screenshots.mjs [--device phone|desktop|tablet] [--theme midnight] [--out dir] [--strip]
 // --strip also writes docs/screenshots/banzir.png, the five-phone strip in the README.
+// The repo keeps WebP copies to stay light for everyone who forks it:
+//   for f in docs/screenshots/*/*.png docs/screenshots/*.png; do convert "$f" -quality 85 "${f%.png}.webp" && rm "$f"; done
 import { mkdirSync } from 'node:fs';
 import { chromium, devices } from 'playwright';
 import { clicker, onboard, seed } from './demo.mjs';

@@ -39,6 +39,7 @@ Product
 - `docs/product/ai-coach.md` — providers, tools, memory design, safety.
 - `docs/product/design.md` — design references, tokens, theme presets, components.
 - `docs/product/features.md` — feature list, legacy app inventory, roadmap.
+- `docs/product/brand.md` — brand, voice, marketing assets, launch checklist.
 
 Programs
 - `docs/programs/schema.md` — the program data schema (draft).
@@ -79,6 +80,8 @@ Process
   every theme and hue, axe clean, focus handling), security headers, browser
   tests and audits in CI, changelog. Next work: "Known gaps and next steps"
   in `docs/product/features.md`; record user-facing changes in `CHANGELOG.md`.
+- 2026-11-12: 1.1.0: desktop and tablet layouts; screenshots, presentation
+  video, Reel and Instagram carousel generated from the app (`marketing/`).
 
 ## Code map
 
@@ -135,6 +138,10 @@ Full layout and commands: `docs/product/architecture.md`.
   high-contrast theme. axe cannot judge text on gradients; the fasting hero
   shipped with invisible tiles in light themes until a screenshot showed it.
   Use `--accent-text` (not `--accent`) for accent-coloured text.
+- Layout changes: check phone, tablet (834 px) and desktop (1440 px) with
+  `node scripts/screenshots.mjs --device ...`; phone order must stay the
+  reading order. After a visible change, regenerate the screenshots and the
+  marketing material (`marketing/README.md`) so they match the app.
 - `index.html`'s inline theme script is allowed by hash in `vercel.json`. A
   unit test fails when they drift: put the new hash in the policy.
 - A React effect must return nothing or a cleanup function. Write

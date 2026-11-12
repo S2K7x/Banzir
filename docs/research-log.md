@@ -359,3 +359,52 @@ Not done
   was not allowed to do. Run `npx lighthouse` against a deployment.
 - Real screen readers and real phones.
 
+## 2026-11-12 — design, branding and marketing
+
+Findings → `docs/product/brand.md`, `docs/product/design.md`
+- Adaptive navigation: compact width uses a bottom bar, medium a navigation
+  rail, expanded a rail or persistent drawer; do not show a rail and a
+  bottom bar together. Material 3 Expressive deprecates the drawer in favour
+  of an expandable rail (reported, not checked in the official docs).
+  https://developer.android.com/develop/ui/views/layout/build-responsive-navigation ;
+  https://m2.material.io/components/navigation-rail
+- Workout trackers must stay readable under effort: next exercise, current
+  set, previous performance, timer and a way to correct mistakes; large
+  targets and high contrast for gym use (agency blogs and Apple's workouts
+  guidelines, secondary). https://screensdesign.com/articles/workout-tracker-app-design-examples/ ;
+  https://developer-mdn.apple.com/design/human-interface-guidelines/patterns/workouts
+- Body text measure: about 45-75 characters; limit text containers, not
+  dashboard grids. https://pimpmytype.com/line-length-line-height/
+- Instagram: feed and carousel 1080x1350 (4:5), the same size on every slide;
+  profile grid crops to about 3:4, keep key content central; Reels and
+  Stories 1080x1920 with text clear of the top and bottom; slide limit 10 by
+  API, up to 20 in the app (sources disagree). Vendor blogs, not Meta docs.
+  https://socialbu.com/blog/instagram-post-aspect-ratio ; https://www.oktopost.com/blog/instagram-grid-size-guide/
+- Carousels: the first slide is the hook and should open a question; one
+  idea per slide, readable in 1-2 s; end with two or three asks (save,
+  share). https://www.trymypost.com/blog/instagram-carousel-hook-design-principles-2026 ;
+  https://metricool.com/instagram-carousels/
+- App promo video: show the product in the first 3 s (hook 0-3 s, problem,
+  in-app proof, call to action), about 30 s performs best; captions for muted
+  autoplay on social, not in store previews. https://www.appfollow.io/blog/app-store-video-strategy/ ;
+  https://www.capcut.com/create/short-form-video-hooks
+- Open-source branding: one consistent name, a simple mark, colours and type,
+  written dos and don'ts; avoid over-marketing in developer communities.
+  https://opensource.com/business/16/2/how-choose-brand-name-open-source-project ;
+  https://community.finos.org/docs/governance/project-branding-guidelines
+- Launch: Show HN titles plain and descriptive, product usable without sign-up,
+  first comment on how it is built and its limits, stay in the thread;
+  Product Hunt as the "official" launch; stagger channels.
+  https://business.daily.dev/resources/hacker-news-marketing-developer-tools-show-hn-launch-day-sustained-coverage/ ;
+  https://docs.opensaas.sh/blog/2025-05-07-you-should-still-launch-your-product-on-ph/
+
+Decisions
+- Sidebar at 1024 px and up, bottom bar below; sheets and onboarding become
+  centred panels from 700 px.
+- Video silent with captions, product in the first second, 47 s (16:9) and
+  37 s (9:16); carousel of 8 slides at 4:5 with the call to action last.
+
+Not verified
+- Engagement statistics quoted by the carousel and video guides (vendor
+  blogs). The material follows their structure, not their numbers.
+

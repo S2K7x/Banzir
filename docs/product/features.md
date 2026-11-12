@@ -140,6 +140,10 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
 - Accessibility (1.0.0): WCAG 2.1 AA contrast in every theme at every accent
   hue, no axe violations on any screen, keyboard focus kept inside dialogs,
   landmarks, reduced motion. Privacy note in Profile.
+- Desktop and tablet (1.1.0): sidebar navigation from 1024 px, two-column
+  dashboards, centred dialogs and onboarding panel from 700 px, hover states.
+- Marketing (1.1.0): presentation video, Reel, Instagram carousel and
+  screenshots, all generated from the app (`marketing/`, `docs/product/brand.md`).
 - Release engineering (1.0.0): security headers, 11 browser tests, axe and
   contrast checks in CI, changelog, README screenshot.
 
