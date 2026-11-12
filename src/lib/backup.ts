@@ -18,7 +18,9 @@ export type Backup = {
 
 export async function buildBackup(): Promise<Backup> {
   const [profile, programs, sessions, kv] = await Promise.all([db.profile.toArray(), db.programs.toArray(), db.sessions.toArray(), db.kv.toArray()]);
-  return { app: 'banzir', format: FORMAT, exportedAt: new Date().toISOString(), settings: getSettings(), profile, programs, sessions, kv };
+  // The AI key never leaves the device in a backup file.
+  const safeKv = kv.map((row) => (row.key === 'coach.config' && row.value && typeof row.value === 'object' ? { ...row, value: { ...(row.value as object), apiKey: '' } } : row));
+  return { app: 'banzir', format: FORMAT, exportedAt: new Date().toISOString(), settings: getSettings(), profile, programs, sessions, kv: safeKv };
 }
 
 export async function exportBackup(): Promise<void> {

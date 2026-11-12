@@ -66,6 +66,8 @@ export type Chat = {
   /** System prompt and tool set this conversation started with; they stay frozen for it. */
   promptVersion: string;
   lastContext?: string;
+  /** Decisions on proposal cards since the last message, told to the model with the next one. */
+  pending?: string[];
 };
 
 export type MemoryNote = { id: string; text: string; at: string };

@@ -69,7 +69,7 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
 | 2 | Onboarding; template matching; first templates | Done 2026-11-12 |
 | 3 | Workout player; history; progression engine; records | Done 2026-11-12 |
 | 4 | Program builder; remaining templates; backup/export; install flow | Done 2026-11-12: builder, saved programs, all 35 templates, backup, restore, CSV, install card. |
-| 5 | AI coach: providers, relay, tools, memory | Not started (Coach tab is a placeholder) |
+| 5 | AI coach: providers, relay, tools, memory | Done 2026-11-12 (see `ai-coach.md`, "As built") |
 | 6 | Modules: running, body weight, nutrition, fasting | Not started |
 | 7 | Polish, accessibility pass, first release | Not started |
 
@@ -109,6 +109,9 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
 - Profile: edit profile and plan, 10 themes, accent hue, corner style, units,
   timer/sound/wake-lock toggles, backup, restore, CSV export, storage
   protection status, erase everything, install card, disclaimer.
+- Coach: bring-your-own-key chat with Claude, OpenAI, Gemini, OpenRouter,
+  Groq, Mistral or any OpenAI-compatible server; reads the plan and log,
+  remembers notes, proposes plan changes as cards to accept or dismiss.
 - Offline: verified with the network disabled (shell, all tabs, player).
 
 ## Known gaps and next steps
@@ -120,7 +123,8 @@ Not planned: accounts, social feed, leaderboards, hosted backend.
    cycling, postpartum return, more sports (needs analysis first).
 3. Full exercise database import (free-exercise-db) with images and
    instructions, loaded on demand.
-4. AI coach (phase 5).
+4. Coach follow-ups: automatic weekly review (opt-in), several saved
+   conversations, effort setting per provider.
 5. Modules: body weight and adaptive calories, running (distance, pace,
    heart-rate zones), nutrition, fasting.
 6. Readiness check, plate calculator, warm-up sets, per-exercise charts.

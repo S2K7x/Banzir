@@ -18,11 +18,13 @@ type Props = {
   profile: Profile;
   sessions: Session[];
   onClose: () => void;
+  /** Opens the coach with a question about the workout just saved. */
+  onAskCoach?: () => void;
 };
 
 type Rest = { end: number; total: number };
 
-export function Player({ initial, program, profile, sessions, onClose }: Props) {
+export function Player({ initial, program, profile, sessions, onClose, onAskCoach }: Props) {
   const settings = useSettings();
   const [a, setA] = useState(initial);
   const [rest, setRest] = useState<Rest | null>(null);
@@ -51,7 +53,7 @@ export function Player({ initial, program, profile, sessions, onClose }: Props) 
     return new Map(list.map((i) => [i.id, i]));
   }, [program, a?.dayId, a?.light]);
 
-  if (saved) return <Summary session={saved} onClose={onClose} />;
+  if (saved) return <Summary session={saved} onClose={onClose} onAskCoach={onAskCoach} />;
   if (!a || a.entries.length === 0) return null;
 
   const entry = a.entries[a.cursor];
@@ -533,7 +535,7 @@ function TimedPanel({ reps, segments, done, sound, onDone, onUndo }: TimedProps)
 
 /* ---------- After saving ---------- */
 
-function Summary({ session, onClose }: { session: Session; onClose: () => void }) {
+function Summary({ session, onClose, onAskCoach }: { session: Session; onClose: () => void; onAskCoach?: () => void }) {
   const sets = session.entries.reduce((n, e) => n + e.sets.length, 0);
   return (
     <div className="overlay">
@@ -560,6 +562,11 @@ function Summary({ session, onClose }: { session: Session; onClose: () => void }
         <button className="btn primary big block" onClick={onClose}>
           Done
         </button>
+        {onAskCoach && (
+          <button className="btn block" onClick={onAskCoach}>
+            <Icon name="chat" size={18} /> Review it with the coach
+          </button>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
+import { COACH_CONFIG_KEY } from '../../lib/coach/draft';
 import { getExercise, rx } from '../../data/exercises';
-import { setState, type ActiveSession } from '../../lib/db';
+import { getKV, setState, type ActiveSession } from '../../lib/db';
 import { estimateMinutes } from '../../lib/matcher';
 import { lighten, position, type ProgramState } from '../../lib/programState';
 import type { Profile, Program, Session } from '../../lib/schema';
@@ -33,6 +35,10 @@ const TIPS: Record<string, string> = {
 };
 
 export function Today({ profile, program, state, sessions, active, openPlayer, goTo }: Props) {
+  const coachReady = useLiveQuery(async () => {
+    const c = await getKV<{ apiKey?: string; model?: string; provider?: string }>(COACH_CONFIG_KEY);
+    return !!c?.model && (!!c.apiKey || c.provider === 'custom');
+  }, []);
   const settings = useSettings();
   const [hideInstall, setHideInstall] = useState(() => isStandalone() || sessionStorage.getItem('banzir.hideInstall') === '1');
   const week = sessionsInWeek(sessions);
@@ -176,6 +182,9 @@ export function Today({ profile, program, state, sessions, active, openPlayer, g
             Last session: {last.dayName}, {shortDate(last.date)}.
           </p>
         )}
+        <button className="btn sm" style={{ justifySelf: 'start' }} onClick={() => goTo('coach')}>
+          <Icon name="chat" size={14} /> {coachReady ? 'Ask your coach' : 'Set up your AI coach'}
+        </button>
       </div>
 
       {!hideInstall && (

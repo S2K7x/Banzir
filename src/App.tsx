@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { setCoachDraft } from './lib/coach/draft';
 import { db, getActive, getState } from './lib/db';
 import { Icon } from './ui/kit';
 import { Today } from './features/today/Today';
@@ -89,7 +90,20 @@ export default function App({ update }: { update?: { subscribe: (cb: () => void)
         {tab === 'profile' && <ProfileTab profile={profile} program={program} sessionCount={sessions.length} editProfile={() => open('edit')} />}
 
         {overlay === 'builder' && program && <Builder key={program.id} program={program} profile={profile} onClose={close} />}
-        {overlay === 'player' && <Player initial={active} program={program} profile={profile} sessions={sessions} onClose={close} />}
+        {overlay === 'player' && (
+          <Player
+            initial={active}
+            program={program}
+            profile={profile}
+            sessions={sessions}
+            onClose={close}
+            onAskCoach={() => {
+              setCoachDraft('Review the workout I just finished. What went well, and what should I change next time?');
+              close();
+              setTab('coach');
+            }}
+          />
+        )}
       </Suspense>
       {overlay === 'edit' && (
         <Suspense fallback={null}>

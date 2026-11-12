@@ -221,3 +221,33 @@ Engineering findings
   plans now have a fixed session count, enforced by a test.
 - Moving ranking out of the matcher and lazy-loading onboarding cut the main
   bundle from 97 kB to 77 kB gzipped.
+
+## 2026-11-12 — AI coach
+
+Findings and where they went (`docs/product/ai-coach.md`, "As built")
+- Claude API: current default model `claude-opus-5-5`; effort default is
+  `medium` on it; thinking cannot be disabled; forced `tool_choice` returns a
+  400; thinking blocks are bound to the exact conversation prefix (system,
+  tools, earlier messages), so histories must be append-only; server-side
+  refusal fallbacks (`fallbacks: "default"`); eager tool-input streaming with
+  client-side validation; top-level automatic prompt caching. Source: the
+  bundled Claude API reference (cached 2026-11-03). The SDK (1.8.0) sends the
+  key as `Authorization: Bearer`.
+- Browser calls: Anthropic answers CORS preflights (tested 2026-11-12).
+  OpenAI still blocks browser calls; Google advises against Gemini keys in
+  browser code; OpenRouter is browser-friendly `[secondary]`.
+  https://community.openai.com/t/chat-completions-api-endpoint-down-blocked-any-web-browser-request/1362527 ;
+  https://ai.google.dev/gemini-api/docs/api-key ;
+  https://horadecodar.com.br/erro-de-cors-na-api-de-ia/
+- Gemini 3+ requires thought signatures to be passed back during function
+  calling. https://ai.google.dev/gemini-api/docs/thought-signatures
+- Vercel runs any file in `/api` as a function in a non-Next project; a
+  default export with a `fetch(Request)` method works.
+  https://vercel.com/docs/functions/quickstart?framework=other ;
+  https://vercel.com/docs/functions/functions-api-reference.md
+
+Not verified (no access from the sandbox)
+- A real call to OpenAI, Gemini, Groq, Mistral or OpenRouter. The wire format
+  was tested with mocks only; the Gemini OpenAI-compatible endpoint's exact
+  field for thought signatures (`extra_content`) is assumed from reports.
+- The relay on a real Vercel deployment (tested only in `vite preview`).

@@ -1,5 +1,68 @@
 # AI coach
 
+## As built (2026-11-12)
+
+Code: `src/lib/coach/` (types, providers, tools, prompt, agent, store, draft)
+and `src/features/coach/` (Coach, Setup, Markdown). Relay: `api/llm.ts`.
+Tests: `src/lib/coach/coach.test.ts`.
+
+Decisions that differ from or refine the design below:
+- **Two wire formats, not three.** Claude uses the official
+  `@anthropic-ai/sdk` from the browser (`dangerouslyAllowBrowser`, which sends
+  the direct-browser-access header). Everything else, Gemini included, uses
+  the OpenAI-compatible chat completions format. Gemini goes through its
+  OpenAI-compatible endpoint; its thought signatures arrive as extra fields
+  on tool calls and are replayed unchanged.
+- **Transport.** Claude and OpenRouter are called directly. OpenAI, Gemini,
+  Groq and Mistral block browser calls, so they go through `/api/llm`, a
+  Vercel function that forwards to an allow-list of hosts and paths, streams
+  the answer back and stores nothing. The same handler is mounted in
+  `vite dev` and `vite preview`. "Other (OpenAI-compatible)" (Ollama, LM
+  Studio) is called directly at the address the person enters.
+- **Models.** Claude defaults to `claude-opus-5-5`; for other providers the
+  model list is fetched from the provider after the key is entered, so no
+  model names are hard-coded.
+- **Claude request shape.** Streaming via `client.beta.messages.stream`,
+  `max_tokens` 32000, `output_config.effort: "medium"` on current models,
+  server-side refusal fallbacks (`fallbacks: "default"`, beta
+  `server-side-fallback-2026-07-01`) on Opus 5 / 5.5, Fable 5.1 / 5.2 and
+  Sonnet 5.5, `eager_input_streaming` on every tool with Zod validation of
+  every input before it runs, prompt caching on the system prompt plus
+  top-level automatic caching.
+- **Frozen prefix.** Current Claude models bind thinking blocks to the
+  exact conversation prefix (system prompt, tools, earlier messages). So the
+  system prompt and tool set are frozen per conversation (`PROMPT_VERSION`),
+  assistant turns are replayed as the provider returned them, and changing
+  context (date, profile, plan position, memory, decisions on proposals) is
+  appended to the next user message as an `<app_context>` block only when it
+  changed. Bump `PROMPT_VERSION` / `TOOLS_VERSION` when the prompt or tools
+  change: running conversations then continue without their thinking blocks.
+- **Summary.** When the history sent per turn passes about 60,000 characters,
+  older turns are summarised by the model into bullet points, the last four
+  exchanges are kept, and kept turns are replayed without thinking blocks
+  (allowed by the API). The full history stays visible in the app.
+- **Memory.** Notes (max 60, 300 characters each) in `kv` `coach.memory`,
+  listed in Coach settings with delete and "Forget everything". Saved by the
+  model with `save_memory`; shown in the context with their ids.
+- **Proposals.** `propose_program_change` (swap, ladder step everywhere,
+  sets/reps/hold/duration/rest, add, remove, rename day),
+  `propose_new_program`, `propose_plan_switch`, `propose_lighter_week`. Each
+  is validated when proposed (the model gets a readable error to correct)
+  and re-applied against the current plan on acceptance. The decision is
+  told to the model with the next message.
+- **Read tools.** `get_profile`, `get_program` (with item and day ids),
+  `get_recent_sessions`, `get_exercise_history`, `get_stats`,
+  `search_exercises`, `list_plans`.
+- **Key handling.** Stored in `kv` `coach.config` on the device; always
+  stripped from backup files (no opt-in). "Disconnect" removes it.
+- **Entry points.** Coach tab; "Ask your coach" on Today; "Review it with
+  the coach" after a workout (pre-fills a question, does not send it).
+- **Not built yet.** Automatic post-workout and weekly reviews (they would
+  spend the person's credit without a tap), a per-provider effort or
+  thinking-display setting, multiple saved conversations.
+
+---
+
 Optional. The user brings their own key. Without a key the tab explains what
 the coach does and how to get a key from each provider.
 

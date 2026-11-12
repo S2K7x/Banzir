@@ -92,10 +92,13 @@ export async function runTurn(o: TurnOptions): Promise<Chat> {
 
   const context = await (o.context ?? contextSnapshot)();
   const changed = context !== chat.lastContext;
+  const decisions = chat.pending?.length ? `Since your last reply:\n${chat.pending.map((p) => `- ${p}`).join('\n')}` : '';
+  const sent = [changed ? context : '', decisions].filter(Boolean).join('\n\n');
   await commit({
     ...chat,
     lastContext: context,
-    messages: [...chat.messages, { id: uid('u'), role: 'user', text: o.text, context: changed ? context : undefined, at: now() }],
+    pending: [],
+    messages: [...chat.messages, { id: uid('u'), role: 'user', text: o.text, context: sent || undefined, at: now() }],
   });
 
   chat = await maybeSummarise(chat, o.config, completeFn, o.signal);
@@ -153,10 +156,13 @@ function assistant(r: Pick<Completion, 'text' | 'toolCalls' | 'stop'> & { native
   return { id: uid('a'), role: 'assistant', text: r.text, toolCalls: r.toolCalls, native: r.native, stop: r.stop, epoch, at: now() };
 }
 
-/** Records the person's decision on a proposal card. */
+/** Records the person's decision on a proposal card, and queues it to be told to the model. */
 export function setProposalStatus(chat: Chat, proposalId: string, status: Proposal['status'], error?: string): Chat {
+  const proposal = chat.messages.flatMap((m) => (m.role === 'assistant' ? (m.proposals ?? []) : [])).find((p) => p.id === proposalId);
+  const verb = status === 'accepted' ? 'accepted and applied' : status === 'dismissed' ? 'dismissed' : `could not apply (${error ?? 'error'})`;
   return {
     ...chat,
+    pending: proposal ? [...(chat.pending ?? []), `The person ${verb} your proposal "${proposal.title}".`] : chat.pending,
     messages: chat.messages.map((m) => (m.role === 'assistant' && m.proposals?.some((p) => p.id === proposalId) ? { ...m, proposals: m.proposals.map((p) => (p.id === proposalId ? { ...p, status, error } : p)) } : m)),
   };
 }

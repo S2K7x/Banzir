@@ -7,10 +7,11 @@ builds a training plan for your goal: muscle, strength, calisthenics skills,
 running, fat loss, general fitness or sport support. Everything is stored on
 your device. No account, no database, nothing to configure.
 
-**Status: early version.** Onboarding, eight plans, guided workouts with
-timers, progression suggestions, history, ten themes, backup and offline use
-work today. The program builder, more plans, the AI coach and the nutrition
-modules are still to come. See [`docs/product/features.md`](docs/product/features.md).
+**Status: early version.** Onboarding, 35 plans, a program builder, guided
+workouts with timers, progression suggestions, history, ten themes, backup,
+offline use and an optional AI coach (bring your own key from Claude,
+OpenAI, Gemini, OpenRouter, Groq, Mistral or a local model) work today. The
+nutrition, fasting and running modules are still to come. See [`docs/product/features.md`](docs/product/features.md).
 
 ## Get your own copy
 

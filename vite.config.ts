@@ -20,8 +20,10 @@ function relayPlugin(): Plugin {
     if (response.body) Readable.fromWeb(response.body as import('node:stream/web').ReadableStream).pipe(res);
     else res.end();
   };
-  const mount = (server: { middlewares: { use: (path: string, fn: (req: IncomingMessage, res: ServerResponse) => void) => void } }) =>
+  // Must return nothing: a function returned from configureServer runs as a post hook.
+  const mount = (server: { middlewares: { use: (path: string, fn: (req: IncomingMessage, res: ServerResponse) => void) => unknown } }) => {
     server.middlewares.use('/api/llm', (req, res) => void handle(req, res));
+  };
   return { name: 'banzir-relay', configureServer: mount, configurePreviewServer: mount };
 }
 

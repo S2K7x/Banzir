@@ -67,8 +67,11 @@ Process
   phone-sized browser.
 - 2026-11-12: all 35 templates, focus questions for every goal, plan
   prerequisites, per-prescription history with 1RM-based load estimates.
-- Not built yet: AI coach (in progress), nutrition / fasting / running /
-  body-weight modules. The ordered list is under "Known gaps and next steps"
+- 2026-11-12: AI coach (phase 5): Claude via the Anthropic SDK, other
+  providers via the OpenAI-compatible format and the `/api/llm` relay,
+  tools, memory, proposals, summaries. Verified with mocked providers.
+- Not built yet: nutrition / fasting / running / body-weight modules
+  (phase 6), polish and first release (phase 7). The ordered list is under "Known gaps and next steps"
   in `docs/product/features.md`.
 
 ## Code map
@@ -84,6 +87,8 @@ Full layout and commands: `docs/product/architecture.md`.
 - `src/lib/programState.ts`, `src/lib/progression.ts` — where someone is in a
   program and what to suggest next.
 - `src/features/*` — one folder per screen; `src/App.tsx` is the shell.
+- `src/lib/coach/` — AI coach; `api/llm.ts` — relay for providers that block
+  browser calls. Read `docs/product/ai-coach.md` ("As built") first.
 - `src/lib/text.ts` — all user-facing labels (for future languages).
 - `npm test` (Vitest), `npm run build` (type-check + build), `npm run dev`.
 
@@ -136,6 +141,13 @@ Full layout and commands: `docs/product/architecture.md`.
 - When checking plans as a coach, print the fitted plan for a few typical
   people (beginner with a bar, intermediate, advanced) and read it. Two
   selection flaws were only visible that way.
+- The coach's system prompt (`src/lib/coach/prompt.ts`) carries a summary
+  of `docs/science/`. Change both together, and bump `PROMPT_VERSION` (or
+  `TOOLS_VERSION` in tools.ts) whenever the prompt or a tool changes.
+- Never edit or reorder coach history that has been sent: Claude rejects
+  replayed thinking blocks after a prefix change. Append instead.
+- Browser tests mock providers with Playwright routes (`api.anthropic.com`,
+  `/api/llm`); the build sandbox cannot reach OpenAI or Gemini.
 - Think in every role before shipping a feature: engineer (tests, bundle),
   coach and scientist (is the prescription sensible for this level, is the
   claim sourced), nutritionist (safe floors), designer (thumb reach, contrast,

@@ -52,8 +52,10 @@ vite.config.ts          Vite, React, PWA manifest and service worker, Vitest
 /docs
 ```
 
-Planned and not there yet: `/api/llm.ts` (AI relay), nutrition, fasting and
-running modules, the program builder.
+/api/llm.ts            optional AI relay (Vercel function; also mounted by vite dev/preview)
+/src/lib/coach         AI coach: providers, tools, prompt, agent loop, storage
+
+Planned and not there yet: nutrition, fasting and running modules.
 
 ## Commands
 
@@ -67,14 +69,14 @@ running modules, the program builder.
 
 CI (`.github/workflows/ci.yml`) runs the tests and the build on every push.
 
-## Bundle (2026-11-12, after all 35 plans)
+## Bundle (2026-11-12, with the coach)
 
-First load is about 120 kB gzipped: the main chunk (React, Dexie, shell,
-Today) at 77 kB, shared exercise data and labels at 41 kB, styles at 4 kB.
-Onboarding (5 kB) and the 35 templates with the ranking (16 kB) load only
-when someone chooses a plan; Program, Builder, Progress, Profile and the
-Player are 2-5 kB chunks loaded on first use; Zod (27 kB) only when
-restoring a backup. The service worker precaches everything.
+First load is about 128 kB gzipped: the main chunk (React, Dexie, shell,
+Today) at 77 kB, shared exercise data and labels at 46 kB, styles at 5 kB.
+Loaded on demand: onboarding (5 kB), templates and ranking (16 kB), the coach
+(17 kB), the Anthropic SDK (84 kB, only when Claude is the provider), Zod
+(28 kB, coach and backup restore), and 2-5 kB chunks for the other screens.
+The service worker precaches everything.
 
 ## Data model (IndexedDB tables)
 
@@ -145,7 +147,7 @@ Why it exists: provider support for direct browser calls is uneven.
 - OpenAI and Gemini: reports conflict; could not be tested from the build
   sandbox `[unverified]`.
 
-Design:
+Built as `api/llm.ts` (see `ai-coach.md`, "As built"). Original design:
 - A small edge function that forwards the request body to an allow-listed
   provider host and streams the response back.
 - The user's key travels in a request header and is never logged or stored.
